@@ -746,7 +746,7 @@ async function abrirIa() {
   $('#ia-meta').textContent = '';
   if (!iaLigada) {
     aviso.hidden = false; aviso.dataset.tipo = 'erro';
-    aviso.textContent = 'A IA está desligada: defina OPENAI_API_KEY nas variáveis da stack no Portainer e atualize a stack. O botão volta a funcionar sozinho.';
+    aviso.textContent = 'A IA está desligada: defina OPENROUTER_API_KEY nas variáveis da stack no Portainer e atualize a stack. O botão volta a funcionar sozinho.';
   }
   pintarListaIa();
   dlg.showModal();

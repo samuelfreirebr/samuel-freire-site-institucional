@@ -15,11 +15,11 @@
 #                       modelos locais.
 #    SERPER_API_KEY     busca de perfis do Instagram. Sem ela: a
 #                       busca fica desligada.
-#    OPENAI_API_KEY     Preencher com IA nas propostas. Sem ela: o
-#                       botão explica o que falta.
 #    PAGESPEED_KEY      só aumenta a cota do PageSpeed.
-#    OPENROUTER_API_KEY resposta por áudio no briefing. Sem ela:
-#                       o botão de áudio não aparece.
+#    OPENROUTER_API_KEY a IA do painel: preencher propostas, montar
+#                       perguntas e contrato, Cofre e o áudio do
+#                       briefing. Sem ela: cada botão explica o que
+#                       falta e o áudio não aparece.
 #
 #  A imagem vem do ghcr.io, montada pela Action a cada push na
 #  main. Para atualizar: git push → Action verde → Update the
@@ -51,12 +51,12 @@ services:
       - GOOGLE_PLACES_KEY=${GOOGLE_PLACES_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - SERPER_API_KEY=${SERPER_API_KEY:-}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_MODELO=${OPENAI_MODELO:-}
       - PAGESPEED_KEY=${PAGESPEED_KEY:-}
-      # Briefing: o cliente responde por áudio e o texto volta transcrito.
+      # IA do painel e áudio do briefing, tudo pela mesma chave.
+      # Modelos opcionais: vazios usam openai/gpt-5 e google/gemini-2.5-flash.
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - OPENROUTER_MODELO=${OPENROUTER_MODELO:-}
+      - OPENROUTER_MODELO_TEXTO=${OPENROUTER_MODELO_TEXTO:-}
+      - OPENROUTER_MODELO_AUDIO=${OPENROUTER_MODELO_AUDIO:-}
       # Senha que o script do Google usa para entregar as transcrições
       # do Meet (material/meet-para-painel.gs). Vazia, a entrada fica fechada.
       - TOKEN_REUNIOES=${TOKEN_REUNIOES:-}

@@ -339,7 +339,7 @@ function abrirSeparar({ texto = '', arquivos = [], jaSeparar = false } = {}) {
   anexos = [...arquivos];
   propostos = [];
   $('#sep-texto').value = texto;
-  $('#sep-aviso').textContent = iaLigada ? '' : 'Separar precisa da IA: falta a OPENAI_API_KEY na stack.';
+  $('#sep-aviso').textContent = iaLigada ? '' : 'Separar precisa da IA: falta a OPENROUTER_API_KEY na stack.';
   irPara('envio');
   $('#sep').showModal();
   if (jaSeparar && iaLigada) separarAgora(); else $('#sep-texto').focus();

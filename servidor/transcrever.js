@@ -6,7 +6,7 @@
    Daqui o áudio vai para o OpenRouter, e o texto volta para o
    campo, onde o cliente confere e corrige antes de enviar.
 
-   Chave: OPENROUTER_API_KEY na stack. Modelo: OPENROUTER_MODELO
+   Chave: OPENROUTER_API_KEY na stack. Modelo: OPENROUTER_MODELO_AUDIO
    (padrão google/gemini-2.5-flash, bom em português e barato).
    Sem chave, o botão de áudio nem aparece na página.
    ============================================================ */
@@ -33,7 +33,7 @@ export async function transcrever(wav) {
       'x-title': 'Briefing Samuel Freire',
     },
     body: JSON.stringify({
-      model: process.env.OPENROUTER_MODELO || 'google/gemini-2.5-flash',
+      model: process.env.OPENROUTER_MODELO_AUDIO || 'google/gemini-2.5-flash',
       temperature: 0,
       messages: [{
         role: 'user',

@@ -278,7 +278,7 @@ export async function gerarContrato({ proposta, transcricao, modelo, respostas, 
       ia = r.ia; usado = r.modelo;
     } catch (e) { avisos.push('A IA não respondeu (' + e.message + '). O contrato saiu só com os dados da proposta.'); }
   } else {
-    avisos.push('IA desligada (sem OPENAI_API_KEY): o contrato saiu só com os dados da proposta.');
+    avisos.push('IA desligada (sem OPENROUTER_API_KEY): o contrato saiu só com os dados da proposta.');
   }
 
   const doBriefing = contratanteDasRespostas(respostas);

@@ -14,8 +14,9 @@
    encerramento e as outras condições não entram no esquema: a IA
    não tem como mexer neles nem querendo.
 
-   Chave: OPENAI_API_KEY na stack. Modelo: OPENAI_MODELO (padrão
-   gpt-4.1). Sem chave, a rota explica em vez de falhar em silêncio.
+   Chave: OPENROUTER_API_KEY na stack, a mesma do áudio do briefing.
+   Modelo: OPENROUTER_MODELO_TEXTO (padrão openai/gpt-5). Sem chave,
+   a rota explica em vez de falhar em silêncio.
    ============================================================ */
 
 import { inflateRawSync } from 'node:zlib';
@@ -24,36 +25,11 @@ const LIMITE_TOTAL = 30 * 1024 * 1024;   // 30 MB de anexos por pedido
 const LIMITE_TEXTO = 60000;               // caracteres de texto que vão para a IA
 const MAX_ARQUIVOS = 24;
 
-export const temChaveIa = () => Boolean(process.env.OPENAI_API_KEY);
+export const temChaveIa = () => Boolean(process.env.OPENROUTER_API_KEY);
 
-/* Qual modelo usar: o da stack, se a conta tiver acesso; senão o
-   melhor da lista que a chave alcança. Cada conta da OpenAI libera
-   modelos diferentes por projeto, e "não tem acesso ao gpt-4.1" foi
-   o primeiro erro real. A lista da conta fica em cache por uma hora. */
-const PREFERENCIA = ['gpt-5', 'gpt-5-mini', 'gpt-4.1', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4o-mini', 'gpt-5-nano'];
-let modelosDaConta = null;
-let quandoListou = 0;
-
-async function listarModelos() {
-  if (modelosDaConta && Date.now() - quandoListou < 60 * 60 * 1000) return modelosDaConta;
-  try {
-    const r = await fetch('https://api.openai.com/v1/models', {
-      headers: { authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-      signal: AbortSignal.timeout(15000),
-    });
-    const d = await r.json().catch(() => ({}));
-    if (r.ok && Array.isArray(d.data)) { modelosDaConta = new Set(d.data.map((m) => m.id)); quandoListou = Date.now(); }
-  } catch (e) { /* sem lista: tenta na ordem e deixa o erro dizer */ }
-  return modelosDaConta;
-}
-
-export async function escolherModelo() {
-  const pedido = process.env.OPENAI_MODELO;
-  const lista = await listarModelos();
-  if (!lista) return pedido || PREFERENCIA[2];
-  if (pedido && lista.has(pedido)) return pedido;
-  return PREFERENCIA.find((m) => lista.has(m)) || pedido || PREFERENCIA[2];
-}
+// No OpenRouter todo modelo fica disponível com a mesma chave: não há
+// mais lista da conta nem descida por falta de acesso.
+export const escolherModelo = async () => process.env.OPENROUTER_MODELO_TEXTO || 'openai/gpt-5';
 
 /* ---------- ZIP mínimo: só o que precisamos ----------
    Lê o diretório central e infla cada entrada. Sem dependência,
@@ -255,33 +231,44 @@ function resumoAtual(p) {
 - perguntas atuais: ${(p.faq?.itens || []).map((f) => f.pergunta).join(' | ') || '(nenhuma)'}`;
 }
 
-async function chamarOpenAi(partes, modeloEscolhido, { sistema = SISTEMA, esquema = ESQUEMA, nome = 'proposta_preenchida', tokens = 4000 } = {}) {
-  const r = await fetch('https://api.openai.com/v1/responses', {
+/* As partes chegam no formato antigo (input_text, input_image,
+   input_file), que proposta, perguntas, contrato e Cofre já montam.
+   Aqui viram o formato do OpenRouter, sem mexer em quem chama. */
+const paraOpenRouter = (p) => p.type === 'input_image' ? { type: 'image_url', image_url: { url: p.image_url, detail: p.detail } }
+  : p.type === 'input_file' ? { type: 'file', file: { filename: p.filename, file_data: p.file_data } }
+  : { type: 'text', text: p.text };
+
+async function chamarIa(partes, modeloEscolhido, { sistema = SISTEMA, esquema = ESQUEMA, nome = 'proposta_preenchida', tokens = 4000 } = {}) {
+  const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'x-title': 'Painel Samuel Freire' },
     body: JSON.stringify({
       model: modeloEscolhido,
-      input: [
-        { role: 'system', content: [{ type: 'input_text', text: sistema }] },
-        { role: 'user', content: partes },
+      messages: [
+        { role: 'system', content: sistema },
+        { role: 'user', content: partes.map(paraOpenRouter) },
       ],
-      text: { format: { type: 'json_schema', name: nome, schema: esquema, strict: true } },
-      max_output_tokens: tokens,
+      response_format: { type: 'json_schema', json_schema: { name: nome, schema: esquema, strict: true } },
+      // Só provedor que respeita o esquema: sem isto o OpenRouter podia
+      // mandar para um que ignora o formato e devolve texto solto.
+      provider: { require_parameters: true },
+      // O modelo pensa antes de responder e o raciocínio conta neste
+      // limite: sem folga, a resposta saía cortada no meio do JSON.
+      max_tokens: tokens + 12000,
     }),
     signal: AbortSignal.timeout(120000),
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) {
-    const msg = d?.error?.message || `OpenAI respondeu ${r.status}`;
-    const e = new Error(/api key|authentication|incorrect/i.test(msg) ? 'A chave OPENAI_API_KEY não foi aceita. Confira na stack.' : msg);
-    e.semAcesso = /does not have access|model_not_found|not found/i.test(msg);
-    throw e;
+    const msg = d?.error?.message || `OpenRouter respondeu ${r.status}`;
+    throw new Error(r.status === 401 ? 'A chave OPENROUTER_API_KEY não foi aceita. Confira na stack.' : msg);
   }
-  const texto = d.output_text
-    || (d.output || []).flatMap((o) => o.content || []).map((c) => c.text || '').join('');
-  if (!texto) throw new Error('A IA não devolveu conteúdo.');
+  if (d.choices?.[0]?.finish_reason === 'length') throw new Error('A resposta da IA passou do tamanho e veio cortada. Tente com menos material.');
+  const texto = String(d.choices?.[0]?.message?.content ?? '').trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
+  const vazia = (m) => Object.assign(new Error(m), { tentarDeNovo: true });
+  if (!texto) throw vazia('A IA não devolveu conteúdo.');
   try { return JSON.parse(texto); }
-  catch (e) { throw new Error('A IA devolveu algo fora do formato esperado.'); }
+  catch (e) { throw vazia('A IA devolveu algo fora do formato esperado.'); }
 }
 
 /* ---------- aplicar só o permitido ---------- */
@@ -346,7 +333,7 @@ export function aplicarNaProposta(p, ia) {
 /* ---------- entrada ---------- */
 
 export async function preencherComIa({ proposta, texto, arquivos }) {
-  if (!temChaveIa()) return { erro: 'Sem chave da OpenAI. Defina OPENAI_API_KEY nas variáveis da stack no Portainer e atualize.' };
+  if (!temChaveIa()) return { erro: 'Sem chave do OpenRouter. Defina OPENROUTER_API_KEY nas variáveis da stack no Portainer e atualize.' };
   const t = String(texto || '').trim();
   if (!t && !(arquivos || []).length) return { erro: 'Cole o texto da conversa ou anexe pelo menos um arquivo.' };
 
@@ -366,15 +353,15 @@ export async function preencherComIa({ proposta, texto, arquivos }) {
   return { ...aplicarNaProposta(proposta || {}, r.ia), lidos: anexos.lidos, modelo: r.modelo };
 }
 
-/* Uma pergunta à IA com resposta em JSON de esquema fixo. Tenta o
-   modelo escolhido; se a conta não tiver acesso, desce a lista de
-   preferência até um que funcione. Serve às propostas e ao contrato
-   (contrato.js), cada um com o seu sistema e o seu esquema. */
+/* Uma pergunta à IA com resposta em JSON de esquema fixo. Serve às
+   propostas, às perguntas, ao contrato e ao Cofre, cada um com o seu
+   sistema e o seu esquema. Resposta vazia ou torta acontece de vez
+   em quando (no teste, 1 em 5): tenta uma segunda vez antes de falhar. */
 export async function pedirJsonIa(partes, opcoes) {
-  let ultimoErro;
-  for (const m of [...new Set([await escolherModelo(), ...PREFERENCIA])]) {
-    try { return { ia: await chamarOpenAi(partes, m, opcoes), modelo: m }; }
-    catch (e) { ultimoErro = e; if (!e.semAcesso) break; }
+  const modelo = await escolherModelo();
+  try { return { ia: await chamarIa(partes, modelo, opcoes), modelo }; }
+  catch (e) {
+    if (!e.tentarDeNovo) throw e;
+    return { ia: await chamarIa(partes, modelo, opcoes), modelo };
   }
-  throw new Error(ultimoErro?.message || 'A IA não respondeu.');
 }

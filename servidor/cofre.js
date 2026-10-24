@@ -6,7 +6,7 @@
 
    Ao guardar um link, o servidor lê a página do link (no GitHub, o
    README pela API), manda para a mesma IA das propostas (ChatGPT, pela
-   OPENAI_API_KEY) e devolve nome, descrição, categoria e tags. Sem a
+   OPENROUTER_API_KEY) e devolve nome, descrição, categoria e tags. Sem a
    chave, devolve só o título e a
    descrição da página. Endereço da rede interna
    (localhost, IP privado) é recusado antes de qualquer leitura.
@@ -272,7 +272,7 @@ const ESQUEMA_SEPARAR = {
 };
 
 export async function separar({ texto, arquivos }) {
-  if (!temChaveIa()) return { erro: 'Separar precisa da IA: falta a OPENAI_API_KEY na stack.', semChave: true };
+  if (!temChaveIa()) return { erro: 'Separar precisa da IA: falta a OPENROUTER_API_KEY na stack.', semChave: true };
   const t = String(texto || '').trim();
   if (!t && !(arquivos || []).length) return { erro: 'Cole um texto ou escolha um arquivo.' };
 

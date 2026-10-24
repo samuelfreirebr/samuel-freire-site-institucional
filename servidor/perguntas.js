@@ -364,7 +364,7 @@ export async function gerarPerguntas({ proposta, transcricao }) {
       ia = r.ia; usado = r.modelo;
     } catch (e) { avisos.push('A IA não respondeu (' + e.message + '). O formulário saiu só com os blocos prontos.'); }
   } else {
-    avisos.push('IA desligada (sem OPENAI_API_KEY): o formulário saiu só com os blocos prontos.');
+    avisos.push('IA desligada (sem OPENROUTER_API_KEY): o formulário saiu só com os blocos prontos.');
   }
 
   const ligados = new Set(['contrato', 'empresa', ...(ia?.prontos || [])]);
