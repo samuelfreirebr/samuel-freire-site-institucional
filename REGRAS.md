@@ -70,7 +70,8 @@ ou IA) lê isto antes de começar.
    só o login, a página pública da proposta publicada, a fatura pelo link
    sorteado, o briefing pelo link sorteado (`/perguntas/<link>`, que só
    aceita resposta das perguntas daquele formulário e os arquivos
-   daquele cliente, até 20 MB cada) e a entrada de
+   daquele cliente, até 20 MB cada, e a transcrição de áudio das
+   perguntas daquele formulário, até 5 minutos) e a entrada de
    transcrições (`/api/reunioes/entrada`), que só grava e exige o
    `TOKEN_REUNIOES`.
 3. Chave de serviço externo (Google, Anthropic, Serper) vem de variável de

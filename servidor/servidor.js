@@ -43,6 +43,7 @@ import { renderizarFatura } from './fatura-html.js';
 import { gerarContrato, renderizarContrato, MODELO_PADRAO } from './contrato.js';
 import { gerarPerguntas, renderizarPerguntas, formularioVazio, BLOCOS_PRONTOS, comExemplos, MODELOS, TEXTO_ABERTURA } from './perguntas.js';
 import { preencherComIa, temChaveIa, escolherModelo } from './proposta-ia.js';
+import { transcrever, temChaveAudio, LIMITE_AUDIO } from './transcrever.js';
 import { apiProspeccao, configuracao as configProspeccao } from './prospeccao.js';
 import * as dados from './dados.js';
 import * as cofre from './cofre.js';
@@ -759,6 +760,20 @@ const servidor = http.createServer(async (req, res) => {
           'x-robots-tag': 'noindex, nofollow',
         });
         return createReadStream(alvo).pipe(res);
+      }
+
+      /* Resposta por áudio: chega o WAV de uma pergunta, volta o texto.
+         Nada fica gravado; o texto só vale quando o cliente envia. */
+      if (sub === 'audio' && req.method === 'POST') {
+        if (!temChaveAudio()) return json(res, { erro: 'A resposta por áudio está desligada.' }, 503);
+        const existe = (f.blocos || []).some((b) => (b.perguntas || []).some((p) => p.id === url.searchParams.get('pergunta') && p.tipo === 'longo'));
+        if (!existe) return json(res, { erro: 'Pergunta não encontrada.' }, 400);
+        let wav;
+        try { wav = await lerCorpo(req, LIMITE_AUDIO); }
+        catch (e) { return json(res, { erro: 'Áudio longo demais. Grave até 5 minutos por vez.' }, 413); }
+        if (wav.length < 44 || wav.toString('ascii', 0, 4) !== 'RIFF') return json(res, { erro: 'Áudio inválido.' }, 400);
+        try { return json(res, { texto: await transcrever(wav) }); }
+        catch (e) { console.error('[audio]', e.message); return json(res, { erro: 'Não consegui transcrever agora. Tente de novo ou escreva a resposta.' }, 502); }
       }
 
       if (sub) return texto(res, 'Página não encontrada.', 404);

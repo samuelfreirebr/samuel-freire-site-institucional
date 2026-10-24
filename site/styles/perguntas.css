@@ -293,6 +293,19 @@ body.quiz .pg-campo.ativa .pg-upload { margin-top: var(--sp-lg); }
 }
 .pg-form .mini:hover { background: var(--ink); border-color: var(--ink); color: #FFFFFF; }
 
+/* Resposta por áudio: fica logo abaixo do texto longo. Gravando, o
+   botão ganha o laranja e um ponto que pisca, como num gravador. */
+.pg-audio__linha { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2xs) var(--sp-sm); margin-top: var(--sp-sm); }
+.pg-audio__aviso { font-size: var(--t-small); color: var(--muted); }
+.pg-audio__linha.gravando .mini { border-color: var(--brand); color: var(--brand); }
+.pg-audio__linha.gravando .mini::before {
+  content: ""; display: inline-block; width: .5em; height: .5em; margin-right: .5em;
+  border-radius: 50%; background: var(--brand); vertical-align: .1em;
+  animation: pg-pisca 1s steps(2, start) infinite;
+}
+@keyframes pg-pisca { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .pg-audio__linha.gravando .mini::before { animation: none; } }
+
 /* A opção é um label dentro da pergunta: sem isto herdava o corpo de título. */
 body.quiz .pg-campo.ativa label.pg-opcao {
   font-size: var(--t-body); font-weight: var(--w-medium);

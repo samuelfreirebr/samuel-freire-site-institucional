@@ -18,6 +18,8 @@
 #    OPENAI_API_KEY     Preencher com IA nas propostas. Sem ela: o
 #                       botão explica o que falta.
 #    PAGESPEED_KEY      só aumenta a cota do PageSpeed.
+#    OPENROUTER_API_KEY resposta por áudio no briefing. Sem ela:
+#                       o botão de áudio não aparece.
 #
 #  A imagem vem do ghcr.io, montada pela Action a cada push na
 #  main. Para atualizar: git push → Action verde → Update the
@@ -52,6 +54,9 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODELO=${OPENAI_MODELO:-}
       - PAGESPEED_KEY=${PAGESPEED_KEY:-}
+      # Briefing: o cliente responde por áudio e o texto volta transcrito.
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODELO=${OPENROUTER_MODELO:-}
       # Senha que o script do Google usa para entregar as transcrições
       # do Meet (material/meet-para-painel.gs). Vazia, a entrada fica fechada.
       - TOKEN_REUNIOES=${TOKEN_REUNIOES:-}

@@ -320,6 +320,60 @@ function montar() {
     return b;
   }
 
+  /* ---------- resposta por áudio ----------
+     Só no texto longo, e só se o servidor tem a chave (data-audio).
+     O texto transcrito entra no próprio campo: o cliente confere e
+     corrige antes de enviar, e o resto do quiz nem sabe que foi áudio. */
+  if (form.dataset.audio && window.MediaRecorder && navigator.mediaDevices?.getUserMedia) {
+    for (const t of telas) if (t.campo.dataset.tipo === 'longo') ligarAudio(t.campo.querySelector('textarea'));
+  }
+
+  function ligarAudio(caixa) {
+    if (!caixa) return;
+    const MAX = 5 * 60;   // segundos; o servidor aceita até uns 6
+    const ROTULO = 'Responder por áudio';
+    const linha = criar('div', 'pg-audio__linha');
+    const botao = criar('button', 'mini', ROTULO);
+    const aviso = criar('span', 'pg-audio__aviso');
+    linha.append(botao, aviso);
+    caixa.after(linha);
+    let gravador, relogio;
+
+    botao.onclick = async () => {
+      if (gravador?.state === 'recording') return gravador.stop();
+      let fluxo;
+      try { fluxo = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch (e) { aviso.textContent = 'Libere o microfone no navegador para gravar.'; return; }
+      const partes = [];
+      gravador = new MediaRecorder(fluxo);
+      gravador.ondataavailable = (e) => partes.push(e.data);
+      gravador.onstop = async () => {
+        clearInterval(relogio);
+        fluxo.getTracks().forEach((t) => t.stop());
+        linha.classList.remove('gravando');
+        botao.disabled = true; botao.textContent = 'Transcrevendo…'; aviso.textContent = '';
+        try {
+          const wav = await paraWav(new Blob(partes, { type: gravador.mimeType }));
+          const r = await fetch(location.pathname + '/audio?pergunta=' + encodeURIComponent(caixa.name), { method: 'POST', headers: { 'content-type': 'audio/wav' }, body: wav });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(d.erro || 'Não consegui transcrever. Tente de novo.');
+          if (!d.texto) throw new Error('Não ouvi nada. Tente gravar de novo.');
+          caixa.value = caixa.value.trim() ? caixa.value.trim() + '\n' + d.texto : d.texto;
+          aviso.textContent = 'Pronto. Confira o texto e corrija se precisar.';
+          guardar();
+        } catch (x) { aviso.textContent = x.message; }
+        botao.disabled = false; botao.textContent = ROTULO;
+      };
+      gravador.start();
+      let s = 0;
+      const tempo = () => { botao.textContent = `Parar e transcrever ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+      tempo();
+      linha.classList.add('gravando');
+      aviso.textContent = 'Gravando. Fale à vontade, até 5 minutos.';
+      relogio = setInterval(() => { s++; tempo(); if (s >= MAX) gravador.stop(); }, 1000);
+    };
+  }
+
   /* ---------- revisão ---------- */
   function pintarRevisao() {
     revisao.innerHTML = '';
@@ -414,6 +468,28 @@ function animar(campo) {
   campo.classList.remove('digita');
   void campo.offsetWidth;
   campo.classList.add('digita');
+}
+
+/* Cada navegador grava num formato (webm no Chrome, mp4 no Safari).
+   Aqui o áudio é decodificado e regravado como WAV mono a 16 kHz:
+   o servidor recebe sempre o mesmo formato e o arquivo fica leve. */
+async function paraWav(blob) {
+  const TAXA = 16000;
+  const ctx = new AudioContext();
+  let bruto;
+  try { bruto = await ctx.decodeAudioData(await blob.arrayBuffer()); } finally { ctx.close(); }
+  const off = new OfflineAudioContext(1, Math.max(1, Math.ceil(bruto.duration * TAXA)), TAXA);
+  const fonte = off.createBufferSource();
+  fonte.buffer = bruto; fonte.connect(off.destination); fonte.start();
+  const pcm = (await off.startRendering()).getChannelData(0);
+  const v = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const txt = (o, s) => { for (let k = 0; k < s.length; k++) v.setUint8(o + k, s.charCodeAt(k)); };
+  txt(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); txt(8, 'WAVE');
+  txt(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, TAXA, true); v.setUint32(28, TAXA * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  txt(36, 'data'); v.setUint32(40, pcm.length * 2, true);
+  for (let k = 0; k < pcm.length; k++) v.setInt16(44 + k * 2, Math.max(-1, Math.min(1, pcm[k])) * 0x7fff, true);
+  return new Blob([v], { type: 'audio/wav' });
 }
 
 function criar(tag, classe, texto) {

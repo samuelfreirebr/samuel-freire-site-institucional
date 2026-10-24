@@ -22,6 +22,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pedirJsonIa, temChaveIa, semTravessao } from './proposta-ia.js';
 import { metaCompartilhar } from './compartilhar.js';
+import { temChaveAudio } from './transcrever.js';
 
 const limpo = (t) => semTravessao(t).trim();
 
@@ -491,7 +492,7 @@ ${metaCompartilhar({
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css">
 <link rel="stylesheet" href="/styles/base.css">
-<link rel="stylesheet" href="/styles/perguntas.css?v=q21">
+<link rel="stylesheet" href="/styles/perguntas.css?v=q22">
 <link rel="icon" href="/img/favicon.png">
 </head>
 <body class="perguntas">
@@ -521,7 +522,7 @@ ${metaCompartilhar({
     <p class="pg-sub">Agora é comigo. Qualquer dúvida no caminho, eu te chamo.</p>
   </div>
 
-  <form id="form" class="pg-form"${respondido ? ' hidden' : ''} novalidate>
+  <form id="form" class="pg-form"${respondido ? ' hidden' : ''}${temChaveAudio() ? ' data-audio="1"' : ''} novalidate>
     ${blocos}
     <p class="pg-erro" id="erro" hidden></p>
     <div class="pg-acoes" id="acoes-fim">
@@ -533,7 +534,7 @@ ${metaCompartilhar({
 
 <footer class="pg-rodape"><p class="small">Samuel Freire Web Designer</p></footer>
 
-<script type="module" src="/js/briefing.js?v=q21"></script>
+<script type="module" src="/js/briefing.js?v=q22"></script>
 </body>
 </html>`;
 }
