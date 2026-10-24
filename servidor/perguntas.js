@@ -492,7 +492,7 @@ ${metaCompartilhar({
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css">
 <link rel="stylesheet" href="/styles/base.css">
-<link rel="stylesheet" href="/styles/perguntas.css?v=q22">
+<link rel="stylesheet" href="/styles/perguntas.css?v=q23">
 <link rel="icon" href="/img/favicon.png">
 </head>
 <body class="perguntas">
@@ -534,7 +534,7 @@ ${metaCompartilhar({
 
 <footer class="pg-rodape"><p class="small">Samuel Freire Web Designer</p></footer>
 
-<script type="module" src="/js/briefing.js?v=q22"></script>
+<script type="module" src="/js/briefing.js?v=q23"></script>
 </body>
 </html>`;
 }

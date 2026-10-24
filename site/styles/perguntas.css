@@ -293,18 +293,43 @@ body.quiz .pg-campo.ativa .pg-upload { margin-top: var(--sp-lg); }
 }
 .pg-form .mini:hover { background: var(--ink); border-color: var(--ink); color: #FFFFFF; }
 
-/* Resposta por áudio: fica logo abaixo do texto longo. Gravando, o
-   botão ganha o laranja e um ponto que pisca, como num gravador. */
-.pg-audio__linha { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2xs) var(--sp-sm); margin-top: var(--sp-sm); }
-.pg-audio__aviso { font-size: var(--t-small); color: var(--muted); }
-.pg-audio__linha.gravando .mini { border-color: var(--brand); color: var(--brand); }
-.pg-audio__linha.gravando .mini::before {
-  content: ""; display: inline-block; width: .5em; height: .5em; margin-right: .5em;
-  border-radius: 50%; background: var(--brand); vertical-align: .1em;
-  animation: pg-pisca 1s steps(2, start) infinite;
+/* Resposta por áudio: microfone redondo logo abaixo do texto longo.
+   Gravando, ele vira o botão de parar (laranja) e ao lado correm as
+   barrinhas com o volume da voz e o tempo. Transcrevendo, as barras
+   ficam cinza e respiram até o texto chegar. */
+.pg-audio { display: flex; align-items: center; gap: var(--sp-sm); margin-top: var(--sp-sm); min-height: 3.25rem; }
+.pg-audio__mic {
+  flex: none; display: grid; place-items: center;
+  width: 3.25rem; height: 3.25rem; border-radius: 50%;
+  background: var(--bg); color: var(--ink);
+  border: var(--hair) solid var(--line-2);
+  transition: background var(--d-fast) var(--ease-out), color var(--d-fast) var(--ease-out), border-color var(--d-fast) var(--ease-out);
 }
-@keyframes pg-pisca { to { visibility: hidden; } }
-@media (prefers-reduced-motion: reduce) { .pg-audio__linha.gravando .mini::before { animation: none; } }
+.pg-audio__mic:hover { border-color: var(--brand); color: var(--brand); }
+.pg-audio__mic:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.pg-audio.gravando .pg-audio__mic { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.pg-audio.transcrevendo .pg-audio__mic { color: var(--meta); cursor: progress; }
+
+.pg-audio__onda { display: none; flex: 1; min-width: 0; height: 2rem; align-items: center; gap: 3px; }
+.pg-audio.gravando .pg-audio__onda, .pg-audio.transcrevendo .pg-audio__onda { display: flex; }
+.pg-audio__onda i {
+  flex: 1; min-width: 2px; height: 100%; border-radius: 2px;
+  background: var(--brand);
+  transform: scaleY(.08);
+  transition: transform 70ms linear;
+}
+.pg-audio.transcrevendo .pg-audio__onda i { background: var(--line-2); animation: pg-respira 1.2s var(--ease-in-out) infinite alternate; }
+@keyframes pg-respira { from { opacity: 1; } to { opacity: .35; } }
+
+.pg-audio__tempo { flex: none; font-size: var(--t-small); font-weight: var(--w-semi); font-variant-numeric: tabular-nums; color: var(--ink); }
+.pg-audio__tempo:empty { display: none; }   /* vazio, não deixa buraco entre o microfone e a dica */
+.pg-audio.transcrevendo .pg-audio__tempo { color: var(--muted); font-weight: var(--w-book); }
+.pg-audio__aviso { font-size: var(--t-small); color: var(--muted); }
+.pg-audio.gravando .pg-audio__aviso, .pg-audio.transcrevendo .pg-audio__aviso { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .pg-audio__onda i { transition: none; }
+  .pg-audio.transcrevendo .pg-audio__onda i { animation: none; }
+}
 
 /* A opção é um label dentro da pergunta: sem isto herdava o corpo de título. */
 body.quiz .pg-campo.ativa label.pg-opcao {

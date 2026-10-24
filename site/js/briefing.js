@@ -16,6 +16,8 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const SETA_DIR = '<svg class="pg-seta pg-seta--dir" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const SETA_ESQ = '<svg class="pg-seta pg-seta--esq" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M13.5 8h-11M7 3.5 2.5 8 7 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ENVIAR = 'Enviar as informações ' + SETA_DIR;
+const ICONE_MIC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const ICONE_PARAR = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>';
 
 const SEM_MOVIMENTO = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -331,13 +333,54 @@ function montar() {
   function ligarAudio(caixa) {
     if (!caixa) return;
     const MAX = 5 * 60;   // segundos; o servidor aceita até uns 6
-    const ROTULO = 'Responder por áudio';
-    const linha = criar('div', 'pg-audio__linha');
-    const botao = criar('button', 'mini', ROTULO);
-    const aviso = criar('span', 'pg-audio__aviso');
-    linha.append(botao, aviso);
+    const BARRAS = 40;
+    const DICA = 'Prefere falar? Toque no microfone.';
+    const linha = criar('div', 'pg-audio');
+    const botao = criar('button', 'pg-audio__mic');
+    const onda = criar('div', 'pg-audio__onda');
+    const tempo = criar('span', 'pg-audio__tempo');
+    const aviso = criar('span', 'pg-audio__aviso', DICA);
+    const barras = Array.from({ length: BARRAS }, () => onda.appendChild(criar('i')));
+    onda.setAttribute('aria-hidden', 'true');
+    linha.append(botao, onda, tempo, aviso);
     caixa.after(linha);
-    let gravador, relogio;
+    let gravador, relogio, quadro, ctxVoz;
+
+    const icone = (estado) => {
+      botao.innerHTML = estado === 'gravando' ? ICONE_PARAR : ICONE_MIC;
+      botao.setAttribute('aria-label', estado === 'gravando' ? 'Parar e transcrever' : 'Responder por áudio');
+      linha.classList.toggle('gravando', estado === 'gravando');
+      linha.classList.toggle('transcrevendo', estado === 'transcrevendo');
+    };
+    icone('parado');
+
+    /* As barrinhas: o volume da voz, medido a cada quadro, entra pela
+       direita e empurra os anteriores para a esquerda. */
+    function ouvir(fluxo) {
+      ctxVoz = new AudioContext();
+      const analise = ctxVoz.createAnalyser();
+      analise.fftSize = 512;
+      ctxVoz.createMediaStreamSource(fluxo).connect(analise);
+      const amostra = new Uint8Array(analise.fftSize);
+      const niveis = new Array(BARRAS).fill(0);
+      let ultimo = 0;
+      const passo = (agora) => {
+        quadro = requestAnimationFrame(passo);
+        if (agora - ultimo < 70) return;
+        ultimo = agora;
+        analise.getByteTimeDomainData(amostra);
+        let soma = 0;
+        for (const v of amostra) soma += ((v - 128) / 128) ** 2;
+        niveis.shift();
+        niveis.push(Math.min(1, Math.sqrt(soma / amostra.length) * 5));
+        niveis.forEach((n, k) => { barras[k].style.transform = `scaleY(${Math.max(0.08, n)})`; });
+      };
+      quadro = requestAnimationFrame(passo);
+    }
+    function pararDeOuvir() {
+      cancelAnimationFrame(quadro);
+      ctxVoz?.close();
+    }
 
     botao.onclick = async () => {
       if (gravador?.state === 'recording') return gravador.stop();
@@ -349,9 +392,10 @@ function montar() {
       gravador.ondataavailable = (e) => partes.push(e.data);
       gravador.onstop = async () => {
         clearInterval(relogio);
+        pararDeOuvir();
         fluxo.getTracks().forEach((t) => t.stop());
-        linha.classList.remove('gravando');
-        botao.disabled = true; botao.textContent = 'Transcrevendo…'; aviso.textContent = '';
+        icone('transcrevendo');
+        botao.disabled = true; tempo.textContent = 'Transcrevendo…';
         try {
           const wav = await paraWav(new Blob(partes, { type: gravador.mimeType }));
           const r = await fetch(location.pathname + '/audio?pergunta=' + encodeURIComponent(caixa.name), { method: 'POST', headers: { 'content-type': 'audio/wav' }, body: wav });
@@ -362,15 +406,16 @@ function montar() {
           aviso.textContent = 'Pronto. Confira o texto e corrija se precisar.';
           guardar();
         } catch (x) { aviso.textContent = x.message; }
-        botao.disabled = false; botao.textContent = ROTULO;
+        botao.disabled = false; tempo.textContent = '';
+        icone('parado');
       };
       gravador.start();
+      ouvir(fluxo);
       let s = 0;
-      const tempo = () => { botao.textContent = `Parar e transcrever ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
-      tempo();
-      linha.classList.add('gravando');
-      aviso.textContent = 'Gravando. Fale à vontade, até 5 minutos.';
-      relogio = setInterval(() => { s++; tempo(); if (s >= MAX) gravador.stop(); }, 1000);
+      const marcar = () => { tempo.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+      marcar();
+      icone('gravando');
+      relogio = setInterval(() => { s++; marcar(); if (s >= MAX) gravador.stop(); }, 1000);
     };
   }
 
