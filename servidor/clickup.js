@@ -8,9 +8,12 @@
    ============================================================ */
 
 /* cliente: nome igual ao do CRM. so: id do Samuel quando a área tem
-   muita gente e só interessam as tarefas dele. */
+   muita gente e só interessam as tarefas dele. fica: filtro extra.
+   Casa SW (pedido do Samuel em 29/10/2026): só "em aberto" com prazo de
+   novembro em diante; o que está esperando aprovação do médico fica fora. */
 const AREAS = [
-  { cliente: 'SW Surgical World', chave: 'CLICKUP_TOKEN_EDA', time: '90171444669', so: null },
+  { cliente: 'SW Surgical World', chave: 'CLICKUP_TOKEN_EDA', time: '90171444669', so: null,
+    fica: (t) => t.status === 'em aberto' && t.prazo >= '2026-11-01' },
   { cliente: 'Etria', chave: 'CLICKUP_TOKEN_ETRIA', time: '90133035284', so: '112137541' },
 ];
 
@@ -52,7 +55,7 @@ async function daArea(a) {
     lista: t.list?.name || '',
     url: t.url,
     cliente: a.cliente,
-  }));
+  })).filter(a.fica || Boolean);
 }
 
 export const ligado = () => AREAS.some((a) => process.env[a.chave]);
