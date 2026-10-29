@@ -476,6 +476,12 @@ async function carregar() {
 $('#agrupar').value = lembrado('agrupar', 'prazo');
 vista(lembrado('vista', 'tabela'));
 irPara(location.hash.slice(1));
-carregar().catch((e) => { $('#kpis').innerHTML = `<p class="vazio">${esc(e.message)}</p>`; });
+carregar().then(() => {
+  // "Nova tarefa" do menu lateral chega aqui com ?nova=tarefa.
+  if (new URLSearchParams(location.search).get('nova') === 'tarefa') {
+    history.replaceState(null, '', location.pathname + location.hash);
+    abrirTarefa({ clientes, aoSalvar: guardar });
+  }
+}).catch((e) => { $('#kpis').innerHTML = `<p class="vazio">${esc(e.message)}</p>`; });
 // Voltou de uma ficha (outra aba) ou o Claude mexeu: traz o que mudou, sem atrapalhar janela aberta.
 addEventListener('focus', () => { if (!document.querySelector('dialog[open]')) carregar().catch(() => {}); });

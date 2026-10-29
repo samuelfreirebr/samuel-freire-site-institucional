@@ -10,95 +10,77 @@
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
 <link rel="stylesheet" href="/admin/painel.css?v=9">
+<link rel="stylesheet" href="/admin/casca.css?v=1">
+<script type="module" src="/admin/casca.js?v=1"></script>
+<link rel="stylesheet" href="/admin/crm/crm.css?v=8">
+<link rel="stylesheet" href="/admin/inicio.css?v=1">
 </head>
 <body>
 
 <header class="topo">
-  <h1>Painel <i>Samuel Freire</i></h1>
-  <a class="mini atalho-cofre" href="/admin/cofre/" title="Cofre: guardar ou achar um link" aria-label="Abrir o Cofre"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h11v9h-11z M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M4.5 12.5V14 M11.5 12.5V14"/></svg></a>
-  <a class="mini" href="/" target="_blank" rel="noopener">Ver o site</a>
-  <button class="mini" type="button" id="sair">Sair</button>
+  <h1>Painel <i>Samuel Freire</i><span class="sec">Início</span></h1>
+  <button class="mini crm-buscar" type="button" id="buscar" title="Busca rápida (Ctrl+K ou /)">Buscar <kbd>Ctrl K</kbd></button>
 </header>
 
-<main class="hub">
-  <div class="hub__in">
+<p class="aviso" id="aviso" role="status"></p>
 
-    <div class="hub__quem">
-      <img class="hub__foto" src="/img/samuel-retrato.jpg" alt="">
-      <div>
-        <p class="hub__nome">Samuel<em>Freire</em></p>
-        <p class="hub__meta"><span id="saudacao">Olá</span> · <span id="data"></span></p>
-      </div>
+<main class="crm-pagina ini">
+
+  <div class="crm-cab">
+    <div>
+      <h2 class="crm-titulo"><span id="saudacao">Olá</span>, Samuel</h2>
+      <p class="crm-sub" id="resumo-dia"></p>
     </div>
-
-    <form class="hub__cofre" action="/admin/cofre/" method="get">
+    <form class="ini-cofre" action="/admin/cofre/" method="get">
       <label for="cofre-link">Cofre</label>
-      <textarea id="cofre-link" name="link" rows="1" autocomplete="off" required placeholder="Cole um link ou texto"></textarea>
+      <textarea id="cofre-link" name="link" rows="1" autocomplete="off" required placeholder="Cole um link ou texto para guardar"></textarea>
       <button class="mini mini--ativo" type="submit">Guardar</button>
-      <a class="mini" href="/admin/cofre/">Abrir o Cofre</a>
     </form>
-
-    <div class="hub__blocos">
-      <a class="bloco" href="/admin/propostas/">
-        <span class="bloco__num">01</span>
-        <span class="bloco__titulo">Criar proposta</span>
-        <span class="bloco__desc">Uma página por cliente, montada em etapas a partir do seu modelo, com prévia ao vivo. Pronta para mandar o link.</span>
-        <span class="bloco__pe">Propostas <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-      <a class="bloco" href="/admin/site/">
-        <span class="bloco__num">02</span>
-        <span class="bloco__titulo">Editar site ativo</span>
-        <span class="bloco__desc">O site inteiro na tela. Clique num texto para mudar, numa foto para trocar. Nada vai ao ar antes de salvar.</span>
-        <span class="bloco__pe">Site <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-      <a class="bloco" href="/google-prospection/">
-        <span class="bloco__num">03</span>
-        <span class="bloco__titulo">Prospectar no Google</span>
-        <span class="bloco__desc">Varre os negócios de uma cidade, separa quem não tem site de quem tem site ruim, escreve a mensagem e guarda o lead na sua lista.</span>
-        <span class="bloco__pe">Prospecção <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-      <a class="bloco" href="/admin/faturas/">
-        <span class="bloco__num">04</span>
-        <span class="bloco__titulo">Gerar fatura</span>
-        <span class="bloco__desc">Fatura em português para cliente do Brasil ou invoice em inglês para cliente de fora. Sai em PDF, com link e controle do que já foi pago.</span>
-        <span class="bloco__pe">Faturas <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-      <a class="bloco" href="/admin/formularios/">
-        <span class="bloco__num">05</span>
-        <span class="bloco__titulo">Formulários</span>
-        <span class="bloco__desc">Briefings para o cliente responder, uma pergunta por vez. Monte em branco ou a partir de uma proposta, mande o link e leia as respostas.</span>
-        <span class="bloco__pe">Formulários <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-      <a class="bloco" href="/admin/contratos/">
-        <span class="bloco__num">06</span>
-        <span class="bloco__titulo">Contratos</span>
-        <span class="bloco__desc">Gera o contrato a partir da proposta, da resposta do formulário e da transcrição da reunião que você escolher. Edita o texto e sai em PDF.</span>
-        <span class="bloco__pe">Contratos <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-      <a class="bloco" href="/admin/cofre/">
-        <span class="bloco__num">07</span>
-        <span class="bloco__titulo">Cofre</span>
-        <span class="bloco__desc">Links úteis e anotações num lugar só: ferramentas, repositórios, vídeos e documentações, cada um com o que é e quando usar.</span>
-        <span class="bloco__pe">Cofre <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-      <a class="bloco" href="/admin/crm/">
-        <span class="bloco__num">08</span>
-        <span class="bloco__titulo">CRM</span>
-        <span class="bloco__desc">Central de tarefas, prazos, leads para follow-up e a ficha de cada cliente. O Claude atualiza junto com as tarefas das conversas.</span>
-        <span class="bloco__pe">Clientes <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-    </div>
-
-    <div class="hub__pe">
-      <span class="ponto"></span><span id="resumo">…</span>
-      <span class="ponto"></span><span>links.samuelfreire.com.br</span>
-    </div>
-
   </div>
+
+  <div class="crm-kpis" id="kpis"><p class="vazio">Carregando…</p></div>
+
+  <div class="crm-grade crm-grade--2">
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Hoje</h3><a class="crm-box__link" href="/admin/crm/#tarefas">Todas as tarefas</a></header>
+      <ul class="tf-lista" id="hoje"></ul>
+    </article>
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Atalhos</h3></header>
+      <div class="ini-atalhos">
+        <a href="/admin/propostas/" data-ico="proposta"><b>Criar proposta</b><small>Página por cliente, com prévia ao vivo</small></a>
+        <a href="/admin/formularios/" data-ico="formulario"><b>Formulários</b><small>Briefing que o cliente responde</small></a>
+        <a href="/admin/contratos/" data-ico="contrato"><b>Contratos</b><small>Da proposta e do briefing, em PDF</small></a>
+        <a href="/admin/faturas/" data-ico="fatura"><b>Faturas</b><small>Fatura ou invoice com link</small></a>
+        <a href="/admin/site/" data-ico="site"><b>Editar site</b><small>Clique no texto para mudar</small></a>
+        <a href="/google-prospection/" data-ico="prospeccao"><b>Prospecção</b><small>Negócios de uma cidade no Google</small></a>
+      </div>
+    </article>
+  </div>
+
+  <div class="crm-grade crm-grade--3">
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Leads para falar</h3><a class="crm-box__link" href="/admin/crm/#leads">Leads</a></header>
+      <ul class="crm-lista" id="leads"></ul>
+    </article>
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Propostas e briefings</h3><a class="crm-box__link" href="/admin/propostas/">Propostas</a></header>
+      <ul class="crm-lista" id="propostas"></ul>
+    </article>
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Últimas mudanças</h3><a class="crm-box__link" href="/admin/crm/">CRM</a></header>
+      <ul class="crm-lista" id="mudancas"></ul>
+    </article>
+  </div>
+
 </main>
 
 <script type="module">
-const $ = (s) => document.querySelector(s);
+import { ico } from '/admin/icones.js';
+import {
+  $, esc, carregarCrm, normalizar, documentos, visiveis, todasTarefas, grupoPrazo, ordenarTarefas, linhaTarefa, ligarLista,
+  leadPedeAtencao, situacaoLead, prazoTexto, diasSemMovimento, quando, ligarBusca,
+} from '/admin/crm/comum.js';
 
 /* Cofre: colar no campo já guarda. O texto vai pelo sessionStorage, não
    pelo endereço, porque um prompt longo não cabe numa URL. Sem JS, o
@@ -108,7 +90,7 @@ function mandarProCofre(texto) {
   try { sessionStorage.setItem('cofre-colar', texto); location.href = '/admin/cofre/'; }
   catch (e) { location.href = '/admin/cofre/?link=' + encodeURIComponent(texto); }
 }
-$('.hub__cofre').addEventListener('submit', (e) => { e.preventDefault(); mandarProCofre($('#cofre-link').value); });
+$('.ini-cofre').addEventListener('submit', (e) => { e.preventDefault(); mandarProCofre($('#cofre-link').value); });
 $('#cofre-link').addEventListener('paste', (e) => {
   if ($('#cofre-link').value) return;
   e.preventDefault();
@@ -116,32 +98,76 @@ $('#cofre-link').addEventListener('paste', (e) => {
 });
 $('#cofre-link').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mandarProCofre($('#cofre-link').value); } });
 
+document.querySelectorAll('.ini-atalhos [data-ico]').forEach((a) => a.prepend(ico(a.dataset.ico)));
 const h = new Date().getHours();
 $('#saudacao').textContent = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-$('#data').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
-$('#sair').onclick = async () => {
-  await fetch('/api/sair', { method: 'POST' });
-  location.replace('/admin/entrar');
+let clientes = [];
+const ficha = (c) => `/admin/crm/cliente/#${c.id}`;
+
+function desenhar(docs) {
+  const tarefas = todasTarefas(clientes).filter((t) => t.estado !== 'feita');
+  const hoje = tarefas.filter((t) => grupoPrazo(t) === 'hoje');
+  const atrasadas = tarefas.filter((t) => grupoPrazo(t) === 'atrasada');
+  const leads = visiveis(clientes).filter(leadPedeAtencao);
+  const noAr = docs.propostas.filter((p) => p.publicada).length;
+  const semResposta = docs.formularios.filter((f) => !f.respondidoEm).length;
+  const fila = tarefas.filter((t) => t.claude === 'fila' || t.claude === 'trabalhando').length;
+
+  const partes = [];
+  if (hoje.length) partes.push(`${hoje.length} tarefa${hoje.length > 1 ? 's' : ''} para hoje`);
+  if (atrasadas.length) partes.push(`${atrasadas.length} atrasada${atrasadas.length > 1 ? 's' : ''}`);
+  if (leads.length) partes.push(`${leads.length} lead${leads.length > 1 ? 's' : ''} para falar`);
+  $('#resumo-dia').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+    + '. ' + (partes.length ? partes.join(', ') + '.' : 'Nada urgente por enquanto.');
+
+  const kpi = (rotulo, valor, apoio, link, extra = '') => `<a class="crm-kpi${extra}" href="${link}">
+      <span class="crm-kpi__rotulo">${rotulo}</span><b class="crm-kpi__valor">${valor}</b><span class="crm-kpi__apoio">${apoio}</span></a>`;
+  $('#kpis').innerHTML = [
+    kpi('Para hoje', hoje.length, hoje.length ? 'Tarefas com prazo hoje' : 'Nada com prazo hoje', '/admin/crm/#tarefas', ' crm-kpi--destaque'),
+    kpi('Atrasadas', atrasadas.length, atrasadas.length ? 'Passaram do prazo' : 'Tudo no prazo', '/admin/crm/#tarefas', atrasadas.length ? ' crm-kpi--alerta' : ''),
+    kpi('Follow-ups', leads.length, leads.length ? 'Leads para falar ou parados' : 'Leads em dia', '/admin/crm/#leads', leads.length ? ' crm-kpi--alerta' : ''),
+    kpi('Propostas no ar', noAr, `${docs.propostas.length} no total`, '/admin/propostas/'),
+    kpi('Briefings sem resposta', semResposta, `${docs.formularios.length} formulário(s)`, '/admin/formularios/'),
+    kpi('Fila do Claude', fila, fila ? 'Peça: "pega a fila do CRM"' : 'Nada na fila', '/admin/crm/#tarefas'),
+  ].join('');
+
+  $('#hoje').innerHTML = ordenarTarefas([...atrasadas, ...hoje, ...tarefas.filter((t) => t.prioridade === 'urgente' && !['hoje', 'atrasada'].includes(grupoPrazo(t)))])
+    .slice(0, 7).map((t) => linhaTarefa(t)).join('') || '<li class="vazio">Nada para hoje nem atrasado.</li>';
+
+  const item = (href, data, alerta, titulo, apoio, novaAba = false) => `<li><a href="${href}"${novaAba ? ' target="_blank" rel="noopener"' : ''}>
+      <span class="crm-lista__data${alerta ? ' atraso' : ''}">${data}</span>
+      <span class="crm-lista__txt"><b>${esc(titulo)}</b><small>${esc(apoio)}</small></span></a></li>`;
+  $('#leads').innerHTML = leads.slice(0, 6).map((c) => item(ficha(c), c.proximoContato ? prazoTexto(c.proximoContato) : `${diasSemMovimento(c)}d`, true, c.nome, situacaoLead(c).texto, true)).join('')
+    || '<li class="vazio">Nenhum lead pedindo follow-up.</li>';
+
+  const recentes = [...docs.propostas].sort((a, b) => String(b.atualizadaEm || b.criadaEm).localeCompare(String(a.atualizadaEm || a.criadaEm))).slice(0, 6);
+  $('#propostas').innerHTML = recentes.map((p) => `<li><a href="/admin/propostas/#${encodeURIComponent(p.id)}">
+      <span class="crm-lista__txt"><b>${esc(p.titulo || p.cliente)}</b><small>${esc(p.cliente || '')}${p.briefing ? (p.briefing.respondidoEm ? ' · briefing respondido' : ' · briefing sem resposta') : ''}</small></span>
+      <span class="crm-lista__quando">${p.publicada ? 'No ar' : 'Rascunho'}</span></a></li>`).join('') || '<li class="vazio">Nenhuma proposta ainda.</li>';
+
+  const linhas = clientes.flatMap((c) => (c.linha || []).map((l) => ({ ...l, cliente: c }))).sort((a, b) => b.data.localeCompare(a.data));
+  $('#mudancas').innerHTML = linhas.slice(0, 6).map((l) => `<li><a href="${l.cliente.interno ? '/admin/crm/#tarefas' : ficha(l.cliente)}">
+      <span class="crm-lista__txt"><b>${esc(l.cliente.interno ? 'Empresa' : l.cliente.nome)}</b><small>${esc(l.texto)}</small></span>
+      <span class="crm-lista__quando">${quando(l.data)}${l.origem === 'claude' ? '<i>Claude</i>' : ''}</span></a></li>`).join('') || '<li class="vazio">Nada ainda.</li>';
+}
+
+let docs = { propostas: [], formularios: [] };
+async function carregar() {
+  const [d, ds] = await Promise.all([carregarCrm(), documentos()]);
+  clientes = d.clientes; docs = ds;
+  desenhar(docs);
+}
+const guardar = (salvo) => {
+  normalizar(salvo);
+  const i = clientes.findIndex((c) => c.id === salvo.id);
+  if (i >= 0) clientes[i] = salvo;
+  desenhar(docs);
 };
-
-// Um resumo do que está no ar. Se a API falhar, a tela segue sem ele.
-try {
-  const [r, rf, rc] = await Promise.all([fetch('/api/propostas'), fetch('/api/faturas'), fetch('/api/crm')]);
-  if (r.status === 401) location.replace('/admin/entrar?voltar=/admin/');
-  const d = await r.json();
-  const n = (d.propostas || []).length;
-  const ar = (d.propostas || []).filter((p) => p.publicada).length;
-  const partes = [n ? `${n} proposta${n > 1 ? 's' : ''} · ${ar} no ar` : 'nenhuma proposta ainda'];
-  const faturas = rf.ok ? ((await rf.json()).faturas || []) : [];
-  const abertas = faturas.filter((f) => !f.paga).length;
-  if (faturas.length) partes.push(abertas ? `${abertas} fatura${abertas > 1 ? 's' : ''} em aberto` : 'faturas em dia');
-  const clientes = rc.ok ? ((await rc.json()).clientes || []).filter((c) => !c.interno) : [];
-  const andamento = clientes.filter((c) => c.etapa === 'andamento').length;
-  const semComecar = clientes.filter((c) => c.etapa === 'fechado').length;
-  if (clientes.length) partes.push(`${andamento} cliente${andamento === 1 ? '' : 's'} em andamento · ${semComecar} sem começar`);
-  $('#resumo').textContent = partes.join(' · ');
-} catch (e) { $('#resumo').textContent = 'painel'; }
+ligarLista($('#hoje'), { achar: (id) => clientes.find((c) => c.id === id), aoSalvar: guardar, clientes: () => clientes });
+$('#buscar').onclick = ligarBusca(() => clientes);
+carregar().catch((e) => { $('#kpis').innerHTML = `<p class="vazio">${esc(e.message)}</p>`; });
+addEventListener('focus', () => { if (!document.querySelector('dialog[open]')) carregar().catch(() => {}); });
 </script>
 </body>
 </html>

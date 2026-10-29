@@ -1,0 +1,69 @@
+/* ============================================================
+   Casca do painel: menu lateral e barra do topo, no estilo do
+   studio-admin (shadcn), com a fonte e o laranja da marca.
+   Entra depois de painel.css em toda tela de /admin.
+   ============================================================ */
+
+/* ---------- Central de ajustes ---------- */
+:root {
+  --casca-largura: 248px;       /* largura do menu lateral */
+  --casca-fundo: var(--bg);     /* fundo do menu */
+  --casca-item: 2.15rem;        /* altura de cada item do menu */
+  --casca-raio: 7px;            /* cantos dos itens e botões do menu */
+  --topo-altura: 3.5rem;        /* altura da barra do topo */
+}
+
+/* ---------- Menu lateral ---------- */
+.casca {
+  position: fixed; inset: 0 auto 0 0; z-index: 30; width: var(--casca-largura);
+  display: flex; flex-direction: column; gap: var(--sp-sm);
+  padding: var(--sp-sm) var(--sp-xs);
+  background: var(--casca-fundo); border-right: var(--hair) solid var(--line);
+  overflow-y: auto;
+}
+body.com-casca { padding-left: var(--casca-largura); }
+
+.casca__marca { display: flex; align-items: center; gap: .6em; padding: .25rem .5rem; color: var(--ink); font-weight: var(--w-black); letter-spacing: -.03em; }
+.casca__marca img { width: 1.9rem; height: 1.9rem; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--brand); }
+.casca__marca i { font-style: italic; font-weight: var(--w-book); }
+
+.casca__criar {
+  display: flex; align-items: center; justify-content: center; height: var(--casca-item);
+  border-radius: var(--casca-raio); background: var(--ink); color: var(--brand-ink);
+  font-size: var(--t-small); font-weight: var(--w-semi);
+}
+.casca__criar::before { content: "+"; margin-right: .45em; font-size: 1.15em; line-height: 1; color: var(--brand); }
+.casca__criar:hover { background: var(--ink-2); }
+
+.casca__nav { display: grid; gap: var(--sp-sm); }
+.casca__grupo { display: grid; gap: 1px; }
+.casca__titulo { padding: 0 .55rem .3rem; font-size: var(--t-eyebrow); font-weight: var(--w-semi); color: var(--muted); }
+.casca__item {
+  display: flex; align-items: center; gap: .65em; width: 100%; height: var(--casca-item); padding: 0 .55rem;
+  border-radius: var(--casca-raio); color: var(--ink-2); font-size: var(--t-small); text-align: left; white-space: nowrap;
+}
+.casca__item .ico { width: 1rem; height: 1rem; flex: none; color: var(--muted); }
+.casca__item:hover { background: var(--bg-2); color: var(--ink); }
+.casca__item[aria-current] { background: var(--bg-2); color: var(--ink); font-weight: var(--w-semi); }
+.casca__item[aria-current] .ico { color: var(--brand); }
+.casca__pe { margin-top: auto; display: grid; gap: 1px; padding-top: var(--sp-sm); border-top: var(--hair) solid var(--line); }
+
+/* ---------- Barra do topo (a .topo de cada tela) ---------- */
+body.com-casca .topo {
+  position: sticky; top: 0; z-index: 20; min-height: var(--topo-altura);
+  padding-block: var(--sp-2xs); background: var(--bg);
+}
+body.com-casca .topo h1 { font-size: var(--t-small); font-weight: var(--w-semi); letter-spacing: -.01em; }
+.casca__abrir { display: none; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: var(--casca-raio); color: var(--ink); }
+.casca__abrir .ico { width: 1.15rem; height: 1.15rem; }
+.casca__abrir:hover { background: var(--bg-2); }
+
+/* ---------- Abaixo de 900px o menu vira gaveta ---------- */
+@media (max-width: 900px) {
+  body.com-casca { padding-left: 0; }
+  .casca { translate: -100% 0; transition: translate var(--d-base) var(--ease-out); }
+  body.casca-aberta .casca { translate: 0 0; }
+  body.casca-aberta::after { content: ""; position: fixed; inset: 0; z-index: 25; background: rgba(20, 21, 23, .4); }
+  .casca__abrir { display: inline-grid; }
+}
+@media (prefers-reduced-motion: reduce) { .casca { transition: none; } }

@@ -15,7 +15,6 @@
 }
 
 /* ---------- Estrutura ---------- */
-body { overflow-y: auto; }
 .crm-pagina { width: 100%; max-width: var(--crm-largura); margin-inline: auto; padding: var(--sp-lg) var(--sp-md) var(--sp-2xl); }
 .crm-aba > * + * { margin-top: var(--crm-respiro); }
 .crm-abas { margin-right: auto; overflow-x: auto; max-width: 100%; }
