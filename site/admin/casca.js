@@ -101,4 +101,14 @@ function montar() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.body.classList.remove('casca-aberta'); });
 }
 
+/* Clicar fora de uma janela aberta (no fundo escuro) fecha a janela.
+   Vale para todo <dialog> do painel: prévia lateral, tarefa, cadastro. */
+document.addEventListener('click', (e) => {
+  const d = e.target;
+  if (!(d instanceof HTMLDialogElement) || !d.open) return;
+  const r = d.getBoundingClientRect();
+  const fora = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+  if (fora) d.close();
+});
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montar); else montar();

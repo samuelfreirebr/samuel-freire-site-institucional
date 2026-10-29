@@ -8,7 +8,7 @@ import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, NOMES, LEADS, DIAS_PROXIMAS,
   hojeIso, dataCurta, diasAte, quando, prazoTexto, somarDias, iniciais, visiveis, abertas, atrasadas,
   proximaEntrega, projetoAtual, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
-  grupoPrazo, todasTarefas, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo,
+  grupoPrazo, todasTarefas, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
 } from './comum.js';
 import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js';
 import { ico } from '../icones.js';
@@ -453,7 +453,7 @@ function previa(c) {
     <dl class="pv-dados">
       <dt>Próximo passo</dt><dd>${esc(c.proximoPasso || 'Sem próximo passo')}</dd>
       <dt>O que quer ou contratou</dt><dd>${esc(c.servico || 'Não informado')}</dd>
-      <dt>Contato</dt><dd>${esc(c.contato || 'Sem contato')}</dd>
+      <dt>Contato</dt><dd class="pv-contato">${esc(c.contato || 'Sem contato')}${whatsapp(c) ? `<a class="mini mini--whats" href="${whatsapp(c)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</dd>
       ${projetoAtual(c) ? `<dt>Projeto atual</dt><dd>${esc(projetoAtual(c).nome)}</dd>` : ''}
     </dl>
     <h3 class="pv-h">Tarefas abertas</h3>

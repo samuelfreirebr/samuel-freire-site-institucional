@@ -502,3 +502,7 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
 :root { --brand-texto: color-mix(in srgb, var(--brand) 72%, var(--ink)); }
 .crm-selo, .crm-card__lead.alerta, .crm-lista__data.atraso, .crm-etapa[data-etapa="fechado"] { color: var(--brand-texto); }
 [data-etapa="lead"], [data-etapa="proposta"] { --etapa-texto: var(--brand-texto); }
+
+/* Botão de abrir a conversa no WhatsApp (prévia e ficha). */
+.mini--whats::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
+.pv-contato { display: flex; align-items: center; gap: var(--sp-xs); flex-wrap: wrap; }

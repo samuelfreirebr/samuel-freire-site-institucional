@@ -4,7 +4,7 @@
 
 import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, documentos, mesmoCliente, NOMES, LEADS,
-  hojeIso, dataCurta, dataLonga, diasAte, quando, prazoTexto, iniciais, selo, abertas, atrasadas, proximaEntrega, projetoAtual,
+  hojeIso, dataCurta, dataLonga, diasAte, quando, prazoTexto, iniciais, selo, whatsapp, abertas, atrasadas, proximaEntrega, projetoAtual,
   diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, copiar,
 } from '../comum.js';
 
@@ -31,6 +31,9 @@ function desenharCabecalho() {
   $('#topo-nome').textContent = c.nome;
   $('#avatar').textContent = iniciais(c.nome);
   $('#nome').innerHTML = esc(c.nome) + selo(c);
+  const zap = whatsapp(c);
+  $('#whats').hidden = !zap;
+  if (zap) $('#whats').href = zap;
   $('#servico').textContent = [c.servico || 'Sem serviço na ficha', c.contato].filter(Boolean).join(' · ');
   $('#etapa').value = c.etapa;
   $('#ficha').dataset.etapa = c.etapa;

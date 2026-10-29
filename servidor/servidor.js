@@ -118,10 +118,9 @@ async function enviarArquivo(req, res, arquivo, cache, extra = {}) {
   createReadStream(arquivo).pipe(res);
 }
 
-// Painel: com ?v= no endereço o arquivo nunca muda (cache longo); sem, confere a cada vez.
-const cacheDoPainel = (url, arquivo) => (url.searchParams.has('v') && path.extname(arquivo) !== '.html'
-  ? 'private, max-age=31536000, immutable'
-  : 'private, no-cache');
+// Painel: sempre confere (304 quando não mudou). Cache longo aqui prendia
+// o navegador num script antigo sempre que alguém esquecia de subir o ?v=.
+const cacheDoPainel = () => 'private, no-cache';
 
 const texto = (res, msg, status = 200, extra = {}) => {
   res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', ...extra });
@@ -749,7 +748,7 @@ const servidor = http.createServer(async (req, res) => {
         return texto(res, 'Faça login.', 401);
       }
 
-      return enviarArquivo(req, res, arq, cacheDoPainel(url, arq), { 'x-robots-tag': 'noindex, nofollow' });
+      return enviarArquivo(req, res, arq, cacheDoPainel(), { 'x-robots-tag': 'noindex, nofollow' });
     }
 
     /* --- Prospecção: mesma tranca do painel, pasta própria --- */
@@ -767,7 +766,7 @@ const servidor = http.createServer(async (req, res) => {
         }
         return texto(res, 'Faça login.', 401);
       }
-      return enviarArquivo(req, res, arq, cacheDoPainel(url, arq), { 'x-robots-tag': 'noindex, nofollow' });
+      return enviarArquivo(req, res, arq, cacheDoPainel(), { 'x-robots-tag': 'noindex, nofollow' });
     }
 
     /* Propostas: página pública, gerada do JSON. */

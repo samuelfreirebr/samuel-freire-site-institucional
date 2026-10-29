@@ -103,6 +103,18 @@ export function prazoTexto(iso) {
 // Etiqueta de quem é cliente recorrente com contrato (campo tipo).
 export const selo = (c) => (c.tipo === 'recorrente' && c.etapa !== 'encerrado' ? '<span class="crm-selo" title="Cliente ativo, recorrente, com contrato">Recorrente</span>' : '');
 
+/* Link do WhatsApp a partir do telefone do campo contato. Sem código do
+   país: +1 se a ficha diz EUA, senão +55. Sem telefone, null.
+   ponytail: pega o primeiro telefone do texto; com dois, vale o primeiro. */
+export function whatsapp(c) {
+  const fone = String(c.contato || '').match(/\+?\d[\d ().-]{7,}\d/);
+  if (!fone) return null;
+  let n = fone[0].replace(/\D/g, '');
+  const eua = /\bEUA\b|\bUSA\b/i.test(`${c.notas || ''} ${c.contato || ''}`);
+  if (!fone[0].startsWith('+') && n.length <= 11) n = (eua ? '1' : '55') + n;
+  return n.length >= 11 ? `https://wa.me/${n}` : null;
+}
+
 export const iniciais = (nome) => String(nome || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
 export const visiveis = (clientes) => clientes.filter((c) => !c.interno);
 export const abertas = (c) => (c.atividades || []).filter((a) => a.estado !== 'feita');
