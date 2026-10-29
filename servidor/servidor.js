@@ -22,7 +22,7 @@
      /google-prospection/ prospecção        · exige sessão
      /api/...             API do painel     · exige sessão (entrar/sair abertas)
      /api/reunioes/entrada  recebe transcrição do Meet · exige TOKEN_REUNIOES
-     /api/crm/...         CRM · sessão ou TOKEN_CLAUDE (o Claude atualiza daqui)
+     /api/... com x-token  o Claude, com TOKEN_CLAUDE: tudo menos apagar
      /api/prospeccao/...  API da prospecção · exige sessão (ver prospeccao.js)
      /img/...             imagens: repositório primeiro, volume depois
      /estado              diagnóstico, sem revelar valor nenhum
@@ -203,21 +203,25 @@ async function apiAberta(req, res, rota) {
       return json(res, { ok: true, id: r.id, repetida: Boolean(r.repetida) });
     } catch (e) { return json(res, { erro: e.message }, 400); }
   }
-  /* CRM pelo Claude: sem sessão, com o TOKEN_CLAUDE da stack no
-     cabeçalho x-token. Só abre o CRM, nada mais do painel. Sem o
-     cabeçalho, segue para a tranca normal (o painel usa a sessão). */
-  if ((rota === 'crm' || rota.startsWith('crm/')) && req.headers['x-token'] !== undefined) {
-    const token = process.env.TOKEN_CLAUDE || '';
-    if (!token) return json(res, { erro: 'Defina TOKEN_CLAUDE na stack para o Claude usar o CRM.' }, 503);
-    const seg = bloqueado(req);
-    if (seg) return json(res, { erro: 'Muitas tentativas. Espere um pouco.' }, 429);
-    if (!iguais(String(req.headers['x-token']), token)) {
-      registrarFalha(req);
-      return json(res, { erro: 'Token incorreto.' }, 401);
-    }
-    return apiCrm(req, res, rota, 'claude');
-  }
   return false;   // não é rota aberta
+}
+
+/* O Claude usa a API do painel inteira com o TOKEN_CLAUDE da stack no
+   cabeçalho x-token, no lugar da sessão. Pode ler, criar e editar;
+   apagar, nunca: DELETE com a chave é recusado e continua sendo só do
+   Samuel, logado. Devolve true quando a chave vale. */
+function chaveDoClaude(req, res) {
+  const token = process.env.TOKEN_CLAUDE || '';
+  if (!token) { json(res, { erro: 'Defina TOKEN_CLAUDE na stack para o Claude usar o painel.' }, 503); return false; }
+  const seg = bloqueado(req);
+  if (seg) { json(res, { erro: 'Muitas tentativas. Espere um pouco.' }, 429); return false; }
+  if (!iguais(String(req.headers['x-token']), token)) {
+    registrarFalha(req);
+    json(res, { erro: 'Token incorreto.' }, 401);
+    return false;
+  }
+  if (req.method === 'DELETE') { json(res, { erro: 'Apagar não é permitido com a chave do Claude. Só o Samuel apaga, pelo painel.' }, 403); return false; }
+  return true;
 }
 
 /* CRM: GET lista, POST cria ou atualiza (só os campos enviados),
@@ -252,7 +256,7 @@ async function api(req, res, url) {
     return apiProspeccao(req, res, url, rota.slice('prospeccao/'.length));
   }
 
-  if (rota === 'crm' || rota.startsWith('crm/')) return apiCrm(req, res, rota, 'painel');
+  if (rota === 'crm' || rota.startsWith('crm/')) return apiCrm(req, res, rota, req.claude ? 'claude' : 'painel');
 
   /* --- cofre: links úteis, só do painel --- */
   if (rota === 'cofre') {
@@ -659,6 +663,11 @@ const servidor = http.createServer(async (req, res) => {
       const rota = caminho.replace(/^\/api\/?/, '');
       const aberta = await apiAberta(req, res, rota);
       if (aberta !== false) return;
+      if (req.headers['x-token'] !== undefined) {
+        if (!chaveDoClaude(req, res)) return;
+        req.claude = true;
+        return api(req, res, url);
+      }
       if (!liberado(req)) return json(res, { erro: 'Faça login para continuar.', entrar: '/admin/entrar' }, 401);
       return api(req, res, url);
     }

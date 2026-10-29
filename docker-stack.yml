@@ -20,8 +20,9 @@
 #                       perguntas e contrato, Cofre e o áudio do
 #                       briefing. Sem ela: cada botão explica o que
 #                       falta e o áudio não aparece.
-#    TOKEN_CLAUDE       chave que o Claude usa para atualizar o CRM.
-#                       Sem ela: o CRM só mexe pelo painel.
+#    TOKEN_CLAUDE       chave que o Claude usa no painel inteiro pela
+#                       API (cabeçalho x-token): lê, cria e edita,
+#                       nunca apaga. Sem ela: só o painel com login.
 #
 #  A imagem vem do ghcr.io, montada pela Action a cada push na
 #  main. Para atualizar: git push → Action verde → Update the
@@ -62,8 +63,8 @@ services:
       # Senha que o script do Google usa para entregar as transcrições
       # do Meet (material/meet-para-painel.gs). Vazia, a entrada fica fechada.
       - TOKEN_REUNIOES=${TOKEN_REUNIOES:-}
-      # Chave do Claude para ler e atualizar o CRM (/api/crm, cabeçalho
-      # x-token). Vazia, só o painel com login mexe no CRM.
+      # Chave do Claude para usar a API do painel (cabeçalho x-token):
+      # tudo menos apagar. Vazia, só o painel com login.
       - TOKEN_CLAUDE=${TOKEN_CLAUDE:-}
     volumes:
       # Textos, imagens enviadas, propostas e os leads da
