@@ -18,7 +18,7 @@ export const NOMES = {
   claude: { fila: 'Na fila do Claude', trabalhando: 'Claude trabalhando', feita: 'Feita pelo Claude' },
   grupo: { atrasada: 'Atrasadas', hoje: 'Hoje', semana: 'Próximos 7 dias', depois: 'Depois', semprazo: 'Sem prazo', aguardando: 'Aguardando alguém', feita: 'Feitas' },
 };
-export const LEADS = ['lead', 'proposta'];                      // ainda não fechou
+export const LEADS = ['lead', 'proposta', 'followup', 'assinatura']; // ainda não fechou: contrato assinado ou pago vira cliente
 const PESO_PRIORIDADE = { urgente: 0, alta: 1, normal: 2, baixa: 3 };
 
 /* ---------- avisos e API ---------- */

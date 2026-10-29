@@ -252,6 +252,8 @@ a.crm-kpi:hover { border-color: var(--ink); }
 [data-etapa] { --etapa-cor: var(--meta); --etapa-fundo: var(--bg-2); --etapa-texto: var(--ink-2); }
 [data-etapa="lead"] { --etapa-cor: color-mix(in srgb, var(--brand) 45%, var(--bg)); --etapa-fundo: var(--brand-wash); --etapa-texto: var(--brand); }
 [data-etapa="proposta"] { --etapa-cor: color-mix(in srgb, var(--brand) 75%, var(--bg)); --etapa-fundo: color-mix(in srgb, var(--brand) 14%, var(--bg)); --etapa-texto: var(--brand); }
+[data-etapa="followup"] { --etapa-cor: color-mix(in srgb, var(--brand) 85%, var(--bg)); --etapa-fundo: color-mix(in srgb, var(--brand) 20%, var(--bg)); --etapa-texto: var(--brand-texto, var(--brand)); }
+[data-etapa="assinatura"] { --etapa-cor: var(--brand); --etapa-fundo: color-mix(in srgb, var(--brand) 28%, var(--bg)); --etapa-texto: var(--brand-texto, var(--brand)); }
 [data-etapa="fechado"] { --etapa-cor: var(--brand); --etapa-fundo: var(--brand); --etapa-texto: var(--brand-ink); }
 [data-etapa="andamento"] { --etapa-cor: var(--ink); --etapa-fundo: var(--ink); --etapa-texto: var(--brand-ink); }
 [data-etapa="entregue"] { --etapa-cor: var(--muted); --etapa-fundo: var(--bg-2); --etapa-texto: var(--ink-2); }

@@ -22,13 +22,16 @@ import { pedirJsonIa, temChaveIa, prepararAnexos, semTravessao } from './propost
 const ARQ = path.join(RAIZ_DADOS, 'crm.json');
 
 export const ETAPAS = [
+  // Até "Falta assinar ou pagar" ainda é lead; de "Fechado" em diante é cliente.
   { id: 'lead', nome: 'Lead' },
   { id: 'proposta', nome: 'Proposta enviada' },
+  { id: 'followup', nome: 'Follow-up' },
+  { id: 'assinatura', nome: 'Falta assinar ou pagar' },
   { id: 'fechado', nome: 'Fechado, sem começar' },
   { id: 'andamento', nome: 'Em produção' },
-  { id: 'recorrente', nome: 'Recorrente ativo' },
   { id: 'entregue', nome: 'Entregue' },
   { id: 'encerrado', nome: 'Encerrado' },
+  { id: 'recorrente', nome: 'Recorrente ativo' },
 ];
 export const ESTADOS_ATIVIDADE = ['afazer', 'andamento', 'aguardando', 'feita'];
 export const PRIORIDADES = ['urgente', 'alta', 'normal', 'baixa'];

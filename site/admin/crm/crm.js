@@ -276,6 +276,8 @@ const FILTROS_LEAD = {
   todos: { nome: 'Todos em aberto', filtro: (c) => LEADS.includes(c.etapa) },
   lead: { nome: 'Lead', filtro: (c) => c.etapa === 'lead' },
   proposta: { nome: 'Proposta enviada', filtro: (c) => c.etapa === 'proposta' },
+  followup: { nome: 'Follow-up', filtro: (c) => c.etapa === 'followup' },
+  assinatura: { nome: 'Falta assinar ou pagar', filtro: (c) => c.etapa === 'assinatura' },
   semdata: { nome: 'Sem data de follow-up', filtro: (c) => LEADS.includes(c.etapa) && !c.proximoContato },
   perdidos: { nome: 'Não fecharam', filtro: (c) => c.etapa === 'encerrado' && Boolean(c.motivoPerda) },
 };
@@ -365,14 +367,17 @@ let pagina = 0;
 
 function desenharClientes() {
   const busca = $('#busca').value.trim().toLowerCase();
-  const lista = visiveis(clientes).filter((c) => !busca || c.nome.toLowerCase().includes(busca) || (c.servico || '').toLowerCase().includes(busca) || (c.contato || '').toLowerCase().includes(busca));
+  // Lead só vira cliente com contrato assinado ou pago: a tabela mostra só clientes;
+  // o funil mostra o caminho inteiro, leads incluídos.
+  const tudo = visiveis(clientes).filter((c) => !busca || c.nome.toLowerCase().includes(busca) || (c.servico || '').toLowerCase().includes(busca) || (c.contato || '').toLowerCase().includes(busca));
+  const lista = tudo.filter((c) => !LEADS.includes(c.etapa));
   const conta = (id) => lista.filter((c) => c.etapa === id).length;
 
-  // Números do topo, como no studio-admin: total, em produção, recorrentes, leads.
+  // Números do topo, como no studio-admin: clientes, em produção, recorrentes, leads.
   const todos = visiveis(clientes);
   const n = (f) => todos.filter(f).length;
   $('#cli-numeros').innerHTML = [
-    ['Clientes e leads', todos.length, 'No CRM', 'clientes'],
+    ['Clientes', n((c) => !LEADS.includes(c.etapa)), 'Contrato assinado ou pago', 'clientes'],
     ['Em produção', n((c) => c.etapa === 'andamento'), `${n((c) => c.etapa === 'fechado')} fechados sem começar`, 'painel'],
     ['Recorrentes', n((c) => selo(c)), 'Ativos com contrato', 'calendario'],
     ['Leads em aberto', n((c) => LEADS.includes(c.etapa)), `${n(leadPedeAtencao)} pedem follow-up`, 'leads'],
@@ -380,7 +385,7 @@ function desenharClientes() {
 
   $('#filtros').innerHTML = [`<button type="button" data-filtro="todos" aria-pressed="${filtroEtapa === 'todos'}">Todos <span>${lista.length}</span></button>`,
     `<button type="button" data-filtro="recorrentes" aria-pressed="${filtroEtapa === 'recorrentes'}">Recorrentes <span>${lista.filter((c) => selo(c)).length}</span></button>`,
-    ...etapas.map((e) => `<button type="button" data-filtro="${e.id}" aria-pressed="${filtroEtapa === e.id}">${esc(e.nome)} <span>${conta(e.id)}</span></button>`)].join('');
+    ...etapas.filter((e) => !LEADS.includes(e.id)).map((e) => `<button type="button" data-filtro="${e.id}" aria-pressed="${filtroEtapa === e.id}">${esc(e.nome)} <span>${conta(e.id)}</span></button>`)].join('');
 
   const daqui = lista.filter((c) => filtroEtapa === 'todos' || (filtroEtapa === 'recorrentes' ? selo(c) : c.etapa === filtroEtapa))
     .sort((a, b) => Boolean(selo(b)) - Boolean(selo(a)) || String(b.atualizadoEm).localeCompare(String(a.atualizadoEm)));
@@ -401,7 +406,7 @@ function desenharClientes() {
       <td><small>${ultima ? quando(ultima.data) : ''}${ultima?.origem === 'claude' ? ' · Claude' : ''}</small></td>
       <td class="crm-tabela__acoes"><a class="crm-icone" href="${ficha(c)}" target="_blank" rel="noopener" title="Abrir a ficha" aria-label="Abrir a ficha de ${esc(c.nome)}">${ico('externo').outerHTML}</a></td>
     </tr>`;
-  }).join('') || `<tr><td colspan="7" class="vazio">${lista.length ? 'Ninguém com esse filtro.' : 'Nenhum cliente ainda. Comece por "Novo cliente ou lead".'}</td></tr>`;
+  }).join('') || `<tr><td colspan="7" class="vazio">${lista.length ? 'Ninguém com esse filtro.' : 'Nenhum cliente ainda. Lead vira cliente quando a etapa passa para Fechado.'}</td></tr>`;
   const de = daqui.length ? pagina * POR_PAGINA + 1 : 0;
   $('#paginacao').innerHTML = `<span>Mostrando ${de} a ${pagina * POR_PAGINA + fatia.length} de ${daqui.length}</span>
     <span class="crm-pag"><button class="mini" type="button" data-pagina="-1"${pagina ? '' : ' disabled'}>Anterior</button>
@@ -409,7 +414,7 @@ function desenharClientes() {
     <button class="mini" type="button" data-pagina="1"${pagina < paginas - 1 ? '' : ' disabled'}>Próxima</button></span>`;
 
   $('#funil').innerHTML = etapas.map((e) => {
-    const coluna = lista.filter((c) => c.etapa === e.id).sort((a, b) => Boolean(selo(b)) - Boolean(selo(a)) || a.nome.localeCompare(b.nome));
+    const coluna = tudo.filter((c) => c.etapa === e.id).sort((a, b) => Boolean(selo(b)) - Boolean(selo(a)) || a.nome.localeCompare(b.nome));
     return `<section class="crm-col" data-etapa="${e.id}">
       <header class="crm-col__topo"><span class="crm-col__ponto"></span>${esc(e.nome)}<span class="crm-col__n">${coluna.length}</span>
         <button class="crm-col__mais" type="button" data-novo-na="${e.id}" title="Novo nesta etapa" aria-label="Novo cliente em ${esc(e.nome)}">+</button></header>
