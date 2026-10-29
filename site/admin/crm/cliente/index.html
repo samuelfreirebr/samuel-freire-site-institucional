@@ -10,13 +10,14 @@
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
 <link rel="stylesheet" href="/admin/painel.css?v=9">
-<link rel="stylesheet" href="/admin/crm/crm.css?v=7">
-<link rel="stylesheet" href="/admin/crm/cliente/cliente.css?v=1">
+<link rel="stylesheet" href="/admin/crm/crm.css?v=8">
+<link rel="stylesheet" href="/admin/crm/cliente/cliente.css?v=2">
 </head>
 <body>
 
 <header class="topo">
   <h1><a href="/admin/">Painel</a> <i>Samuel Freire</i><span class="sec"><a href="/admin/crm/#clientes">CRM</a></span><span class="sec" id="topo-nome">Cliente</span></h1>
+  <button class="mini crm-buscar" type="button" id="buscar" title="Busca rápida (Ctrl+K ou /)">Buscar <kbd>Ctrl K</kbd></button>
   <button class="mini" type="button" id="editar">Editar dados</button>
 </header>
 
@@ -40,24 +41,24 @@
 
   <nav class="grupo fc-abas" aria-label="Partes da ficha">
     <button type="button" data-aba="resumo" aria-selected="true">Resumo</button>
-    <button type="button" data-aba="documentos" aria-selected="false">Documentos <span id="n-docs"></span></button>
+    <button type="button" data-aba="tarefas" aria-selected="false">Tarefas <span id="n-tarefas"></span></button>
+    <button type="button" data-aba="projetos" aria-selected="false">Projetos <span id="n-projetos"></span></button>
+    <button type="button" data-aba="materiais" aria-selected="false">Materiais <span id="n-materiais"></span></button>
+    <button type="button" data-aba="briefing" aria-selected="false">Briefing</button>
+    <button type="button" data-aba="notas" aria-selected="false">Notas <span id="n-notas"></span></button>
     <button type="button" data-aba="linha" aria-selected="false">Linha do tempo</button>
   </nav>
 
+  <!-- Resumo -->
   <section data-painel="resumo" class="fc-resumo">
     <div class="fc-col">
       <article class="crm-card-box fc-passo">
-        <h3>Próximo passo</h3>
+        <div class="crm-box__topo"><h3>Próximo passo</h3><button class="mini" type="button" data-editar-passo>Mudar</button></div>
         <p id="passo"></p>
       </article>
       <article class="crm-card-box">
-        <div class="crm-box__topo"><h3>Atividades</h3><span class="crm-box__dica" id="n-ativ"></span></div>
-        <ul class="fc-ativ" id="atividades"></ul>
-        <form class="fc-add" id="add-ativ">
-          <input type="text" id="nova-ativ" placeholder="Nova atividade" maxlength="300" aria-label="Nova atividade" required>
-          <input type="date" id="nova-prazo" aria-label="Prazo da atividade">
-          <button class="mini mini--ativo" type="submit">Adicionar</button>
-        </form>
+        <div class="crm-box__topo"><h3>Tarefas abertas</h3><button class="mini mini--ativo" type="button" data-nova-tarefa>Nova tarefa</button></div>
+        <ul class="tf-lista" id="resumo-tarefas"></ul>
       </article>
     </div>
     <div class="fc-col">
@@ -66,26 +67,84 @@
         <ul class="crm-lista" id="falta"></ul>
       </article>
       <article class="crm-card-box">
-        <h3>Notas</h3>
-        <p class="fc-notas" id="notas"></p>
+        <div class="crm-box__topo"><h3>Projeto atual</h3><button class="mini" type="button" data-ir="projetos">Projetos</button></div>
+        <div id="projeto-atual"></div>
       </article>
       <article class="crm-card-box">
-        <h3>Últimas mudanças</h3>
+        <div class="crm-box__topo"><h3>Últimas mudanças</h3><button class="mini" type="button" data-ir="linha">Ver tudo</button></div>
         <ul class="crm-lista" id="ultimas"></ul>
       </article>
     </div>
   </section>
 
-  <section data-painel="documentos" hidden>
-    <div class="crm-grade crm-grade--3" id="docs"></div>
+  <!-- Tarefas -->
+  <section data-painel="tarefas" hidden>
+    <article class="crm-card-box">
+      <div class="crm-box__topo">
+        <h3>Tarefas</h3>
+        <div class="crm-cab__acoes">
+          <label class="crm-check"><input type="checkbox" id="ver-feitas"> Mostrar feitas</label>
+          <button class="mini mini--ativo" type="button" data-nova-tarefa>Nova tarefa</button>
+        </div>
+      </div>
+      <ul class="tf-lista" id="tarefas"></ul>
+    </article>
   </section>
 
-  <section data-painel="linha" hidden>
-    <article class="crm-card-box fc-linha-caixa">
-      <form class="fc-add" id="add-linha">
-        <input type="text" id="nova-linha" placeholder="O que aconteceu? Ex.: cliente aprovou o layout" maxlength="4000" aria-label="Anotar na linha do tempo" required>
-        <button class="mini mini--ativo" type="submit">Anotar</button>
+  <!-- Projetos -->
+  <section data-painel="projetos" hidden>
+    <div class="fc-projetos" id="projetos"></div>
+    <article class="crm-card-box">
+      <h3>Novo projeto</h3>
+      <form class="fc-add" id="add-projeto">
+        <input type="text" name="nome" placeholder="Nome do projeto. Ex.: LP Mentoria Alpha" maxlength="200" aria-label="Nome do projeto" required>
+        <select name="estado" aria-label="Situação do projeto" class="fc-select"></select>
+        <input type="date" name="prazo" aria-label="Prazo do projeto">
+        <button class="mini mini--ativo" type="submit">Adicionar</button>
       </form>
+    </article>
+  </section>
+
+  <!-- Materiais -->
+  <section data-painel="materiais" hidden>
+    <article class="crm-card-box">
+      <div class="crm-box__topo">
+        <h3>Materiais do cliente</h3>
+        <div class="crm-cab__acoes">
+          <button class="mini mini--ativo" type="button" id="pedir-materiais" title="Copia uma mensagem pronta com o que falta">Pedir o que falta</button>
+          <a class="mini" href="/admin/formularios/" target="_blank" rel="noopener" title="Formulário com envio de arquivos de até 20 MB">Criar formulário</a>
+        </div>
+      </div>
+      <p class="fc-dica">Marque o que já chegou. No link, cole a pasta do Drive ou o arquivo. "Pedir o que falta" copia uma mensagem para mandar no WhatsApp.</p>
+      <ul class="fc-materiais" id="materiais"></ul>
+      <div class="fc-sugestoes" id="sugestoes"></div>
+      <form class="fc-add" id="add-material">
+        <input type="text" name="nome" placeholder="Outro material. Ex.: fotos da equipe" maxlength="200" aria-label="Nome do material" required>
+        <input type="text" name="link" placeholder="Link (opcional)" maxlength="2000" aria-label="Link do material">
+        <button class="mini mini--ativo" type="submit">Adicionar</button>
+      </form>
+    </article>
+  </section>
+
+  <!-- Briefing -->
+  <section data-painel="briefing" hidden>
+    <div class="crm-grade crm-grade--2" id="briefing"></div>
+  </section>
+
+  <!-- Notas -->
+  <section data-painel="notas" hidden>
+    <article class="crm-card-box fc-largura">
+      <form id="add-nota">
+        <label><span>Nova nota</span><textarea name="texto" rows="3" maxlength="4000" required placeholder="Ex.: reunião de hoje, pediu para trocar a paleta da LP"></textarea></label>
+        <button class="mini mini--ativo" type="submit">Guardar nota</button>
+      </form>
+      <ol class="fc-linha" id="notas"></ol>
+    </article>
+  </section>
+
+  <!-- Linha do tempo -->
+  <section data-painel="linha" hidden>
+    <article class="crm-card-box fc-largura">
       <ol class="fc-linha" id="linha"></ol>
     </article>
   </section>
@@ -95,33 +154,36 @@
   <header class="modal__topo">
     <b id="jan-titulo">Editar dados</b>
     <button class="mini mini--ativo" type="submit" form="form">Salvar</button>
-    <button class="mini" type="button" id="fechar">Fechar</button>
+    <button class="mini" type="button" data-fechar>Fechar</button>
   </header>
   <div class="modal__corpo">
     <form id="form">
       <div class="linha linha--2">
         <label><span>Nome</span><input type="text" name="nome" required maxlength="160"></label>
-        <label><span>O que contratou</span><input type="text" name="servico" maxlength="300"></label>
+        <label><span>O que quer ou contratou</span><input type="text" name="servico" maxlength="300"></label>
       </div>
       <label><span>Próximo passo</span><input type="text" name="proximoPasso" maxlength="500" placeholder="O que precisa acontecer agora"></label>
       <label><span>Contato</span><input type="text" name="contato" maxlength="300" placeholder="Nome, WhatsApp, e-mail"></label>
-      <fieldset class="fc-contrato">
+      <fieldset class="fc-grupo-campos">
+        <legend>Lead</legend>
+        <div class="linha linha--2">
+          <label><span>Origem</span><select name="origemLead" id="f-origem"></select></label>
+          <label><span>Próximo follow-up</span><input type="date" name="proximoContato"><small>Quando falar de novo.</small></label>
+        </div>
+        <label><span>Por que não fechou</span><input type="text" name="motivoPerda" maxlength="500" placeholder="Só se o lead não fechou"></label>
+      </fieldset>
+      <fieldset class="fc-grupo-campos">
         <legend>Contrato</legend>
         <div class="linha linha--3">
-          <label><span>Tipo</span><select name="tipo"><option value="">Não definido</option><option value="recorrente">Recorrente (por mês)</option><option value="pontual">Pontual (projeto)</option></select></label>
-          <label><span>Valor</span><input type="number" name="valor" min="0" step="0.01" placeholder="Ex.: 1500"><small>Só o número. Vazio: sem valor.</small></label>
-          <label><span>Moeda</span><select name="moeda"><option value="BRL">R$ (real)</option><option value="USD">US$ (dólar)</option><option value="EUR">€ (euro)</option></select></label>
-        </div>
-        <div class="linha linha--2">
+          <label><span>Tipo</span><select name="tipo"><option value="">Não definido</option><option value="recorrente">Recorrente</option><option value="pontual">Pontual (projeto)</option></select></label>
           <label><span>Início</span><input type="date" name="inicio"></label>
           <label><span>Fim</span><input type="date" name="fim"><small>Vazio: sem data de fim.</small></label>
         </div>
       </fieldset>
-      <label><span>Notas</span><textarea name="notas" maxlength="8000" rows="5"></textarea></label>
     </form>
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/cliente/cliente.js?v=1"></script>
+<script type="module" src="/admin/crm/cliente/cliente.js?v=2"></script>
 </body>
 </html>

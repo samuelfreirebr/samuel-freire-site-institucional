@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
 <link rel="stylesheet" href="/admin/painel.css?v=9">
-<link rel="stylesheet" href="/admin/crm/crm.css?v=7">
+<link rel="stylesheet" href="/admin/crm/crm.css?v=8">
 </head>
 <body>
 
@@ -18,20 +18,26 @@
   <h1><a href="/admin/">Painel</a> <i>Samuel Freire</i><span class="sec">CRM</span></h1>
   <nav class="grupo crm-abas" aria-label="Telas do CRM">
     <button type="button" data-aba="geral" aria-selected="true">Visão geral</button>
+    <button type="button" data-aba="tarefas" aria-selected="false">Tarefas</button>
+    <button type="button" data-aba="calendario" aria-selected="false">Calendário</button>
+    <button type="button" data-aba="leads" aria-selected="false">Leads</button>
     <button type="button" data-aba="clientes" aria-selected="false">Clientes</button>
   </nav>
-  <button class="mini mini--ativo" type="button" id="novo">Novo cliente</button>
+  <button class="mini crm-buscar" type="button" id="buscar" title="Busca rápida (Ctrl+K ou /)">Buscar <kbd>Ctrl K</kbd></button>
+  <button class="mini mini--ativo" type="button" id="nova-tarefa">Nova tarefa</button>
+  <button class="mini" type="button" id="novo">Novo cliente ou lead</button>
 </header>
 
 <p class="aviso" id="aviso" role="status"></p>
 
 <main class="crm-pagina">
 
-  <section id="aba-geral" aria-labelledby="t-geral">
+  <!-- ===================== Visão geral ===================== -->
+  <section id="aba-geral" class="crm-aba" aria-labelledby="t-geral">
     <div class="crm-cab">
       <div>
-        <h2 class="crm-titulo" id="t-geral">Visão geral</h2>
-        <p class="crm-sub" id="hoje"></p>
+        <h2 class="crm-titulo" id="t-geral"><span id="saudacao">Olá</span>, Samuel</h2>
+        <p class="crm-sub" id="resumo-dia"></p>
       </div>
     </div>
 
@@ -39,43 +45,109 @@
 
     <div class="crm-grade crm-grade--2">
       <article class="crm-card-box">
-        <header class="crm-box__topo">
-          <h3>Recebido por mês</h3>
-          <div class="crm-pilulas" id="moedas" role="group" aria-label="Moeda"></div>
-        </header>
-        <p class="crm-box__num" id="recebido-total"></p>
-        <div class="crm-grafico" id="grafico"></div>
+        <header class="crm-box__topo"><h3>Para hoje e atrasadas</h3><a class="crm-box__link" href="#tarefas">Central de tarefas</a></header>
+        <ul class="tf-lista" id="hoje-lista"></ul>
       </article>
       <article class="crm-card-box">
-        <header class="crm-box__topo"><h3>Funil</h3><span class="crm-box__dica">Clientes por etapa</span></header>
+        <header class="crm-box__topo"><h3>Funil</h3><span class="crm-box__dica">Clientes e leads por etapa</span></header>
         <ul class="crm-barras" id="barras"></ul>
       </article>
     </div>
 
     <div class="crm-grade crm-grade--3">
       <article class="crm-card-box">
-        <header class="crm-box__topo"><h3>Próximas entregas</h3><span class="crm-box__dica">14 dias</span></header>
+        <header class="crm-box__topo"><h3>Próximas entregas</h3><span class="crm-box__dica" id="dica-entregas"></span></header>
         <ul class="crm-lista" id="entregas"></ul>
       </article>
       <article class="crm-card-box">
-        <header class="crm-box__topo"><h3>Atrasadas</h3></header>
-        <ul class="crm-lista" id="atrasadas"></ul>
+        <header class="crm-box__topo"><h3>Leads para falar</h3><a class="crm-box__link" href="#leads">Leads</a></header>
+        <ul class="crm-lista" id="leads-atencao"></ul>
       </article>
       <article class="crm-card-box">
-        <header class="crm-box__topo"><h3>Últimas mudanças</h3></header>
-        <ul class="crm-lista" id="mudancas"></ul>
+        <header class="crm-box__topo"><h3>Projetos</h3><span class="crm-box__dica">Em andamento e próximos</span></header>
+        <ul class="crm-lista" id="projetos"></ul>
       </article>
+    </div>
+
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Últimas mudanças</h3></header>
+      <ul class="crm-lista crm-lista--2col" id="mudancas"></ul>
+    </article>
+  </section>
+
+  <!-- ===================== Tarefas ===================== -->
+  <section id="aba-tarefas" class="crm-aba" aria-labelledby="t-tarefas" hidden>
+    <div class="crm-cab">
+      <div>
+        <h2 class="crm-titulo" id="t-tarefas">Tarefas</h2>
+        <p class="crm-sub">Tudo o que precisa ser feito, de todos os clientes e da empresa.</p>
+      </div>
+      <div class="crm-cab__acoes">
+        <label class="crm-campo"><span>Agrupar por</span>
+          <select id="agrupar">
+            <option value="prazo">Prazo</option>
+            <option value="cliente">Cliente</option>
+            <option value="prioridade">Prioridade</option>
+            <option value="estado">Situação</option>
+          </select>
+        </label>
+        <label class="crm-campo"><span>Cliente</span><select id="filtro-cliente"><option value="">Todos</option></select></label>
+        <label class="crm-check"><input type="checkbox" id="mostrar-feitas"> Mostrar feitas</label>
+      </div>
+    </div>
+
+    <div class="crm-visoes">
+      <div class="crm-pilulas" id="visoes" role="group" aria-label="Visões"></div>
+      <button class="mini" type="button" id="salvar-visao" title="Guarda o filtro atual como uma visão sua">Salvar esta visão</button>
+    </div>
+
+    <div id="grupos"></div>
+  </section>
+
+  <!-- ===================== Calendário ===================== -->
+  <section id="aba-calendario" class="crm-aba" aria-labelledby="t-cal" hidden>
+    <div class="crm-cab">
+      <div>
+        <h2 class="crm-titulo" id="t-cal">Calendário</h2>
+        <p class="crm-sub">Prazos de tarefas e entregas, follow-ups de leads e fim de contratos.</p>
+      </div>
+      <div class="crm-cab__acoes">
+        <button class="mini" type="button" id="mes-ant" aria-label="Mês anterior">←</button>
+        <b class="crm-mes" id="mes-nome"></b>
+        <button class="mini" type="button" id="mes-prox" aria-label="Próximo mês">→</button>
+        <button class="mini" type="button" id="mes-hoje">Hoje</button>
+      </div>
+    </div>
+    <div class="cal" id="cal"></div>
+    <p class="crm-legenda"><span class="cal-ev cal-ev--entrega">Entrega</span><span class="cal-ev">Tarefa</span><span class="cal-ev cal-ev--lead">Follow-up</span><span class="cal-ev cal-ev--contrato">Fim de contrato</span> Clique num dia vazio para criar uma tarefa nele.</p>
+  </section>
+
+  <!-- ===================== Leads ===================== -->
+  <section id="aba-leads" class="crm-aba" aria-labelledby="t-leads" hidden>
+    <div class="crm-cab">
+      <div>
+        <h2 class="crm-titulo" id="t-leads">Leads</h2>
+        <p class="crm-sub" id="leads-sub">Quem ainda não fechou: quando falar de novo e quem está parado.</p>
+      </div>
+    </div>
+    <div class="crm-pilulas crm-pilulas--filtro" id="leads-filtros" role="group" aria-label="Filtrar leads"></div>
+    <div class="crm-card-box crm-tabela-caixa">
+      <table class="crm-tabela">
+        <thead><tr><th>Lead</th><th>Etapa</th><th>Origem</th><th>Follow-up</th><th>Na etapa</th><th>Último movimento</th><th><span class="sr">Ações</span></th></tr></thead>
+        <tbody id="leads-linhas"></tbody>
+      </table>
     </div>
   </section>
 
-  <section id="aba-clientes" aria-labelledby="t-clientes" hidden>
+  <!-- ===================== Clientes ===================== -->
+  <section id="aba-clientes" class="crm-aba" aria-labelledby="t-clientes" hidden>
     <div class="crm-cab">
       <div>
         <h2 class="crm-titulo" id="t-clientes">Clientes</h2>
-        <p class="crm-sub">Leads, propostas e clientes num lugar só. O nome abre a ficha em outra aba.</p>
+        <p class="crm-sub">Clique na linha para a prévia; no nome, a ficha abre em outra aba.</p>
       </div>
       <div class="crm-cab__acoes">
-        <input class="crm-busca" type="search" id="busca" placeholder="Buscar cliente" autocomplete="off" aria-label="Buscar cliente">
+        <input class="crm-busca" type="search" id="busca" placeholder="Filtrar por nome" autocomplete="off" aria-label="Filtrar clientes por nome">
         <div class="grupo" role="group" aria-label="Formato">
           <button type="button" data-vista="tabela" aria-selected="true">Tabela</button>
           <button type="button" data-vista="funil" aria-selected="false">Funil</button>
@@ -87,7 +159,7 @@
 
     <div class="crm-card-box crm-tabela-caixa" id="vista-tabela">
       <table class="crm-tabela">
-        <thead><tr><th>Cliente</th><th>Etapa</th><th>Contrato</th><th>Próxima entrega</th><th>Atividades</th><th>Último movimento</th></tr></thead>
+        <thead><tr><th>Cliente</th><th>Etapa</th><th>Próximo passo</th><th>Projeto atual</th><th>Próxima entrega</th><th>Tarefas</th></tr></thead>
         <tbody id="linhas"></tbody>
       </table>
     </div>
@@ -97,9 +169,18 @@
 
 </main>
 
+<!-- Prévia lateral do cliente -->
+<dialog id="previa" class="lateral" aria-labelledby="pv-nome">
+  <header class="modal__topo"><b id="pv-nome">Cliente</b>
+    <a class="mini mini--ativo" id="pv-abrir" target="_blank" rel="noopener">Abrir ficha</a>
+    <button class="mini" type="button" data-fechar>Fechar</button></header>
+  <div class="modal__corpo" id="pv-corpo"></div>
+</dialog>
+
+<!-- Novo cliente ou lead -->
 <dialog id="novo-jan" aria-labelledby="novo-titulo">
   <header class="modal__topo">
-    <b id="novo-titulo">Novo cliente</b>
+    <b id="novo-titulo">Novo cliente ou lead</b>
     <button class="mini mini--ativo" type="submit" form="novo-form">Criar e abrir a ficha</button>
     <button class="mini" type="button" data-fechar>Fechar</button>
   </header>
@@ -108,12 +189,41 @@
       <label><span>Nome</span><input type="text" name="nome" required maxlength="160"></label>
       <div class="linha linha--2">
         <label><span>Etapa</span><select name="etapa" id="novo-etapa"></select></label>
-        <label><span>O que contratou</span><input type="text" name="servico" maxlength="300" placeholder="Ex.: site institucional"></label>
+        <label><span>O que quer ou contratou</span><input type="text" name="servico" maxlength="300" placeholder="Ex.: site institucional"></label>
+      </div>
+      <div class="linha linha--2">
+        <label><span>Origem</span><select name="origemLead" id="novo-origem"></select></label>
+        <label><span>Falar de novo em</span><input type="date" name="proximoContato"><small>Para lead: a data do próximo follow-up.</small></label>
       </div>
     </form>
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/crm.js?v=7"></script>
+<!-- Registrar contato com um lead -->
+<dialog id="contato-jan" aria-labelledby="contato-titulo">
+  <header class="modal__topo">
+    <b id="contato-titulo">Registrar contato</b>
+    <button class="mini mini--ativo" type="submit" form="contato-form">Salvar</button>
+    <button class="mini" type="button" data-fechar>Fechar</button>
+  </header>
+  <div class="modal__corpo">
+    <form id="contato-form">
+      <label><span>O que conversaram</span><textarea name="texto" rows="3" maxlength="4000" required placeholder="Ex.: pediu para retomar depois do feriado"></textarea></label>
+      <div class="linha linha--2">
+        <label><span>Próximo follow-up</span><input type="date" name="proximoContato"><small>Vazio: sem data marcada.</small></label>
+        <label><span>Etapa</span><select name="etapa" id="contato-etapa"></select></label>
+      </div>
+      <div class="crm-atalhos" id="contato-atalhos">
+        <span>Atalhos:</span>
+        <button class="mini" type="button" data-dias="2">Em 2 dias</button>
+        <button class="mini" type="button" data-dias="7">Em 1 semana</button>
+        <button class="mini" type="button" data-dias="30">Em 1 mês</button>
+      </div>
+      <label id="contato-perda" hidden><span>Por que não fechou</span><input type="text" name="motivoPerda" maxlength="500" placeholder="Ex.: achou caro, fechou com outro"></label>
+    </form>
+  </div>
+</dialog>
+
+<script type="module" src="/admin/crm/crm.js?v=8"></script>
 </body>
 </html>

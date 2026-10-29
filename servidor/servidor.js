@@ -225,7 +225,7 @@ async function apiAberta(req, res, rota) {
    que sai vai para a etapa Encerrado. */
 async function apiCrm(req, res, rota, origem) {
   if (rota === 'crm') {
-    if (req.method === 'GET') return json(res, { clientes: await crm.listar(), etapas: crm.ETAPAS, estados: crm.ESTADOS_ATIVIDADE });
+    if (req.method === 'GET') return json(res, { clientes: await crm.listar(), etapas: crm.ETAPAS, estados: crm.ESTADOS_ATIVIDADE, prioridades: crm.PRIORIDADES, origens: crm.ORIGENS, estadosProjeto: crm.ESTADOS_PROJETO });
     if (req.method === 'POST') {
       const dado = await lerJson(req, res, 262144);
       if (dado === undefined) return;
@@ -238,7 +238,7 @@ async function apiCrm(req, res, rota, origem) {
   if (m && req.method === 'POST') {
     const dado = await lerJson(req, res, 16384);
     if (dado === undefined) return;
-    try { return json(res, await crm.anotar(m[1], dado.texto, origem)); }
+    try { return json(res, await crm.anotar(m[1], dado.texto, origem, dado.tipo)); }
     catch (e) { return json(res, { erro: e.message }, 400); }
   }
   return json(res, { erro: 'Rota do CRM não encontrada.' }, 404);
