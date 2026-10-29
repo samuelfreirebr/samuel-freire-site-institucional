@@ -73,7 +73,9 @@ ou IA) lê isto antes de começar.
    daquele cliente, até 20 MB cada, e a transcrição de áudio das
    perguntas daquele formulário, até 5 minutos) e a entrada de
    transcrições (`/api/reunioes/entrada`), que só grava e exige o
-   `TOKEN_REUNIOES`.
+   `TOKEN_REUNIOES`. O CRM (`/api/crm`) também aceita o `TOKEN_CLAUDE`
+   no cabeçalho `x-token`, para o Claude atualizar; a chave não abre
+   mais nada do painel.
 3. Chave de serviço externo (Google, Anthropic, Serper) vem de variável de
    ambiente na stack, nunca escrita no código.
 4. Antes de dar por pronto: `node --check` nos arquivos JS alterados e teste

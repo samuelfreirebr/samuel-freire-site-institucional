@@ -81,6 +81,12 @@
         <span class="bloco__desc">Links úteis e anotações num lugar só: ferramentas, repositórios, vídeos e documentações, cada um com o que é e quando usar.</span>
         <span class="bloco__pe">Cofre <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </a>
+      <a class="bloco" href="/admin/crm/">
+        <span class="bloco__num">08</span>
+        <span class="bloco__titulo">CRM</span>
+        <span class="bloco__desc">Em que pé está cada cliente: quem começou, quem ainda não começou e o próximo passo. O Claude atualiza junto com as tarefas das conversas.</span>
+        <span class="bloco__pe">Clientes <svg class="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12L12 4M12 4H5.5M12 4v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
     </div>
 
     <div class="hub__pe">
@@ -121,7 +127,7 @@ $('#sair').onclick = async () => {
 
 // Um resumo do que está no ar. Se a API falhar, a tela segue sem ele.
 try {
-  const [r, rf] = await Promise.all([fetch('/api/propostas'), fetch('/api/faturas')]);
+  const [r, rf, rc] = await Promise.all([fetch('/api/propostas'), fetch('/api/faturas'), fetch('/api/crm')]);
   if (r.status === 401) location.replace('/admin/entrar?voltar=/admin/');
   const d = await r.json();
   const n = (d.propostas || []).length;
@@ -130,6 +136,10 @@ try {
   const faturas = rf.ok ? ((await rf.json()).faturas || []) : [];
   const abertas = faturas.filter((f) => !f.paga).length;
   if (faturas.length) partes.push(abertas ? `${abertas} fatura${abertas > 1 ? 's' : ''} em aberto` : 'faturas em dia');
+  const clientes = rc.ok ? ((await rc.json()).clientes || []) : [];
+  const andamento = clientes.filter((c) => c.etapa === 'andamento').length;
+  const semComecar = clientes.filter((c) => c.etapa === 'fechado').length;
+  if (clientes.length) partes.push(`${andamento} cliente${andamento === 1 ? '' : 's'} em andamento · ${semComecar} sem começar`);
   $('#resumo').textContent = partes.join(' · ');
 } catch (e) { $('#resumo').textContent = 'painel'; }
 </script>

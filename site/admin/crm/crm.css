@@ -1,0 +1,73 @@
+/* ============================================================
+   CRM: o quadro do funil e a ficha do cliente.
+   Entra depois de painel.css; usa só as variáveis.
+   ============================================================ */
+
+/* ---------- Central de ajustes ---------- */
+.crm {
+  --crm-coluna: minmax(190px, 1fr);   /* largura de cada etapa: divide a tela, nunca menos de 190px */
+  --crm-gap: var(--sp-sm);      /* espaço entre colunas e cartões */
+}
+
+.crm-busca { width: auto; flex: 0 1 14rem; padding: .45em .85em; border-radius: var(--radius-pill); font-size: var(--t-small); }
+
+.crm { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: var(--sp-md); gap: var(--sp-sm); }
+.crm-resumo { color: var(--muted); font-size: var(--t-eyebrow); min-height: 1.4em; }
+
+/* Colunas lado a lado; no celular rola para o lado, uma etapa por vez. */
+.crm-quadro {
+  flex: 1; min-height: 0; display: grid; grid-auto-flow: column;
+  grid-auto-columns: var(--crm-coluna); gap: var(--crm-gap);
+  overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: var(--sp-sm);
+}
+@media (max-width: 640px) { .crm { --crm-coluna: 84vw; } }
+
+.crm-col {
+  display: flex; flex-direction: column; min-height: 0; scroll-snap-align: start;
+  background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-img);
+}
+.crm-col.alvo { border-color: var(--brand); }
+.crm-col__topo {
+  display: flex; align-items: center; gap: .5em; padding: var(--sp-sm) var(--sp-sm) var(--sp-2xs);
+  font-size: var(--t-eyebrow); font-weight: var(--w-bold); letter-spacing: .12em; text-transform: uppercase;
+}
+.crm-col__n { color: var(--muted); font-weight: var(--w-semi); margin-left: auto; }
+.crm-col__lista { flex: 1; overflow-y: auto; display: grid; align-content: start; gap: var(--crm-gap); padding: var(--sp-2xs) var(--sp-sm) var(--sp-sm); }
+.crm-col__vazia { color: var(--muted); font-size: var(--t-eyebrow); padding: var(--sp-2xs) 0; }
+
+.crm-card {
+  display: grid; gap: 4px; text-align: left; width: 100%;
+  padding: var(--sp-sm); background: var(--bg-2); border: var(--hair) solid transparent; border-radius: var(--radius-img);
+  color: var(--ink); cursor: pointer;
+}
+.crm-card:hover { border-color: var(--ink); }
+.crm-card[draggable="true"]:active { cursor: grabbing; }
+.crm-card__nome { font-weight: var(--w-bold); line-height: 1.25; }
+.crm-card__serv { color: var(--muted); font-size: var(--t-eyebrow); }
+.crm-card__prox { font-size: var(--t-small); line-height: 1.4; }
+.crm-card__pe { display: flex; gap: .6em; align-items: center; color: var(--muted); font-size: var(--t-eyebrow); margin-top: 2px; }
+.crm-card__pe .claude { color: var(--brand); font-weight: var(--w-semi); }
+
+/* ---------- Ficha ---------- */
+.crm-sec { margin-top: var(--sp-lg); }
+.crm-sec h3 {
+  font-size: var(--t-eyebrow); font-weight: var(--w-semi); letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+  padding-bottom: var(--sp-2xs); margin-bottom: var(--sp-sm); border-bottom: var(--hair) solid var(--line);
+}
+.crm-add { display: flex; align-items: center; gap: var(--sp-2xs); margin-bottom: var(--sp-sm); }
+.crm-add input { flex: 1; min-width: 0; }
+
+.crm-ativ { list-style: none; padding: 0; margin: 0 0 var(--sp-sm); display: grid; gap: 4px; }
+.crm-ativ li { display: flex; align-items: center; gap: var(--sp-2xs); font-size: var(--t-small); }
+.crm-ativ li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.crm-ativ li[data-feita="1"] span { color: var(--muted); text-decoration: line-through; }
+.crm-ativ select { width: auto; padding: .3em .5em; font-size: var(--t-eyebrow); }
+.crm-ativ .claude { color: var(--brand); font-size: var(--t-eyebrow); }
+
+.crm-docs { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; font-size: var(--t-small); }
+.crm-docs small { color: var(--muted); }
+
+.crm-linha { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--sp-sm); }
+.crm-linha li { display: grid; gap: 2px; padding-left: var(--sp-sm); border-left: var(--hair-2) solid var(--line); font-size: var(--t-small); }
+.crm-linha li[data-origem="claude"] { border-left-color: var(--brand); }
+.crm-linha time { color: var(--muted); font-size: var(--t-eyebrow); }

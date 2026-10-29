@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>CRM | Painel Samuel Freire</title>
+<link rel="icon" href="/img/favicon.png" type="image/png">
+<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
+<link rel="stylesheet" href="/styles/base.css?v=20260911a">
+<link rel="stylesheet" href="/admin/painel.css?v=9">
+<link rel="stylesheet" href="./crm.css?v=3">
+</head>
+<body>
+
+<header class="topo">
+  <h1><a href="/admin/">Painel</a> <i>Samuel Freire</i><span class="sec">CRM</span></h1>
+  <input class="crm-busca" type="search" id="busca" placeholder="Buscar cliente" autocomplete="off" aria-label="Buscar cliente">
+  <button class="mini mini--ativo" type="button" id="novo">Novo cliente</button>
+</header>
+
+<p class="aviso" id="aviso" role="status"></p>
+
+<main class="crm">
+  <p class="crm-resumo" id="resumo"></p>
+  <div class="crm-quadro" id="funil"><p class="vazio">Carregando…</p></div>
+</main>
+
+<dialog id="ficha" aria-labelledby="ficha-titulo">
+  <header class="modal__topo">
+    <b id="ficha-titulo">Cliente</b>
+    <button class="mini mini--ativo" type="submit" form="form">Salvar</button>
+    <button class="mini" type="button" id="fechar" aria-label="Fechar">Fechar</button>
+  </header>
+  <div class="modal__corpo">
+    <form id="form">
+      <div class="linha linha--2">
+        <label><span>Nome</span><input type="text" name="nome" required maxlength="160"></label>
+        <label><span>Etapa</span><select name="etapa" id="f-etapa"></select></label>
+      </div>
+      <label><span>O que contratou</span><input type="text" name="servico" maxlength="300" placeholder="Ex.: site institucional, criativos mensais"></label>
+      <label><span>Próximo passo</span><input type="text" name="proximoPasso" maxlength="500" placeholder="O que precisa acontecer agora"></label>
+      <label><span>Contato</span><input type="text" name="contato" maxlength="300" placeholder="Nome, WhatsApp, e-mail"></label>
+      <label><span>Notas</span><textarea name="notas" maxlength="8000"></textarea></label>
+    </form>
+
+    <section class="crm-sec">
+      <h3>Atividades</h3>
+      <ul class="crm-ativ" id="atividades"></ul>
+      <form class="crm-add" id="add-ativ">
+        <input type="text" id="nova-ativ" placeholder="Nova atividade" maxlength="300" aria-label="Nova atividade">
+        <button class="mini" type="submit">Adicionar</button>
+      </form>
+    </section>
+
+    <section class="crm-sec" id="sec-docs" hidden>
+      <h3>No painel</h3>
+      <ul class="crm-docs" id="docs"></ul>
+    </section>
+
+    <section class="crm-sec" id="sec-linha" hidden>
+      <h3>Linha do tempo</h3>
+      <form class="crm-add" id="add-linha">
+        <input type="text" id="nova-linha" placeholder="O que aconteceu" maxlength="4000" aria-label="Anotar na linha do tempo">
+        <button class="mini" type="submit">Anotar</button>
+      </form>
+      <ol class="crm-linha" id="linha"></ol>
+    </section>
+  </div>
+</dialog>
+
+<script type="module" src="./crm.js?v=1"></script>
+</body>
+</html>

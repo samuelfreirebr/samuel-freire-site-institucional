@@ -31,6 +31,7 @@ servidor/              o servidor Node que roda no Portainer (zero dependências
   prospeccao.js          rotas da prospecção: busca, cidades, IA, Instagram, vagas, leads
   prospeccao-site.js     diagnóstico rápido de um site (fetch cru + heurísticas)
   seguranca.js           senha do painel
+  crm.js                 CRM: etapa, atividades e linha do tempo de cada cliente
   multipart.js           leitura do upload de imagem
   listas.js              clientes, bastidores, projetos
   sementes/              propostas que já vêm no repositório

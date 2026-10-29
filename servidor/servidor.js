@@ -17,10 +17,12 @@
      /admin/propostas/    propostas         · exige sessão
      /admin/faturas/      faturas           · exige sessão
      /admin/cofre/        banco de links    · exige sessão (/cofre leva para lá)
+     /admin/crm/          funil de clientes · exige sessão
      /contratos/<id>      contrato da proposta, para imprimir · exige sessão
      /google-prospection/ prospecção        · exige sessão
      /api/...             API do painel     · exige sessão (entrar/sair abertas)
      /api/reunioes/entrada  recebe transcrição do Meet · exige TOKEN_REUNIOES
+     /api/crm/...         CRM · sessão ou TOKEN_CLAUDE (o Claude atualiza daqui)
      /api/prospeccao/...  API da prospecção · exige sessão (ver prospeccao.js)
      /img/...             imagens: repositório primeiro, volume depois
      /estado              diagnóstico, sem revelar valor nenhum
@@ -47,6 +49,7 @@ import { transcrever, temChaveAudio, LIMITE_AUDIO } from './transcrever.js';
 import { apiProspeccao, configuracao as configProspeccao } from './prospeccao.js';
 import * as dados from './dados.js';
 import * as cofre from './cofre.js';
+import * as crm from './crm.js';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 // A pasta site/ ao lado desta. No container, copiada para /app/site.
@@ -200,7 +203,45 @@ async function apiAberta(req, res, rota) {
       return json(res, { ok: true, id: r.id, repetida: Boolean(r.repetida) });
     } catch (e) { return json(res, { erro: e.message }, 400); }
   }
+  /* CRM pelo Claude: sem sessão, com o TOKEN_CLAUDE da stack no
+     cabeçalho x-token. Só abre o CRM, nada mais do painel. Sem o
+     cabeçalho, segue para a tranca normal (o painel usa a sessão). */
+  if ((rota === 'crm' || rota.startsWith('crm/')) && req.headers['x-token'] !== undefined) {
+    const token = process.env.TOKEN_CLAUDE || '';
+    if (!token) return json(res, { erro: 'Defina TOKEN_CLAUDE na stack para o Claude usar o CRM.' }, 503);
+    const seg = bloqueado(req);
+    if (seg) return json(res, { erro: 'Muitas tentativas. Espere um pouco.' }, 429);
+    if (!iguais(String(req.headers['x-token']), token)) {
+      registrarFalha(req);
+      return json(res, { erro: 'Token incorreto.' }, 401);
+    }
+    return apiCrm(req, res, rota, 'claude');
+  }
   return false;   // não é rota aberta
+}
+
+/* CRM: GET lista, POST cria ou atualiza (só os campos enviados),
+   POST crm/<id>/linha anota na linha do tempo. Sem DELETE: cliente
+   que sai vai para a etapa Encerrado. */
+async function apiCrm(req, res, rota, origem) {
+  if (rota === 'crm') {
+    if (req.method === 'GET') return json(res, { clientes: await crm.listar(), etapas: crm.ETAPAS, estados: crm.ESTADOS_ATIVIDADE });
+    if (req.method === 'POST') {
+      const dado = await lerJson(req, res, 262144);
+      if (dado === undefined) return;
+      try { return json(res, await crm.salvar(dado, origem)); }
+      catch (e) { return json(res, { erro: e.message }, 400); }
+    }
+    return json(res, { erro: 'Método não aceito.' }, 405);
+  }
+  const m = rota.match(/^crm\/([a-f0-9]{12})\/linha$/);
+  if (m && req.method === 'POST') {
+    const dado = await lerJson(req, res, 16384);
+    if (dado === undefined) return;
+    try { return json(res, await crm.anotar(m[1], dado.texto, origem)); }
+    catch (e) { return json(res, { erro: e.message }, 400); }
+  }
+  return json(res, { erro: 'Rota do CRM não encontrada.' }, 404);
 }
 
 async function api(req, res, url) {
@@ -210,6 +251,8 @@ async function api(req, res, url) {
   if (rota === 'prospeccao' || rota.startsWith('prospeccao/')) {
     return apiProspeccao(req, res, url, rota.slice('prospeccao/'.length));
   }
+
+  if (rota === 'crm' || rota.startsWith('crm/')) return apiCrm(req, res, rota, 'painel');
 
   /* --- cofre: links úteis, só do painel --- */
   if (rota === 'cofre') {
@@ -632,7 +675,7 @@ const servidor = http.createServer(async (req, res) => {
     if (caminho === '/admin' || caminho.startsWith('/admin/')) {
       /* Pastas precisam da barra final: sem ela o navegador resolve
          './editor.js' como /editor.js e a página abre morta. */
-      if (/^\/admin(\/site|\/propostas|\/faturas|\/cofre)?$/.test(caminho)) {
+      if (/^\/admin(\/site|\/propostas|\/faturas|\/cofre|\/crm)?$/.test(caminho)) {
         res.writeHead(308, { location: caminho + '/' + url.search, 'cache-control': 'no-store' });
         return res.end();
       }
