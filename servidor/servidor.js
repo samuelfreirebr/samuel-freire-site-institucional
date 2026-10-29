@@ -52,6 +52,7 @@ import * as dados from './dados.js';
 import * as cofre from './cofre.js';
 import * as crm from './crm.js';
 import * as clickup from './clickup.js';
+import * as novidades from './novidades.js';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 // A pasta site/ ao lado desta. No container, copiada para /app/site.
@@ -305,6 +306,9 @@ async function api(req, res, url) {
   }
 
   if (rota === 'crm' || rota.startsWith('crm/')) return apiCrm(req, res, rota, req.claude ? 'claude' : 'painel');
+
+  /* --- novidades: visitas do site e o que os clientes fizeram --- */
+  if (rota === 'novidades' && req.method === 'GET') return json(res, await novidades.resumo());
 
   /* --- ClickUp: tarefas abertas das áreas, só leitura --- */
   if (rota === 'clickup' && req.method === 'GET') {
@@ -788,6 +792,7 @@ const servidor = http.createServer(async (req, res) => {
       const p = await dados.lerProposta(id);
       if (!p) return texto(res, 'Proposta não encontrada.', 404);
       if (p.publicada === false && !liberado(req)) return texto(res, 'Proposta não encontrada.', 404);
+      if (!liberado(req)) novidades.abriu(req, 'proposta', id, p.cliente || id, '/admin/propostas/#' + id).catch(() => {});
       const html = renderizarProposta(comModelo(p, await dados.lerModelo()));
       return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache, must-revalidate', 'x-robots-tag': 'noindex, nofollow' }, html);
     }
@@ -882,9 +887,11 @@ const servidor = http.createServer(async (req, res) => {
         }
         try { await dados.salvarEnvio(link, { envio: d.envio, respostas: limpas, concluir: d.concluir === true }); }
         catch (e) { return json(res, { erro: e.message }, 400); }
+        if (d.concluir === true) novidades.registrar('formulario-respondido', f.id, f.cliente?.nome || f.titulo || 'Formulário', '/admin/perguntas/#' + f.id).catch(() => {});
         return json(res, { ok: true });
       }
 
+      if (!liberado(req)) novidades.abriu(req, 'formulario', f.id, f.cliente?.nome || f.titulo || 'Formulário', '/admin/perguntas/#' + f.id).catch(() => {});
       const html = renderizarPerguntas(comExemplos(f));
       return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow', 'referrer-policy': 'no-referrer' }, html);
     }
@@ -931,7 +938,9 @@ const servidor = http.createServer(async (req, res) => {
 
     const arq = await acharArquivo(caminho);
     if (!arq) return texto(res, 'Página não encontrada.', 404);
-    return servirArquivo(res, arq, path.extname(arq).toLowerCase() === '.html');
+    const pagina = path.extname(arq).toLowerCase() === '.html';
+    if (pagina && req.method === 'GET' && !liberado(req)) novidades.contarVisita(req).catch(() => {});
+    return servirArquivo(res, arq, pagina);
 
   } catch (e) {
     console.error('erro na requisição:', e);

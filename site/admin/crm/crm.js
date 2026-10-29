@@ -602,6 +602,30 @@ function guardar(salvo) {
   if ($('#previa').open && $('#pv-abrir').href.endsWith(salvo.id)) previa(salvo);
 }
 
+/* ---------- Visitas do site e o que os clientes fizeram ---------- */
+
+const TXT_EVENTO = {
+  'proposta-aberta': 'abriu a proposta', 'proposta-voltou': 'voltou a ver a proposta',
+  'formulario-aberta': 'abriu o formulário', 'formulario-voltou': 'voltou ao formulário', 'formulario-respondido': 'respondeu o formulário',
+};
+async function desenharNovidades() {
+  const r = await fetch('/api/novidades');
+  if (!r.ok) return;
+  const { visitas: v, eventos } = await r.json();
+  const numero = (n, rotulo) => `<div><b>${n}</b><span>${rotulo}</span></div>`;
+  $('#nv-visitas').innerHTML = numero(v.hoje, 'hoje') + numero(v.semana, '7 dias') + numero(v.mes, '30 dias');
+  const dias = v.dias.slice(-14), max = Math.max(1, ...dias.map((d) => d.n)), hoje = dias.at(-1).dia;
+  $('#nv-barras').innerHTML = `<div class="g-ritmo" role="img" aria-label="${v.semana} visitas nos últimos 7 dias">${dias.map((d) => `<div class="g-ritmo__dia${d.dia === hoje ? ' hoje' : ''}" title="${d.dia.split('-').reverse().join('/')}: ${d.n} visita(s)">
+      <span class="g-ritmo__n">${d.n || ''}</span><span class="g-ritmo__barra" style="height:${d.n ? Math.max(8, (d.n / max) * 100) : 4}%"></span>
+      <span class="g-ritmo__rot">${new Date(d.dia + 'T12:00').toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3)}</span></div>`).join('')}</div>`;
+  const mes = new Date(Date.now() - 30 * 864e5).toISOString();
+  const doMes = eventos.filter((e) => e.quando >= mes);
+  const conta = (prefixo) => new Set(doMes.filter((e) => e.tipo.startsWith(prefixo)).map((e) => e.id)).size;
+  $('#nv-clientes').innerHTML = numero(conta('proposta-'), 'propostas vistas') + numero(conta('formulario-respondido'), 'formulários respondidos') + numero(conta('formulario-a'), 'formulários abertos');
+  $('#nv-eventos').innerHTML = eventos.slice(0, 5).map((e) => `<li><a href="${esc(e.link)}"><span class="crm-lista__txt"><b>${esc(e.titulo)} ${TXT_EVENTO[e.tipo] || ''}</b><small>${quando(e.quando)}</small></span></a></li>`).join('')
+    || '<li class="vazio">Quando um cliente abrir uma proposta ou responder um formulário, aparece aqui.</li>';
+}
+
 function desenhar() { desenharGeral(); desenharTarefas(); desenharCalendario(); desenharLeads(); desenharClientes(); }
 
 for (const raiz of ['#hoje-lista', '#grupos', '#pv-corpo']) ligarLista($(raiz), { achar, aoSalvar: guardar, clientes: () => clientes });
@@ -614,6 +638,7 @@ async function carregar() {
   $('#novo-etapa').innerHTML = etapas.filter((e) => e.id !== 'encerrado').map((e) => `<option value="${e.id}">${esc(e.nome)}</option>`).join('');
   $('#novo-origem').innerHTML = '<option value="">Não informada</option>' + origens.map((o) => `<option value="${o}">${NOMES.origem[o] || o}</option>`).join('');
   desenhar();
+  desenharNovidades().catch(() => {});
   tarefasClickup(clientes).then((l) => { clickup = l; desenharGeral(); desenharTarefas(); });
 }
 

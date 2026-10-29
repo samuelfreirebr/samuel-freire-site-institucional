@@ -529,3 +529,11 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
 .tf-subgrupo { display: flex; gap: .5em; margin: 0; padding: var(--sp-xs) var(--sp-sm) var(--sp-3xs, 4px); border-top: var(--hair) solid var(--line); font-size: var(--t-eyebrow); font-weight: var(--w-bold); color: var(--ink-2); }
 .tf-subgrupo span { color: var(--muted); font-weight: var(--w-semi); }
 @media (max-width: 640px) { .tf--clickup { grid-template-columns: auto minmax(0, 1fr) 5.2em; } .tf__status { grid-column: 2 / -1; justify-self: start; } }
+
+/* ---------- Visitas do site e propostas/formulários (visão geral) ---------- */
+.nv-numeros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-xs); margin-bottom: var(--sp-sm); }
+.nv-numeros div { display: grid; gap: 2px; padding: var(--sp-xs) var(--sp-sm); border-radius: 14px; background: var(--bg-2); }
+.nv-numeros b { font-size: 1.6rem; font-weight: var(--w-black); letter-spacing: -.03em; line-height: 1.1; }
+.nv-numeros div:first-child b { color: var(--brand-texto, var(--brand)); }
+.nv-numeros span { color: var(--muted); font-size: var(--t-eyebrow); }
+#nv-barras .g-ritmo { height: 140px; }

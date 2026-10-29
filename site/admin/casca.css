@@ -120,3 +120,25 @@ input[type=text], input[type=number], input[type=password], input[type=url], inp
   body.casca-recolhida .casca__grupo + .casca__grupo { padding-top: var(--sp-2xs); border-top: var(--hair) solid var(--line); }
 }
 @media (max-width: 900px) { .casca__recolher { display: none; } }
+
+/* ---------- Notificações (sino do menu) ---------- */
+.casca__sino { position: relative; }
+.casca__n { margin-left: auto; min-width: 1.35rem; height: 1.35rem; padding: 0 .35em; border-radius: var(--radius-pill); background: var(--brand); color: #fff; font-size: 11px; font-weight: var(--w-bold); display: grid; place-items: center; }
+.casca__n[hidden] { display: none; }
+body.casca-recolhida .casca__n { position: absolute; top: 2px; right: 2px; min-width: 1.05rem; height: 1.05rem; font-size: 9px; }
+dialog.notif[open] { inset: 0 0 0 auto; margin: 0; width: min(100vw, 26rem); height: 100%; max-height: none; border-radius: var(--janela-raio) 0 0 var(--janela-raio) !important; }
+.notif .modal__corpo { display: grid; align-content: start; gap: var(--sp-md); }
+.notif__visitas { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 0 .6em; padding: var(--sp-sm) var(--sp-md); border-radius: 16px; background: var(--bg-2); color: var(--ink); }
+.notif__visitas b { grid-row: span 2; font-size: 2rem; font-weight: var(--w-black); color: var(--brand); line-height: 1; }
+.notif__visitas span { font-weight: var(--w-semi); }
+.notif__visitas small { color: var(--muted); font-size: var(--t-eyebrow); }
+.notif__grupo h3 { display: flex; gap: .5em; margin-bottom: var(--sp-2xs); font-size: var(--t-small); font-weight: var(--w-bold); }
+.notif__grupo h3 span { color: var(--muted); font-weight: var(--w-semi); }
+.notif__grupo h3.atraso { color: var(--brand); }
+.notif__grupo ul { display: grid; list-style: none; margin: 0; padding: 0; }
+.notif__grupo li + li { border-top: var(--hair) solid var(--line); }
+.notif__grupo li a { display: grid; gap: 2px; padding: .55rem .5rem; border-radius: 10px; color: var(--ink); }
+.notif__grupo li a:hover { background: var(--bg-2); }
+.notif__grupo li b { font-size: var(--t-small); font-weight: var(--w-semi); overflow-wrap: anywhere; }
+.notif__grupo li small { color: var(--muted); font-size: var(--t-eyebrow); }
+.notif__grupo li.novo b::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: .45em; border-radius: 50%; background: var(--brand); vertical-align: .1em; }

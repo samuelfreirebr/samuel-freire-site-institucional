@@ -9,10 +9,10 @@
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="/admin/painel.css?v=20261029e">
-<link rel="stylesheet" href="/admin/casca.css?v=20261029e">
-<script type="module" src="/admin/casca.js?v=20261029e"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029e">
+<link rel="stylesheet" href="/admin/painel.css?v=20261029f">
+<link rel="stylesheet" href="/admin/casca.css?v=20261029f">
+<script type="module" src="/admin/casca.js?v=20261029f"></script>
+<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029f">
 <link rel="modulepreload" href="/admin/icones.js">
 <link rel="modulepreload" href="/admin/crm/comum.js">
 <link rel="modulepreload" href="/admin/crm/graficos.js">
@@ -43,6 +43,19 @@
     <div id="boas"></div>
 
     <div class="crm-kpis" id="kpis"><p class="vazio">Carregando…</p></div>
+
+    <div class="crm-grade crm-grade--2">
+      <article class="crm-card-box">
+        <header class="crm-box__topo"><h3>Visitas do site</h3><span class="crm-box__dica">Pessoas por dia, sem contar você logado</span></header>
+        <div class="nv-numeros" id="nv-visitas"></div>
+        <div id="nv-barras"></div>
+      </article>
+      <article class="crm-card-box">
+        <header class="crm-box__topo"><h3>Propostas e formulários</h3><span class="crm-box__dica">Últimos 30 dias</span></header>
+        <div class="nv-numeros" id="nv-clientes"></div>
+        <ul class="crm-lista" id="nv-eventos"></ul>
+      </article>
+    </div>
 
     <div class="crm-grade crm-grade--2">
       <article class="crm-card-box">
@@ -269,6 +282,6 @@
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/crm.js?v=20261029e"></script>
+<script type="module" src="/admin/crm/crm.js?v=20261029f"></script>
 </body>
 </html>
