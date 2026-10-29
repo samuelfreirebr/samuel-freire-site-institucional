@@ -163,7 +163,32 @@ export function ordenarTarefas(lista) {
 
 /* ---------- lista de tarefas (central e ficha) ---------- */
 
+/* Tarefas do ClickUp no formato das do painel, presas ao cliente do CRM.
+   Só leitura: a linha leva ao ClickUp. Sem ClickUp ligado, lista vazia. */
+export async function tarefasClickup(clientes) {
+  try {
+    const r = await fetch('/api/clickup');
+    if (!r.ok) return [];
+    return ((await r.json()).tarefas || []).map((t) => ({
+      id: 'cu-' + t.id, titulo: t.titulo, estado: t.estado, prazo: t.prazo, prioridade: 'normal', tipo: 'tarefa', checklist: [],
+      cliente: clientes.find((c) => mesmoCliente(c.nome, t.cliente)) || { id: '', nome: t.cliente },
+      clickup: { url: t.url, status: t.status, lista: t.lista },
+    }));
+  } catch { return []; }
+}
+
+const linhaClickup = (t, mostrarCliente) => `<li class="tf tf--clickup" data-feita="${t.estado === 'feita' ? 1 : 0}">
+    <span class="tf__cu" data-estado="${t.estado}" aria-hidden="true"></span>
+    <a class="tf__corpo" href="${esc(t.clickup.url)}" target="_blank" rel="noopener">
+      <span class="tf__titulo">${esc(t.titulo)}</span>
+      <span class="tf__meta">${mostrarCliente ? `<span>${esc(t.cliente.nome)}</span>` : ''}<span>${esc(t.clickup.lista)}</span><span>ClickUp: ${esc(t.clickup.status)}</span></span>
+    </a>
+    <span class="tf__prio"></span>
+    <span class="tf__prazo${t.estado !== 'feita' && t.prazo && t.prazo < hojeIso() ? ' atraso' : ''}">${prazoTexto(t.prazo)}</span>
+  </li>`;
+
 export function linhaTarefa(t, { mostrarCliente = true } = {}) {
+  if (t.clickup) return linhaClickup(t, mostrarCliente);
   const feita = t.estado === 'feita';
   const atraso = !feita && t.prazo && t.prazo < hojeIso();
   const feitos = t.checklist.filter((i) => i.feito).length;

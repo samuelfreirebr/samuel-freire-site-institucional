@@ -521,3 +521,13 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
 /* Pasta do Drive nos materiais */
 .fc-drive { display: flex; align-items: flex-end; gap: var(--sp-2xs); flex-wrap: wrap; margin-bottom: var(--sp-sm); }
 .fc-drive label { flex: 1 1 18rem; margin: 0; }
+
+/* ---------- Tarefas do ClickUp (só leitura, abrem no ClickUp) ---------- */
+.tf__cu { width: 1.6rem; display: grid; place-items: center; }
+.tf__cu::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--line-2); }
+.tf__cu[data-estado="andamento"]::before { background: var(--ink); }
+.tf__cu[data-estado="aguardando"]::before { background: var(--brand); }
+.tf__cu[data-estado="feita"]::before { background: var(--verde, #1E8A57); }
+.tf-subgrupo { display: flex; gap: .5em; margin: 0; padding: var(--sp-xs) var(--sp-sm) var(--sp-3xs, 4px); border-top: var(--hair) solid var(--line); font-size: var(--t-eyebrow); font-weight: var(--w-bold); color: var(--ink-2); }
+.tf-subgrupo span { color: var(--muted); font-weight: var(--w-semi); }
+.tf--clickup .tf__prio { visibility: hidden; }

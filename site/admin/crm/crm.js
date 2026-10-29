@@ -8,12 +8,13 @@ import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, NOMES, LEADS, DIAS_PROXIMAS,
   hojeIso, dataCurta, diasAte, quando, prazoTexto, somarDias, iniciais, visiveis, abertas, atrasadas,
   proximaEntrega, proximaTarefa, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
-  grupoPrazo, todasTarefas, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
+  grupoPrazo, todasTarefas, tarefasClickup, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
 } from './comum.js';
 import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js';
 import { ico } from '../icones.js';
 
 let clientes = [], etapas = [], origens = [];
+let clickup = [];   // tarefas do ClickUp, só leitura (chegam depois do CRM)
 let filtroEtapa = 'todos', filtroLead = 'atencao', visao = 'abertas', mes = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 const ficha = (c) => `/admin/crm/cliente/#${c.id}`;
 const nomeEtapa = (id) => etapas.find((e) => e.id === id)?.nome || id;
@@ -45,7 +46,7 @@ addEventListener('hashchange', () => irPara(location.hash.slice(1)));
 
 function desenharGeral() {
   const h = new Date().getHours();
-  const tarefas = todasTarefas(clientes).filter((t) => t.estado !== 'feita');
+  const tarefas = [...todasTarefas(clientes), ...clickup].filter((t) => t.estado !== 'feita');
   const hoje = tarefas.filter((t) => grupoPrazo(t) === 'hoje');
   const vencidas = tarefas.filter((t) => grupoPrazo(t) === 'atrasada');
   const urgentes = tarefas.filter((t) => t.prioridade === 'urgente');
@@ -123,6 +124,7 @@ const VISOES = {
   entregas: { nome: 'Entregas', filtro: (t) => t.estado !== 'feita' && t.tipo === 'entrega' },
   claude: { nome: 'Fila do Claude', filtro: (t) => Boolean(t.claude) && t.claude !== 'feita' },
   empresa: { nome: 'Da empresa', filtro: (t) => t.estado !== 'feita' && t.cliente.interno },
+  clickup: { nome: 'Do ClickUp', filtro: (t) => t.estado !== 'feita' && Boolean(t.clickup) },
 };
 let minhasVisoes = lembrado('visoes', []);
 
@@ -144,9 +146,13 @@ function desenharTarefas() {
   const base = minha ? VISOES[minha.base] || VISOES.abertas : VISOES[visao] || VISOES.abertas;
   const feitas = $('#mostrar-feitas').checked;
   const cli = sel.value;
-  let lista = todasTarefas(clientes).filter((t) => (feitas && t.estado === 'feita') || base.filtro(t))
+  let lista = [...todasTarefas(clientes), ...clickup].filter((t) => (feitas && t.estado === 'feita') || base.filtro(t))
     .filter((t) => !cli || (cli === 'interno' ? t.cliente.interno : t.cliente.id === cli));
   lista = ordenarTarefas(lista);
+  // A Casa SW manda dezenas de peças por mês: ficam num bloco só, por médico.
+  const daSw = (t) => t.clickup && /surgical|casa sw/i.test(t.cliente.nome);
+  const sw = lista.filter(daSw);
+  lista = lista.filter((t) => !daSw(t));
 
   const por = $('#agrupar').value;
   const grupos = new Map();
@@ -160,7 +166,16 @@ function desenharTarefas() {
   $('#grupos').innerHTML = chaves.map((k) => `<details class="tf-grupo" data-grupo="${esc(por + ':' + k)}"${fechados.includes(por + ':' + k) ? '' : ' open'}>
       <summary><span class="tf-grupo__nome${k === 'atrasada' ? ' atraso' : ''}">${esc(nomeGrupo(k))}</span><span class="tf-grupo__n">${grupos.get(k).length}</span></summary>
       <ul class="tf-lista">${grupos.get(k).map((t) => linhaTarefa(t, { mostrarCliente: por !== 'cliente' })).join('')}</ul>
-    </details>`).join('') || `<div class="crm-card-box crm-vazio-grande"><b>Nada aqui.</b><p>Nenhuma tarefa nesta visão. Use "Nova tarefa" no topo.</p></div>`;
+    </details>`).join('');
+  if (sw.length) {
+    const porLista = Map.groupBy(sw.sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999')), (t) => t.clickup.lista || 'Sem lista');
+    $('#grupos').innerHTML += `<details class="tf-grupo tf-grupo--sw" data-grupo="casa-sw"${fechados.includes('casa-sw') ? '' : ' open'}>
+      <summary><span class="tf-grupo__nome">Casa SW (ClickUp)</span><span class="tf-grupo__n">${sw.length}</span></summary>
+      ${[...porLista].sort((a, b) => a[0].localeCompare(b[0])).map(([nome, ts]) => `<p class="tf-subgrupo">${esc(nome)} <span>${ts.length}</span></p>
+      <ul class="tf-lista">${ts.map((t) => linhaTarefa(t, { mostrarCliente: false })).join('')}</ul>`).join('')}
+    </details>`;
+  }
+  if (!$('#grupos').innerHTML) $('#grupos').innerHTML = `<div class="crm-card-box crm-vazio-grande"><b>Nada aqui.</b><p>Nenhuma tarefa nesta visão. Use "Nova tarefa" no topo.</p></div>`;
 }
 
 $('#visoes').addEventListener('click', (e) => {
@@ -599,6 +614,7 @@ async function carregar() {
   $('#novo-etapa').innerHTML = etapas.filter((e) => e.id !== 'encerrado').map((e) => `<option value="${e.id}">${esc(e.nome)}</option>`).join('');
   $('#novo-origem').innerHTML = '<option value="">Não informada</option>' + origens.map((o) => `<option value="${o}">${NOMES.origem[o] || o}</option>`).join('');
   desenhar();
+  tarefasClickup(clientes).then((l) => { clickup = l; desenharGeral(); desenharTarefas(); });
 }
 
 $('#agrupar').value = lembrado('agrupar', 'prazo');
