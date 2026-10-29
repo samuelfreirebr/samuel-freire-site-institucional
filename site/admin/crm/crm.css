@@ -539,3 +539,11 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
 .nv-numeros div:first-child b { color: var(--brand-texto, var(--brand)); }
 .nv-numeros span { color: var(--muted); font-size: var(--t-eyebrow); }
 #nv-barras .g-ritmo { height: 140px; }
+
+/* Quadro de tarefas: o título do cartão é botão (abre a tarefa) ou link (ClickUp). */
+button.crm-card__nome { text-align: left; }
+#tf-quadro .crm-atraso { color: var(--brand); font-weight: var(--w-semi); }
+
+/* Títulos das abas mais discretos: o conteúdo é o protagonista. */
+.crm-titulo { font-size: 1.5rem; letter-spacing: -.02em; line-height: 1.2; }
+.crm-sub { margin-top: 2px; }

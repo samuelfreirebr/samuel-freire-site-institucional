@@ -8,14 +8,14 @@ import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, NOMES, LEADS, DIAS_PROXIMAS,
   hojeIso, dataCurta, diasAte, quando, prazoTexto, somarDias, iniciais, visiveis, abertas, atrasadas,
   proximaEntrega, proximaTarefa, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
-  grupoPrazo, todasTarefas, tarefasClickup, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
+  grupoPrazo, todasTarefas, tarefasClickup, ordenarTarefas, salvarTarefa, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
 } from './comum.js';
 import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js';
 import { ico } from '../icones.js';
 
 let clientes = [], etapas = [], origens = [];
 let clickup = [];   // tarefas do ClickUp, só leitura (chegam depois do CRM)
-let filtroEtapa = 'todos', filtroLead = 'atencao', visao = 'abertas', mes = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let filtroEtapa = 'todos', filtroLead = 'todos', visao = 'abertas', mes = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 const ficha = (c) => `/admin/crm/cliente/#${c.id}`;
 const nomeEtapa = (id) => etapas.find((e) => e.id === id)?.nome || id;
 const etiqueta = (id) => `<span class="crm-etapa" data-etapa="${id}">${esc(nomeEtapa(id))}</span>`;
@@ -176,7 +176,40 @@ function desenharTarefas() {
     </details>`;
   }
   if (!$('#grupos').innerHTML) $('#grupos').innerHTML = `<div class="crm-card-box crm-vazio-grande"><b>Nada aqui.</b><p>Nenhuma tarefa nesta visão. Use "Nova tarefa" no topo.</p></div>`;
+  // Quadro: uma coluna por situação. Tarefa do painel arrasta; a do ClickUp abre no ClickUp.
+  const cor = { afazer: 'lead', andamento: 'andamento', aguardando: 'proposta', feita: 'recorrente' };
+  const todasDaVisao = [...lista, ...sw];
+  $('#tf-quadro').innerHTML = Object.entries(NOMES.estado).map(([k, nome]) => {
+    const col = todasDaVisao.filter((t) => t.estado === k).sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999'));
+    return `<section class="crm-col" data-etapa="${cor[k]}" data-coluna="${k}">
+      <header class="crm-col__topo"><span class="crm-col__ponto"></span>${nome}<span class="crm-col__n">${col.length}</span></header>
+      <div class="crm-col__lista">${col.map(cartaoTarefa).join('') || `<p class="crm-col__vazia">${k === 'feita' && !feitas ? 'Arraste aqui para concluir.' : 'Arraste uma tarefa para cá.'}</p>`}</div>
+    </section>`;
+  }).join('');
 }
+
+function cartaoTarefa(t) {
+  const quem = t.cliente.interno ? 'Empresa' : t.cliente.nome;
+  const atraso = t.estado !== 'feita' && t.prazo && t.prazo < hojeIso();
+  const nome = t.clickup
+    ? `<a class="crm-card__nome" href="${esc(t.clickup.url)}" target="_blank" rel="noopener">${esc(t.titulo)}</a>`
+    : `<button class="crm-card__nome" type="button" data-abrir-tarefa="${t.id}" data-cliente="${t.cliente.id}">${esc(t.titulo)}</button>`;
+  return `<article class="crm-card" draggable="${t.clickup ? 'false' : 'true'}" data-id="${t.id}" data-etapa="${t.cliente.etapa || ''}">
+    ${nome}
+    <span class="crm-card__serv">${esc(quem)}${t.clickup ? ` · ${esc(t.clickup.lista)}` : ''}</span>
+    <footer class="crm-card__pe">
+      ${t.prazo ? `<span${atraso ? ' class="crm-atraso"' : ''}>${ico('calendario').outerHTML}${prazoTexto(t.prazo)}</span>` : '<span>Sem prazo</span>'}
+      <span class="crm-card__dias">${t.clickup ? 'ClickUp' : NOMES.prioridade[t.prioridade]}</span>
+    </footer>
+  </article>`;
+}
+$('#tf-quadro').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-abrir-tarefa]');
+  if (!b) return;
+  const c = achar(b.dataset.cliente);
+  const t = c?.atividades.find((x) => x.id === b.dataset.abrirTarefa);
+  if (t) abrirTarefa({ cliente: c, tarefa: t, clientes, aoSalvar: guardar });
+});
 
 $('#visoes').addEventListener('click', (e) => {
   const tirar = e.target.closest('[data-tirar]');
@@ -272,8 +305,8 @@ $('#mes-hoje').onclick = () => { mes = new Date(new Date().getFullYear(), new Da
 /* ---------- Leads ---------- */
 
 const FILTROS_LEAD = {
+  todos: { nome: 'Todos os leads', filtro: (c) => LEADS.includes(c.etapa) },
   atencao: { nome: 'Pedem atenção', filtro: (c) => LEADS.includes(c.etapa) && leadPedeAtencao(c) },
-  todos: { nome: 'Todos em aberto', filtro: (c) => LEADS.includes(c.etapa) },
   lead: { nome: 'Lead', filtro: (c) => c.etapa === 'lead' },
   proposta: { nome: 'Proposta enviada', filtro: (c) => c.etapa === 'proposta' },
   followup: { nome: 'Follow-up', filtro: (c) => c.etapa === 'followup' },
@@ -304,6 +337,7 @@ function desenharLeads() {
       <td class="crm-tabela__acoes">${LEADS.includes(c.etapa) ? '<button class="mini" type="button" data-acao="contato">Registrar contato</button>' : ''}</td>
     </tr>`;
   }).join('') || `<tr><td colspan="7" class="vazio">${abertos ? 'Ninguém neste filtro.' : 'Nenhum lead em aberto. Use "Novo cliente ou lead".'}</td></tr>`;
+  $('#leads-funil').innerHTML = colunasEtapa(etapas.filter((e) => LEADS.includes(e.id)), todos.filter((c) => LEADS.includes(c.etapa)));
 }
 $('#leads-filtros').addEventListener('click', (e) => {
   const b = e.target.closest('[data-filtro]');
@@ -413,11 +447,16 @@ function desenharClientes() {
     ${Array.from({ length: paginas }, (_, k) => `<button class="crm-pag__n" type="button" data-ir-pagina="${k}" aria-current="${k === pagina}">${k + 1}</button>`).join('')}
     <button class="mini" type="button" data-pagina="1"${pagina < paginas - 1 ? '' : ' disabled'}>Próxima</button></span>`;
 
-  $('#funil').innerHTML = etapas.map((e) => {
-    const coluna = tudo.filter((c) => c.etapa === e.id).sort((a, b) => Boolean(selo(b)) - Boolean(selo(a)) || a.nome.localeCompare(b.nome));
-    return `<section class="crm-col" data-etapa="${e.id}">
+  $('#funil').innerHTML = colunasEtapa(etapas.filter((e) => !LEADS.includes(e.id)), lista);
+}
+
+/* Colunas do funil (Leads e Clientes): uma por etapa, cartões arrastáveis. */
+function colunasEtapa(lista, pessoas) {
+  return lista.map((e) => {
+    const coluna = pessoas.filter((c) => c.etapa === e.id).sort((a, b) => Boolean(selo(b)) - Boolean(selo(a)) || a.nome.localeCompare(b.nome));
+    return `<section class="crm-col" data-etapa="${e.id}" data-coluna="${e.id}">
       <header class="crm-col__topo"><span class="crm-col__ponto"></span>${esc(e.nome)}<span class="crm-col__n">${coluna.length}</span>
-        <button class="crm-col__mais" type="button" data-novo-na="${e.id}" title="Novo nesta etapa" aria-label="Novo cliente em ${esc(e.nome)}">+</button></header>
+        <button class="crm-col__mais" type="button" data-novo-na="${e.id}" title="Novo nesta etapa" aria-label="Novo em ${esc(e.nome)}">+</button></header>
       <div class="crm-col__lista">${coluna.map(cartao).join('') || '<p class="crm-col__vazia">Arraste um cartão para cá.</p>'}</div>
     </section>`;
   }).join('');
@@ -455,7 +494,8 @@ $('#aba-clientes').addEventListener('change', async (e) => {
   try { guardar(await salvarCliente({ id, etapa: e.target.value })); avisar(`Etapa: ${nomeEtapa(e.target.value)}.`); }
   catch (err) { avisar(err.message, 'erro'); }
 });
-$('#funil').addEventListener('click', (e) => {
+// "+" no topo de uma coluna do funil: novo cliente ou lead já naquela etapa.
+document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-novo-na]');
   if (!b) return;
   $('#novo-form').reset();
@@ -491,29 +531,48 @@ function previa(c) {
   if (!$('#previa').open) $('#previa').showModal();
 }
 
-/* Arrastar o cartão para outra coluna muda a etapa. */
-const funil = $('#funil');
-const limparAlvo = () => $$('.crm-col.alvo').forEach((c) => c.classList.remove('alvo'));
-funil.addEventListener('dragstart', (e) => {
-  const card = e.target.closest('.crm-card');
-  if (card) e.dataTransfer.setData('text/plain', card.dataset.id);
+/* Quadros: arrastar um cartão para outra coluna. No funil muda a etapa;
+   no quadro de tarefas muda a situação da tarefa. */
+function ligarQuadro(quadro, aoSoltar) {
+  const limpar = () => quadro.querySelectorAll('.crm-col.alvo').forEach((c) => c.classList.remove('alvo'));
+  quadro.addEventListener('dragstart', (e) => {
+    const card = e.target.closest('.crm-card[draggable="true"]');
+    if (card) e.dataTransfer.setData('text/plain', card.dataset.id);
+  });
+  quadro.addEventListener('dragover', (e) => {
+    const col = e.target.closest('.crm-col');
+    if (!col) return;
+    e.preventDefault();
+    if (!col.classList.contains('alvo')) { limpar(); col.classList.add('alvo'); }
+  });
+  quadro.addEventListener('dragleave', (e) => { if (!quadro.contains(e.relatedTarget)) limpar(); });
+  quadro.addEventListener('drop', async (e) => {
+    const col = e.target.closest('.crm-col'), id = e.dataTransfer.getData('text/plain');
+    limpar();
+    if (!col || !id) return;
+    e.preventDefault();
+    try { await aoSoltar(id, col.dataset.coluna); } catch (err) { avisar(err.message, 'erro'); }
+  });
+}
+const mudarEtapa = async (id, etapa) => { const c = achar(id); if (c && c.etapa !== etapa) guardar(await salvarCliente({ id, etapa })); };
+ligarQuadro($('#funil'), mudarEtapa);
+ligarQuadro($('#leads-funil'), mudarEtapa);
+ligarQuadro($('#tf-quadro'), async (id, estado) => {
+  const c = clientes.find((x) => (x.atividades || []).some((t) => t.id === id));
+  const t = c?.atividades.find((x) => x.id === id);
+  if (t && t.estado !== estado) guardar(await salvarTarefa(c, { ...t, estado }));
 });
-funil.addEventListener('dragover', (e) => {
-  const col = e.target.closest('.crm-col');
-  if (!col) return;
-  e.preventDefault();
-  if (!col.classList.contains('alvo')) { limparAlvo(); col.classList.add('alvo'); }
-});
-funil.addEventListener('dragleave', (e) => { if (!funil.contains(e.relatedTarget)) limparAlvo(); });
-funil.addEventListener('drop', async (e) => {
-  const col = e.target.closest('.crm-col');
-  limparAlvo();
-  const c = achar(e.dataTransfer.getData('text/plain'));
-  if (!col || !c || c.etapa === col.dataset.etapa) return;
-  e.preventDefault();
-  try { guardar(await salvarCliente({ id: c.id, etapa: col.dataset.etapa })); }
-  catch (err) { avisar(err.message, 'erro'); }
-});
+
+/* Tabela ou quadro, por aba (Leads e Tarefas). A escolha fica neste navegador. */
+const FORMATOS = { leads: { tabela: '#leads-tabela', funil: '#leads-funil' }, tarefas: { lista: '#grupos', quadro: '#tf-quadro' } };
+function formato(aba, v) {
+  for (const [k, sel] of Object.entries(FORMATOS[aba])) $(sel).hidden = k !== v;
+  $$(`[data-formato^="${aba}:"]`).forEach((b) => b.setAttribute('aria-selected', String(b.dataset.formato === `${aba}:${v}`)));
+  lembrar('formato-' + aba, v);
+}
+$$('[data-formato]').forEach((b) => b.addEventListener('click', () => formato(...b.dataset.formato.split(':'))));
+formato('leads', lembrado('formato-leads', 'tabela'));
+formato('tarefas', lembrado('formato-tarefas', 'lista'));
 
 $('#pv-apagar').onclick = async () => {
   const id = $('#pv-abrir').href.split('#')[1];

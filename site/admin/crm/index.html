@@ -9,10 +9,10 @@
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="/admin/painel.css?v=20261029h">
-<link rel="stylesheet" href="/admin/casca.css?v=20261029h">
-<script type="module" src="/admin/casca.js?v=20261029h"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029h">
+<link rel="stylesheet" href="/admin/painel.css?v=20261029i">
+<link rel="stylesheet" href="/admin/casca.css?v=20261029i">
+<script type="module" src="/admin/casca.js?v=20261029i"></script>
+<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029i">
 <link rel="modulepreload" href="/admin/icones.js">
 <link rel="modulepreload" href="/admin/crm/comum.js">
 <link rel="modulepreload" href="/admin/crm/graficos.js">
@@ -129,11 +129,16 @@
 
     <div class="crm-visoes">
       <div class="crm-pilulas" id="visoes" role="group" aria-label="Visões"></div>
+      <div class="grupo" role="group" aria-label="Formato">
+        <button type="button" data-formato="tarefas:lista" aria-selected="true">Lista</button>
+        <button type="button" data-formato="tarefas:quadro" aria-selected="false">Quadro</button>
+      </div>
       <button class="mini" type="button" id="sincronizar" title="Busca de novo as tarefas do ClickUp e do painel">Sincronizar</button>
         <button class="mini" type="button" id="salvar-visao" title="Guarda o filtro atual como uma visão sua">Salvar esta visão</button>
     </div>
 
     <div id="grupos"></div>
+    <div class="crm-quadro" id="tf-quadro" hidden></div>
   </section>
 
   <!-- ===================== Calendário ===================== -->
@@ -161,9 +166,16 @@
         <h2 class="crm-titulo" id="t-leads">Leads</h2>
         <p class="crm-sub" id="leads-sub">Quem ainda não fechou: quando falar de novo e quem está parado.</p>
       </div>
+      <div class="crm-cab__acoes">
+        <div class="grupo" role="group" aria-label="Formato">
+          <button type="button" data-formato="leads:tabela" aria-selected="true">Tabela</button>
+          <button type="button" data-formato="leads:funil" aria-selected="false">Funil</button>
+        </div>
+      </div>
     </div>
     <div class="crm-pilulas crm-pilulas--filtro" id="leads-filtros" role="group" aria-label="Filtrar leads"></div>
-    <div class="crm-card-box crm-tabela-caixa">
+    <div class="crm-quadro" id="leads-funil" hidden></div>
+    <div class="crm-card-box crm-tabela-caixa" id="leads-tabela">
       <table class="crm-tabela">
         <thead><tr><th>Lead</th><th>Etapa</th><th>Origem</th><th>Follow-up</th><th>Na etapa</th><th>Último movimento</th><th><span class="sr">Ações</span></th></tr></thead>
         <tbody id="leads-linhas"></tbody>
@@ -283,6 +295,6 @@
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/crm.js?v=20261029h"></script>
+<script type="module" src="/admin/crm/crm.js?v=20261029i"></script>
 </body>
 </html>
