@@ -90,7 +90,7 @@ dialog { border-radius: var(--janela-raio) !important; }
 dialog .modal__topo { padding: var(--sp-md) var(--sp-md) var(--sp-sm); border-bottom: 0; }
 dialog .modal__topo b { font-size: var(--t-body); font-weight: var(--w-bold); letter-spacing: -.01em; }
 dialog .modal__corpo { padding: var(--sp-2xs) var(--sp-md) var(--sp-md); }
-dialog::backdrop { background: rgba(20, 21, 23, .42); backdrop-filter: blur(3px); }
+dialog::backdrop { background: rgba(20, 21, 23, .48); }
 @media (max-width: 640px) {
   dialog[open]:not(.lateral):not(.busca) { inset: auto 0 0 0; height: auto; max-height: 92dvh; border-radius: var(--janela-raio) var(--janela-raio) 0 0 !important; }
 }

@@ -326,9 +326,7 @@ a.crm-kpi:hover { border-color: var(--ink); }
 .crm-card__pe > span { display: inline-flex; align-items: center; gap: .3em; }
 .crm-card__pe .ico { width: .8rem; height: .8rem; }
 .crm-card__dias { margin-left: auto; }
-.crm-avatar--mini { width: 1.45rem; height: 1.45rem; font-size: 9px; }
-.crm-card .crm-avatar--mini { background: var(--etapa-fundo); color: var(--etapa-texto); }
-.claude { color: var(--brand); font-weight: var(--w-semi); }
+.crm-card .claude { color: var(--brand); font-weight: var(--w-semi); }
 
 /* ---------- Janelas: prévia lateral, busca rápida, tarefa, contato ---------- */
 dialog.lateral[open] { inset: 0 0 0 auto; margin: 0; width: min(100vw, var(--crm-lateral)); height: 100%; max-height: none; border-radius: 0; border-left: var(--hair) solid var(--line); }

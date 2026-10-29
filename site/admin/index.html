@@ -14,6 +14,9 @@
 <script type="module" src="/admin/casca.js?v=2"></script>
 <link rel="stylesheet" href="/admin/crm/crm.css?v=12">
 <link rel="stylesheet" href="/admin/inicio.css?v=1">
+<link rel="modulepreload" href="/admin/icones.js">
+<link rel="modulepreload" href="/admin/crm/comum.js">
+<link rel="modulepreload" href="/admin/crm/graficos.js">
 </head>
 <body>
 
@@ -187,7 +190,12 @@ const guardar = (salvo) => {
 ligarLista($('#hoje'), { achar: (id) => clientes.find((c) => c.id === id), aoSalvar: guardar, clientes: () => clientes });
 $('#buscar').onclick = ligarBusca(() => clientes);
 carregar().catch((e) => { $('#kpis').innerHTML = `<p class="vazio">${esc(e.message)}</p>`; });
-addEventListener('focus', () => { if (!document.querySelector('dialog[open]')) carregar().catch(() => {}); });
+let ultimaCarga = Date.now();   // no máximo uma recarga por minuto
+addEventListener('focus', () => {
+  if (document.querySelector('dialog[open]') || Date.now() - ultimaCarga < 60000) return;
+  ultimaCarga = Date.now();
+  carregar().catch(() => {});
+});
 </script>
 </body>
 </html>

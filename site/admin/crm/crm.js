@@ -612,4 +612,9 @@ carregar().then(() => {
   }
 }).catch((e) => { $('#kpis').innerHTML = `<p class="vazio">${esc(e.message)}</p>`; });
 // Voltou de uma ficha (outra aba) ou o Claude mexeu: traz o que mudou, sem atrapalhar janela aberta.
-addEventListener('focus', () => { if (!document.querySelector('dialog[open]')) carregar().catch(() => {}); });
+let ultimaCarga = Date.now();   // ao voltar para a aba, recarrega no máximo uma vez por minuto
+addEventListener('focus', () => {
+  if (document.querySelector('dialog[open]') || Date.now() - ultimaCarga < 60000) return;
+  ultimaCarga = Date.now();
+  carregar().catch(() => {});
+});

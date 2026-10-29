@@ -31,6 +31,7 @@
 import http from 'node:http';
 import path from 'node:path';
 import { promises as fs, createReadStream } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
 import { injetar } from './injetar.js';
@@ -71,13 +72,56 @@ const MIME = {
 
 /* ---------- respostas curtas ---------- */
 
-const json = (res, dado, status = 200) => {
-  res.writeHead(status, {
-    'content-type': 'application/json; charset=utf-8',
-    'cache-control': 'no-store',
-  });
-  res.end(JSON.stringify(dado));
-};
+/* ---------- compressão ----------
+   O servidor está numa rede lenta (poucos KB por segundo): mandar
+   texto comprimido corta de 70% a 85% do que trafega. zlib é do Node. */
+const aceitaGzip = (req) => /\bgzip\b/.test(req?.headers['accept-encoding'] || '');
+const TEXTO = /^(text\/|application\/(json|javascript)|image\/svg)/;
+
+function enviarCorpo(res, status, cabecalhos, corpo) {
+  const buf = Buffer.isBuffer(corpo) ? corpo : Buffer.from(corpo);
+  const h = { ...cabecalhos, vary: 'Accept-Encoding' };
+  if (buf.length > 1024 && aceitaGzip(res.req) && TEXTO.test(h['content-type'] || '')) {
+    const gz = gzipSync(buf);
+    h['content-encoding'] = 'gzip';
+    h['content-length'] = gz.length;
+    res.writeHead(status, h);
+    return res.end(gz);
+  }
+  h['content-length'] = buf.length;
+  res.writeHead(status, h);
+  res.end(buf);
+}
+
+const json = (res, dado, status = 200) => enviarCorpo(res, status, {
+  'content-type': 'application/json; charset=utf-8',
+  'cache-control': 'no-store',
+}, JSON.stringify(dado));
+
+/* Arquivo do disco com cache que confere: ETag pela data e tamanho,
+   304 quando o navegador já tem igual, e o gzip guardado em memória
+   (refeito só quando o arquivo muda). `cache` é o cache-control. */
+const comprimidos = new Map();   // caminho -> { etag, gz }
+async function enviarArquivo(req, res, arquivo, cache, extra = {}) {
+  const st = await fs.stat(arquivo);
+  const etag = `"${st.size.toString(36)}-${Math.floor(st.mtimeMs).toString(36)}"`;
+  const tipo = MIME[path.extname(arquivo).toLowerCase()] || 'application/octet-stream';
+  const h = { 'content-type': tipo, 'cache-control': cache, etag, vary: 'Accept-Encoding', ...extra };
+  if (req.headers['if-none-match'] === etag) { res.writeHead(304, h); return res.end(); }
+  if (TEXTO.test(tipo) && st.size > 1024 && st.size < 4 * 1024 * 1024 && aceitaGzip(req)) {
+    let c = comprimidos.get(arquivo);
+    if (c?.etag !== etag) { c = { etag, gz: gzipSync(await fs.readFile(arquivo)) }; comprimidos.set(arquivo, c); }
+    res.writeHead(200, { ...h, 'content-encoding': 'gzip', 'content-length': c.gz.length });
+    return res.end(c.gz);
+  }
+  res.writeHead(200, { ...h, 'content-length': st.size });
+  createReadStream(arquivo).pipe(res);
+}
+
+// Painel: com ?v= no endereço o arquivo nunca muda (cache longo); sem, confere a cada vez.
+const cacheDoPainel = (url, arquivo) => (url.searchParams.has('v') && path.extname(arquivo) !== '.html'
+  ? 'private, max-age=31536000, immutable'
+  : 'private, no-cache');
 
 const texto = (res, msg, status = 200, extra = {}) => {
   res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', ...extra });
@@ -138,18 +182,9 @@ function cabecalhosDe(arquivo) {
 
 async function servirArquivo(res, arquivo, ehHtml) {
   const h = cabecalhosDe(arquivo);
-  if (!ehHtml) {
-    const st = await fs.stat(arquivo);
-    h['content-length'] = st.size;
-    res.writeHead(200, h);
-    createReadStream(arquivo).pipe(res);
-    return;
-  }
+  if (!ehHtml) return enviarArquivo(res.req, res, arquivo, h['cache-control']);
   const html = await fs.readFile(arquivo, 'utf8');
-  const corpo = injetar(html, await dados.lerConteudo());
-  h['content-length'] = Buffer.byteLength(corpo);
-  res.writeHead(200, h);
-  res.end(corpo);
+  enviarCorpo(res, 200, h, injetar(html, await dados.lerConteudo()));
 }
 
 /* ---------- API ---------- */
@@ -374,8 +409,7 @@ async function api(req, res, url) {
     if (!p) return;
     if (typeof p !== 'object' || Array.isArray(p)) return json(res, { erro: 'A proposta precisa ser um objeto.' }, 400);
     const html = renderizarProposta(comModelo(p, await dados.lerModelo()), { previa: true });
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'content-length': Buffer.byteLength(html), 'cache-control': 'no-store' });
-    return res.end(html);
+    return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }, html);
   }
   if (rota === 'proposta-icones' && req.method === 'GET') return json(res, catalogoIcones());
 
@@ -532,8 +566,7 @@ async function api(req, res, url) {
     if (!f) return;
     if (typeof f !== 'object' || Array.isArray(f)) return json(res, { erro: 'A fatura precisa ser um objeto.' }, 400);
     const html = renderizarFatura(f, { previa: true });
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'content-length': Buffer.byteLength(html), 'cache-control': 'no-store' });
-    return res.end(html);
+    return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }, html);
   }
   // O prestador e os dados de pagamento da última do mesmo tipo: a
   // fatura nova já nasce com eles, sem redigitar.
@@ -716,14 +749,7 @@ const servidor = http.createServer(async (req, res) => {
         return texto(res, 'Faça login.', 401);
       }
 
-      const st = await fs.stat(arq);
-      res.writeHead(200, {
-        'content-type': MIME[path.extname(arq).toLowerCase()] || 'application/octet-stream',
-        'content-length': st.size,
-        'cache-control': 'no-store',
-        'x-robots-tag': 'noindex, nofollow',
-      });
-      return createReadStream(arq).pipe(res);
+      return enviarArquivo(req, res, arq, cacheDoPainel(url, arq), { 'x-robots-tag': 'noindex, nofollow' });
     }
 
     /* --- Prospecção: mesma tranca do painel, pasta própria --- */
@@ -741,14 +767,7 @@ const servidor = http.createServer(async (req, res) => {
         }
         return texto(res, 'Faça login.', 401);
       }
-      const st = await fs.stat(arq);
-      res.writeHead(200, {
-        'content-type': MIME[path.extname(arq).toLowerCase()] || 'application/octet-stream',
-        'content-length': st.size,
-        'cache-control': 'no-store',
-        'x-robots-tag': 'noindex, nofollow',
-      });
-      return createReadStream(arq).pipe(res);
+      return enviarArquivo(req, res, arq, cacheDoPainel(url, arq), { 'x-robots-tag': 'noindex, nofollow' });
     }
 
     /* Propostas: página pública, gerada do JSON. */
@@ -758,13 +777,7 @@ const servidor = http.createServer(async (req, res) => {
       if (!p) return texto(res, 'Proposta não encontrada.', 404);
       if (p.publicada === false && !liberado(req)) return texto(res, 'Proposta não encontrada.', 404);
       const html = renderizarProposta(comModelo(p, await dados.lerModelo()));
-      res.writeHead(200, {
-        'content-type': 'text/html; charset=utf-8',
-        'content-length': Buffer.byteLength(html),
-        'cache-control': 'no-cache, must-revalidate',
-        'x-robots-tag': 'noindex, nofollow',
-      });
-      return res.end(html);
+      return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache, must-revalidate', 'x-robots-tag': 'noindex, nofollow' }, html);
     }
 
     /* Contrato: a página para imprimir em PDF. Só com login: quem
@@ -784,8 +797,7 @@ const servidor = http.createServer(async (req, res) => {
         data: c.atualizadoEm ? new Date(c.atualizadoEm).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
         imprimir: url.searchParams.get('imprimir') === '1',
       });
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'content-length': Buffer.byteLength(html), 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' });
-      return res.end(html);
+      return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' }, html);
     }
 
     /* Perguntas: página aberta, pelo link sorteado. O cliente não tem
@@ -862,14 +874,7 @@ const servidor = http.createServer(async (req, res) => {
       }
 
       const html = renderizarPerguntas(comExemplos(f));
-      res.writeHead(200, {
-        'content-type': 'text/html; charset=utf-8',
-        'content-length': Buffer.byteLength(html),
-        'cache-control': 'no-store',
-        'x-robots-tag': 'noindex, nofollow',
-        'referrer-policy': 'no-referrer',
-      });
-      return res.end(html);
+      return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow', 'referrer-policy': 'no-referrer' }, html);
     }
 
     /* Faturas: página pública pelo link sorteado. ?imprimir=1 abre
@@ -879,14 +884,7 @@ const servidor = http.createServer(async (req, res) => {
       const f = await dados.lerFatura(id);
       if (!f) return texto(res, 'Fatura não encontrada.', 404);
       const html = renderizarFatura(f, { imprimir: url.searchParams.get('imprimir') === '1' });
-      res.writeHead(200, {
-        'content-type': 'text/html; charset=utf-8',
-        'content-length': Buffer.byteLength(html),
-        'cache-control': 'no-store',
-        'x-robots-tag': 'noindex, nofollow',
-        'referrer-policy': 'no-referrer',
-      });
-      return res.end(html);
+      return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow', 'referrer-policy': 'no-referrer' }, html);
     }
 
     /* Imagens: o repositório vence, o volume completa. Assim o

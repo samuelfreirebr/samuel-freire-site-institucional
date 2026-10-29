@@ -172,51 +172,6 @@ dialog::backdrop { background: rgba(20,21,23,.55); }
 .modal__topo b { margin-right: auto; font-size: var(--t-small); }
 .modal__corpo { padding: var(--sp-md); overflow: auto; }
 
-/* ---------- Hub ---------- */
-.hub {
-  flex: 1; display: grid; place-items: center;
-  padding: var(--sp-xl) var(--sp-md);
-}
-.hub__in { width: 100%; max-width: 980px; }
-.hub__quem { display: flex; align-items: center; gap: var(--sp-md); margin-bottom: var(--sp-2xl); }
-.hub__foto { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--brand); }
-.hub__nome { font-size: var(--t-lead); font-weight: var(--w-black); letter-spacing: -.035em; line-height: 1; }
-.hub__nome em { font-style: italic; font-weight: var(--w-book); }
-.hub__meta { color: var(--muted); font-size: var(--t-small); margin-top: 4px; }
-/* Cofre direto da tela inicial: colou, Guardar, e o link já entra organizado. */
-.hub__cofre {
-  display: flex; align-items: center; gap: var(--sp-2xs); flex-wrap: wrap;
-  margin: calc(-1 * var(--sp-lg)) 0 var(--sp-lg); padding: var(--sp-2xs) var(--sp-2xs) var(--sp-2xs) var(--sp-sm);
-  background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-img);
-}
-.hub__cofre:focus-within { border-color: var(--ink); }
-.hub__cofre label { display: flex; align-items: center; gap: .6em; margin: 0; font-size: var(--t-eyebrow); font-weight: var(--w-bold); letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
-.hub__cofre label::before { content: ""; width: var(--bullet); height: var(--bullet); border-radius: 50%; background: var(--brand); }
-.hub__cofre textarea { flex: 1 1 12rem; min-width: 0; min-height: 0; border: 0; padding: .6em .4em; resize: none; }
-.hub__cofre textarea:focus-visible { outline: none; }
-/* Quatro blocos: lado a lado no computador, dois por linha no
-   tablet, um por linha no celular. Contagem fixa em vez de auto-fit,
-   que quebrava em três em cima e um sozinho embaixo. */
-/* Dois por linha, não quatro: com quatro cada bloco fica estreito
-   demais e a descrição quebra em cinco linhas. */
-.hub__blocos { display: grid; gap: var(--sp-md); grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 760px) { .hub__blocos { grid-template-columns: minmax(0, 1fr); } }
-.bloco {
-  display: flex; flex-direction: column; gap: var(--sp-lg);
-  min-height: 210px; padding: var(--sp-lg);
-  background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-img);
-  color: var(--ink); transition: border-color var(--d-fast), transform var(--d-base) var(--ease-out);
-}
-.bloco:hover { border-color: var(--ink); transform: translateY(-2px); }
-.bloco__num { font-size: var(--t-eyebrow); font-weight: var(--w-bold); letter-spacing: .14em; color: var(--brand); }
-.bloco__titulo { font-size: var(--t-h3); font-weight: var(--w-black); letter-spacing: var(--ls-h3); line-height: var(--lh-h3); margin-top: auto; }
-.bloco__desc { color: var(--muted); font-size: var(--t-small); line-height: 1.5; }
-.bloco__pe { display: flex; align-items: center; justify-content: space-between; font-size: var(--t-eyebrow); font-weight: var(--w-semi); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.bloco__pe .arrow { width: 2rem; height: 2rem; padding: .55rem; box-sizing: border-box; border-radius: 50%; background: var(--bg-2); transition: transform var(--d-base) var(--ease-out), background var(--d-fast), color var(--d-fast); }
-.bloco:hover .bloco__pe .arrow { background: var(--brand); color: #fff; transform: rotate(45deg); }
-.hub__pe { margin-top: var(--sp-2xl); display: flex; gap: var(--sp-md); align-items: center; flex-wrap: wrap; color: var(--muted); font-size: var(--t-eyebrow); }
-.hub__pe .ponto { width: 5px; height: 5px; border-radius: 50%; background: var(--brand); }
-
 /* ---------- Propostas: lista ---------- */
 .lista-prop { display: grid; gap: var(--sp-sm); }
 .prop-card {

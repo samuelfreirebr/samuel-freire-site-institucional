@@ -343,5 +343,10 @@ async function carregar() {
 $('#buscar').onclick = ligarBusca(() => todos);
 carregar().catch((e) => { $('#ficha').innerHTML = `<p class="vazio">${esc(e.message)}</p>`; });
 // O Claude pode ter mexido enquanto a aba estava em segundo plano.
-addEventListener('focus', () => { if (c && !document.querySelector('dialog[open]') && !document.activeElement?.matches('input, textarea')) carregar().catch(() => {}); });
+let ultimaCarga = Date.now();   // no máximo uma recarga por minuto
+addEventListener('focus', () => {
+  if (!c || document.querySelector('dialog[open]') || document.activeElement?.matches('input, textarea') || Date.now() - ultimaCarga < 60000) return;
+  ultimaCarga = Date.now();
+  carregar().catch(() => {});
+});
 addEventListener('hashchange', () => { if (decodeURIComponent(location.hash.slice(1)).split('&')[0] !== c?.id) location.reload(); });

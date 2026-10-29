@@ -5,7 +5,7 @@
 /* ---------- Central de ajustes ---------- */
 export const DIAS_LEAD_PARADO = 7;     // lead sem movimento há este tanto de dias vira "parado"
 export const DIAS_PROXIMAS = 14;       // janela das "próximas entregas"
-export const PASTA_PROJETOS = 'Meu Drive/PROJETOS : PORTFÓLIO';   // vai no pedido para o Claude
+const PASTA_PROJETOS = 'Meu Drive/PROJETOS : PORTFÓLIO';   // vai no pedido para o Claude
 
 export const $ = (s, raiz = document) => raiz.querySelector(s);
 export const $$ = (s, raiz = document) => [...raiz.querySelectorAll(s)];
@@ -19,7 +19,6 @@ export const NOMES = {
   claude: { fila: 'Na fila do Claude', trabalhando: 'Claude trabalhando', feita: 'Feita pelo Claude' },
   grupo: { atrasada: 'Atrasadas', hoje: 'Hoje', semana: 'Próximos 7 dias', depois: 'Depois', semprazo: 'Sem prazo', aguardando: 'Aguardando alguém', feita: 'Feitas' },
 };
-export const ATIVOS = ['fechado', 'andamento', 'entregue'];     // já é cliente
 export const LEADS = ['lead', 'proposta'];                      // ainda não fechou
 const PESO_PRIORIDADE = { urgente: 0, alta: 1, normal: 2, baixa: 3 };
 
