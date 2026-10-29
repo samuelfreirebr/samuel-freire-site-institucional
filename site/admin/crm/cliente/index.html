@@ -9,11 +9,11 @@
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="/admin/painel.css?v=20261029c">
-<link rel="stylesheet" href="/admin/casca.css?v=20261029c">
-<script type="module" src="/admin/casca.js?v=20261029c"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029c">
-<link rel="stylesheet" href="/admin/crm/cliente/cliente.css?v=20261029c">
+<link rel="stylesheet" href="/admin/painel.css?v=20261029d">
+<link rel="stylesheet" href="/admin/casca.css?v=20261029d">
+<script type="module" src="/admin/casca.js?v=20261029d"></script>
+<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029d">
+<link rel="stylesheet" href="/admin/crm/cliente/cliente.css?v=20261029d">
 <link rel="modulepreload" href="/admin/icones.js">
 <link rel="modulepreload" href="/admin/crm/comum.js">
 </head>
@@ -60,6 +60,10 @@
         <div class="crm-box__topo"><h3>Tarefas abertas</h3><button class="mini mini--ativo" type="button" data-nova-tarefa>Nova tarefa</button></div>
         <ul class="tf-lista" id="resumo-tarefas"></ul>
       </article>
+      <article class="crm-card-box" data-clickup hidden>
+        <div class="crm-box__topo"><h3>No ClickUp <span class="fc-cu-n"></span></h3><span class="fc-dica">Só leitura. Clique para abrir no ClickUp.</span></div>
+        <ul class="tf-lista" id="resumo-clickup"></ul>
+      </article>
     </div>
     <div class="fc-col">
       <article class="crm-card-box">
@@ -84,6 +88,10 @@
         </div>
       </div>
       <ul class="tf-lista" id="tarefas"></ul>
+    </article>
+    <article class="crm-card-box" data-clickup hidden>
+      <div class="crm-box__topo"><h3>No ClickUp <span class="fc-cu-n"></span></h3><span class="fc-dica">Só leitura. Clique para abrir no ClickUp.</span></div>
+      <ul class="tf-lista" id="clickup"></ul>
     </article>
   </section>
 
@@ -167,6 +175,6 @@
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/cliente/cliente.js?v=20261029c"></script>
+<script type="module" src="/admin/crm/cliente/cliente.js?v=20261029d"></script>
 </body>
 </html>

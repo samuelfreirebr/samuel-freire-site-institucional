@@ -51,6 +51,7 @@ import { apiProspeccao, configuracao as configProspeccao } from './prospeccao.js
 import * as dados from './dados.js';
 import * as cofre from './cofre.js';
 import * as crm from './crm.js';
+import * as clickup from './clickup.js';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 // A pasta site/ ao lado desta. No container, copiada para /app/site.
@@ -304,6 +305,12 @@ async function api(req, res, url) {
   }
 
   if (rota === 'crm' || rota.startsWith('crm/')) return apiCrm(req, res, rota, req.claude ? 'claude' : 'painel');
+
+  /* --- ClickUp: tarefas abertas das áreas, só leitura --- */
+  if (rota === 'clickup' && req.method === 'GET') {
+    if (!clickup.ligado()) return json(res, { ligado: false, tarefas: [], erros: [] });
+    return json(res, { ligado: true, ...(await clickup.tarefas({ renovar: url.searchParams.has('renovar') })) });
+  }
 
   /* --- cofre: links úteis, só do painel --- */
   if (rota === 'cofre') {

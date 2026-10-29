@@ -4,7 +4,7 @@
 
 import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, documentos, mesmoCliente, NOMES, LEADS,
-  dataCurta, quando, prazoTexto, iniciais, selo, whatsapp, abertas, atrasadas, proximaTarefa,
+  dataCurta, quando, prazoTexto, hojeIso, iniciais, selo, whatsapp, abertas, atrasadas, proximaTarefa,
   diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, copiar,
 } from '../comum.js';
 
@@ -69,7 +69,7 @@ function desenharResumo() {
     ...c.materiais.filter((m) => m.estado === 'falta').map((m) => ({ txt: `Material: ${m.nome}`, apoio: 'Ainda não chegou' })),
     ...forms.filter((f) => !f.respondidoEm).map((f) => ({ txt: 'Briefing sem resposta', apoio: f.titulo || 'Formulário enviado' })),
   ];
-  if (!abertas(c).length && !LEADS.includes(c.etapa) && c.etapa !== 'encerrado') falta.push({ txt: 'Nenhuma tarefa aberta', apoio: 'Crie a próxima tarefa deste cliente' });
+  if (!abertas(c).length && !doClickup().length && !LEADS.includes(c.etapa) && c.etapa !== 'encerrado') falta.push({ txt: 'Nenhuma tarefa aberta', apoio: 'Crie a próxima tarefa deste cliente' });
   $('#falta').innerHTML = falta.slice(0, 8).map((f) => `<li><span class="fc-falta${f.alerta ? ' atraso' : ''}">
       <span class="crm-lista__txt"><b>${esc(f.txt)}</b><small>${esc(f.apoio || '')}</small></span></span></li>`).join('')
     || '<li class="vazio">Nada pendente. Tudo em dia.</li>';
@@ -83,6 +83,40 @@ function desenharTarefas() {
   const feitas = $('#ver-feitas').checked;
   $('#tarefas').innerHTML = tarefasDaqui().filter((t) => feitas || t.estado !== 'feita').map((t) => linhaTarefa(t, { mostrarCliente: false })).join('')
     || '<li class="vazio">Nenhuma tarefa. Use "Nova tarefa".</li>';
+}
+
+/* ---------- ClickUp (só leitura) ---------- */
+
+let clickup = [];
+async function buscarClickup() {
+  try {
+    const r = await fetch('/api/clickup');
+    if (!r.ok) return;
+    clickup = (await r.json()).tarefas || [];
+  } catch { return; }
+  desenharResumo();
+  desenharClickup();
+}
+
+const doClickup = () => clickup.filter((t) => mesmoCliente(c.nome, t.cliente));
+
+function desenharClickup() {
+  const daqui = doClickup()
+    .sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999'));
+  const linha = (t) => `<li class="tf fc-cu" data-feita="${t.estado === 'feita' ? 1 : 0}">
+      <span class="fc-cu__ponto" data-estado="${t.estado}" aria-hidden="true"></span>
+      <a class="tf__corpo" href="${esc(t.url)}" target="_blank" rel="noopener">
+        <span class="tf__titulo">${esc(t.titulo)}</span>
+        <span class="tf__meta"><span>${esc(t.lista)}</span><span>${esc(t.status)}</span></span>
+      </a>
+      <span class="tf__prazo${t.estado !== 'feita' && t.prazo && t.prazo < hojeIso() ? ' atraso' : ''}">${prazoTexto(t.prazo)}</span>
+    </li>`;
+  for (const caixa of $$('[data-clickup]')) {
+    caixa.hidden = !daqui.length;
+    caixa.querySelector('.fc-cu-n').textContent = daqui.length;
+  }
+  $('#resumo-clickup').innerHTML = daqui.filter((t) => t.estado !== 'feita').slice(0, 6).map(linha).join('');
+  $('#clickup').innerHTML = daqui.map(linha).join('');
 }
 
 /* ---------- Materiais ---------- */
@@ -169,7 +203,7 @@ function desenharNotas() {
   $('#linha').innerHTML = [...(c.linha || [])].reverse().map(itemLinha).join('');
 }
 
-function desenhar() { desenharCabecalho(); desenharResumo(); desenharTarefas(); desenharMateriais(); desenharBriefing(); desenharNotas(); }
+function desenhar() { desenharCabecalho(); desenharResumo(); desenharTarefas(); desenharMateriais(); desenharBriefing(); desenharNotas(); desenharClickup(); }
 
 /* ---------- ações ---------- */
 
@@ -296,6 +330,7 @@ async function carregar() {
   }
   desenhar();
   buscarContratos();
+  buscarClickup();
 }
 
 $('#buscar').onclick = ligarBusca(() => todos);
