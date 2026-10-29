@@ -194,6 +194,18 @@ $('#visoes').addEventListener('click', (e) => {
   if (minha) { $('#agrupar').value = minha.agrupar; $('#filtro-cliente').value = minha.cliente; $('#mostrar-feitas').checked = minha.feitas; }
   desenharTarefas();
 });
+$('#sincronizar').addEventListener('click', async (e) => {
+  const b = e.currentTarget;
+  b.disabled = true; b.textContent = 'Sincronizando…';
+  try {
+    await carregar();
+    clickup = await tarefasClickup(clientes, true);
+    desenharGeral(); desenharTarefas();
+    avisar('Tarefas atualizadas, com o ClickUp.');
+  } catch (err) { avisar(err.message, 'erro'); }
+  finally { b.disabled = false; b.textContent = 'Sincronizar'; }
+});
+
 $('#salvar-visao').addEventListener('click', () => {
   const nome = (prompt('Nome da visão (ex.: Semana da SW):') || '').trim().slice(0, 40);
   if (!nome) return;

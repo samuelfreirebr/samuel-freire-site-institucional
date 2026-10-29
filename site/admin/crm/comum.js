@@ -165,9 +165,9 @@ export function ordenarTarefas(lista) {
 
 /* Tarefas do ClickUp no formato das do painel, presas ao cliente do CRM.
    Só leitura: a linha leva ao ClickUp. Sem ClickUp ligado, lista vazia. */
-export async function tarefasClickup(clientes) {
+export async function tarefasClickup(clientes, renovar = false) {
   try {
-    const r = await fetch('/api/clickup');
+    const r = await fetch('/api/clickup' + (renovar ? '?renovar' : ''));
     if (!r.ok) return [];
     return ((await r.json()).tarefas || []).map((t) => ({
       id: 'cu-' + t.id, titulo: t.titulo, estado: t.estado, prazo: t.prazo, prioridade: 'normal', tipo: 'tarefa', checklist: [],
