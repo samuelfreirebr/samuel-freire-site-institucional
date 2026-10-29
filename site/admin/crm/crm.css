@@ -92,7 +92,7 @@ body { overflow-y: auto; }
 .crm-lista li + li { border-top: var(--hair) solid var(--line); }
 .crm-lista a { display: flex; align-items: center; gap: var(--sp-xs); padding: var(--sp-2xs) 0; color: var(--ink); }
 .crm-lista a:hover .crm-lista__txt b { text-decoration: underline; text-underline-offset: 3px; }
-.crm-lista__data { flex: none; width: 3.4em; padding: .3em 0; text-align: center; border-radius: var(--radius-img); background: var(--bg-2); font-size: var(--t-eyebrow); font-weight: var(--w-bold); }
+.crm-lista__data { flex: none; min-width: 3.6em; padding: .35em .6em; text-align: center; border-radius: var(--radius-img); background: var(--bg-2); font-size: var(--t-eyebrow); font-weight: var(--w-bold); }
 .crm-lista__data.atraso { background: var(--brand-wash); color: var(--brand); }
 .crm-lista__txt { display: grid; flex: 1; min-width: 0; font-size: var(--t-small); }
 .crm-lista__txt b, .crm-lista__txt small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
