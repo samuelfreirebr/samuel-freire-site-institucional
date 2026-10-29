@@ -1,0 +1,82 @@
+/* ============================================================
+   Ficha do cliente. Entra depois de crm.css; usa só as variáveis.
+   ============================================================ */
+
+/* ---------- Central de ajustes ---------- */
+:root {
+  --fc-avatar: 4rem;         /* tamanho do círculo com as iniciais */
+  --fc-coluna-larga: 3fr;    /* Resumo: coluna das atividades */
+  --fc-coluna-estreita: 2fr; /* Resumo: coluna do que falta e notas */
+}
+
+.crm-ficha > * + * { margin-top: var(--crm-respiro); }
+.crm-ficha h3 { margin-bottom: var(--sp-sm); }
+.crm-ficha .crm-box__topo h3 { margin-bottom: 0; }
+
+/* ---------- Cabeçalho ---------- */
+.fc-cab { display: flex; align-items: center; gap: var(--sp-md); flex-wrap: wrap; }
+.fc-avatar { width: var(--fc-avatar); height: var(--fc-avatar); font-size: var(--t-small); }
+.crm-ficha[data-etapa="andamento"] .fc-avatar { box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 4px var(--brand); }
+.fc-cab__txt { flex: 1; min-width: 12rem; }
+.fc-etapa { margin: 0; min-width: 14rem; }
+.fc-etapa span { font-size: var(--t-eyebrow); font-weight: var(--w-semi); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- Números do contrato ---------- */
+.fc-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-img); }
+.fc-meta__item { display: grid; gap: 4px; padding: var(--sp-md); min-width: 0; }
+.fc-meta__item + .fc-meta__item { border-left: var(--hair) solid var(--line); }
+.fc-meta__item span { font-size: var(--t-eyebrow); font-weight: var(--w-semi); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.fc-meta__item b { font-size: var(--t-lead); font-weight: var(--w-black); letter-spacing: -.03em; overflow-wrap: anywhere; }
+.fc-meta__item small { color: var(--muted); font-size: var(--t-eyebrow); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-meta__item.alerta small { color: var(--brand); font-weight: var(--w-semi); }
+@media (max-width: 820px) {
+  .fc-meta { grid-template-columns: 1fr 1fr; }
+  .fc-meta__item + .fc-meta__item { border-left: 0; }
+  .fc-meta__item:nth-child(even) { border-left: var(--hair) solid var(--line); }
+  .fc-meta__item:nth-child(n + 3) { border-top: var(--hair) solid var(--line); }
+}
+
+.fc-abas { width: max-content; max-width: 100%; overflow-x: auto; }
+.fc-abas span { color: var(--meta); margin-left: .2em; }
+
+/* ---------- Resumo ---------- */
+.fc-resumo { display: grid; gap: var(--crm-espaco); align-items: start; }
+@media (min-width: 900px) { .fc-resumo { grid-template-columns: var(--fc-coluna-larga) var(--fc-coluna-estreita); } }
+.fc-col { display: grid; gap: var(--crm-espaco); min-width: 0; }
+.fc-passo { border-left: var(--hair-2) solid var(--brand); }
+.fc-passo p { font-size: var(--t-lead); font-weight: var(--w-semi); letter-spacing: -.02em; line-height: var(--lh-lead); }
+.fc-passo p.vazio, .fc-notas.vazio { font-size: var(--t-small); font-weight: var(--w-book); padding: 0; }
+.fc-notas { font-size: var(--t-small); white-space: pre-line; color: var(--ink-2); }
+
+.fc-ativ { display: grid; margin-bottom: var(--sp-sm); }
+.fc-ativ li { display: flex; align-items: center; gap: var(--sp-xs); padding: var(--sp-2xs) 0; font-size: var(--t-small); }
+.fc-ativ li + li { border-top: var(--hair) solid var(--line); }
+.fc-ativ__prazo { flex: none; width: 5.2em; font-size: var(--t-eyebrow); font-weight: var(--w-bold); color: var(--muted); }
+.fc-ativ__prazo.atraso { color: var(--brand); }
+.fc-ativ__txt { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.fc-ativ__txt i { font-style: normal; font-size: var(--t-eyebrow); }
+.fc-ativ li[data-feita="1"] .fc-ativ__txt { color: var(--muted); text-decoration: line-through; }
+.fc-ativ select { width: auto; flex: none; padding: .3em .5em; font-size: var(--t-eyebrow); }
+.fc-ativ .vazio { padding: var(--sp-2xs) 0; }
+
+.fc-add { display: flex; align-items: center; gap: var(--sp-2xs); flex-wrap: wrap; }
+.fc-add input[type="text"] { flex: 1 1 14rem; min-width: 0; }
+/* painel.css não pinta o campo de data: aqui ele fica igual aos outros. */
+input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-height: 1.5; color: var(--ink); border: var(--hair) solid var(--line-2); border-radius: var(--radius-img); background: var(--bg); }
+.fc-add input[type="date"] { width: auto; flex: none; padding: .6em .7em; font-size: var(--t-small); }
+
+.fc-falta { display: flex; padding: var(--sp-2xs) 0 var(--sp-2xs) var(--sp-xs); border-left: var(--hair-2) solid var(--line-2); margin: var(--sp-3xs) 0; }
+.fc-falta.atraso { border-left-color: var(--brand); }
+.crm-lista li + li .fc-falta { margin-top: var(--sp-2xs); }
+.crm-lista li:has(.fc-falta) + li { border-top: 0; }
+
+/* ---------- Linha do tempo ---------- */
+.fc-linha-caixa { max-width: 860px; }
+.fc-linha { display: grid; gap: var(--sp-sm); margin-top: var(--sp-md); }
+.fc-linha li { display: grid; gap: 2px; padding-left: var(--sp-sm); border-left: var(--hair-2) solid var(--line); font-size: var(--t-small); }
+.fc-linha li[data-origem="claude"] { border-left-color: var(--brand); }
+.fc-linha time { color: var(--muted); font-size: var(--t-eyebrow); }
+
+.fc-contrato { margin: var(--sp-sm) 0 var(--sp-md); }
+.fc-contrato legend { margin-bottom: var(--sp-sm); }
+.crm-lista i { font-style: normal; color: var(--brand); font-weight: var(--w-semi); }

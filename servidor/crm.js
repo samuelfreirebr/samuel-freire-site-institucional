@@ -31,6 +31,7 @@ let fila = Promise.resolve();
 const naFila = (fn) => { const r = fila.then(fn, fn); fila = r.catch(() => {}); return r; };
 const novoId = () => randomBytes(6).toString('hex');
 const corte = (v, max) => String(v ?? '').trim().slice(0, max);
+const data = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v || '') ? v : '';
 
 export async function listar() {
   try { return JSON.parse(await fs.readFile(ARQ, 'utf8')); }
@@ -48,7 +49,7 @@ function limparAtividades(lista) {
     id: corte(a.id, 20) || novoId(),
     titulo: corte(a.titulo, 300),
     estado: ESTADOS_ATIVIDADE.includes(a.estado) ? a.estado : 'backlog',
-    prazo: /^\d{4}-\d{2}-\d{2}$/.test(a.prazo || '') ? a.prazo : '',
+    prazo: data(a.prazo),
     origem: a.origem === 'claude' ? 'claude' : 'painel',
   })).filter((a) => a.titulo);
 }
@@ -63,6 +64,12 @@ function limpar(d) {
     proximoPasso: corte(d.proximoPasso, 500),
     contato: corte(d.contato, 300),
     notas: corte(d.notas, 8000),
+    /* Contrato. Valor vazio fica null: o Samuel preenche, ninguém chuta. */
+    tipo: ['recorrente', 'pontual'].includes(d.tipo) ? d.tipo : '',
+    valor: d.valor === '' || d.valor == null || !(Number(d.valor) >= 0) ? null : Math.round(Number(d.valor) * 100) / 100,
+    moeda: /^[A-Z]{3}$/.test(d.moeda || '') ? d.moeda : 'BRL',
+    inicio: data(d.inicio),
+    fim: data(d.fim),
     atividades: limparAtividades(d.atividades),
   };
 }

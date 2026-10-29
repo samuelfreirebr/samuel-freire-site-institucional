@@ -10,66 +10,110 @@
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
 <link rel="stylesheet" href="/admin/painel.css?v=9">
-<link rel="stylesheet" href="./crm.css?v=5">
+<link rel="stylesheet" href="/admin/crm/crm.css?v=7">
 </head>
 <body>
 
 <header class="topo">
   <h1><a href="/admin/">Painel</a> <i>Samuel Freire</i><span class="sec">CRM</span></h1>
-  <input class="crm-busca" type="search" id="busca" placeholder="Buscar cliente" autocomplete="off" aria-label="Buscar cliente">
+  <nav class="grupo crm-abas" aria-label="Telas do CRM">
+    <button type="button" data-aba="geral" aria-selected="true">Visão geral</button>
+    <button type="button" data-aba="clientes" aria-selected="false">Clientes</button>
+  </nav>
   <button class="mini mini--ativo" type="button" id="novo">Novo cliente</button>
 </header>
 
 <p class="aviso" id="aviso" role="status"></p>
 
-<main class="crm">
-  <p class="crm-resumo" id="resumo"></p>
-  <div class="crm-quadro" id="funil"><p class="vazio">Carregando…</p></div>
+<main class="crm-pagina">
+
+  <section id="aba-geral" aria-labelledby="t-geral">
+    <div class="crm-cab">
+      <div>
+        <h2 class="crm-titulo" id="t-geral">Visão geral</h2>
+        <p class="crm-sub" id="hoje"></p>
+      </div>
+    </div>
+
+    <div class="crm-kpis" id="kpis"><p class="vazio">Carregando…</p></div>
+
+    <div class="crm-grade crm-grade--2">
+      <article class="crm-card-box">
+        <header class="crm-box__topo">
+          <h3>Recebido por mês</h3>
+          <div class="crm-pilulas" id="moedas" role="group" aria-label="Moeda"></div>
+        </header>
+        <p class="crm-box__num" id="recebido-total"></p>
+        <div class="crm-grafico" id="grafico"></div>
+      </article>
+      <article class="crm-card-box">
+        <header class="crm-box__topo"><h3>Funil</h3><span class="crm-box__dica">Clientes por etapa</span></header>
+        <ul class="crm-barras" id="barras"></ul>
+      </article>
+    </div>
+
+    <div class="crm-grade crm-grade--3">
+      <article class="crm-card-box">
+        <header class="crm-box__topo"><h3>Próximas entregas</h3><span class="crm-box__dica">14 dias</span></header>
+        <ul class="crm-lista" id="entregas"></ul>
+      </article>
+      <article class="crm-card-box">
+        <header class="crm-box__topo"><h3>Atrasadas</h3></header>
+        <ul class="crm-lista" id="atrasadas"></ul>
+      </article>
+      <article class="crm-card-box">
+        <header class="crm-box__topo"><h3>Últimas mudanças</h3></header>
+        <ul class="crm-lista" id="mudancas"></ul>
+      </article>
+    </div>
+  </section>
+
+  <section id="aba-clientes" aria-labelledby="t-clientes" hidden>
+    <div class="crm-cab">
+      <div>
+        <h2 class="crm-titulo" id="t-clientes">Clientes</h2>
+        <p class="crm-sub">Leads, propostas e clientes num lugar só. O nome abre a ficha em outra aba.</p>
+      </div>
+      <div class="crm-cab__acoes">
+        <input class="crm-busca" type="search" id="busca" placeholder="Buscar cliente" autocomplete="off" aria-label="Buscar cliente">
+        <div class="grupo" role="group" aria-label="Formato">
+          <button type="button" data-vista="tabela" aria-selected="true">Tabela</button>
+          <button type="button" data-vista="funil" aria-selected="false">Funil</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="crm-pilulas crm-pilulas--filtro" id="filtros" role="group" aria-label="Filtrar por etapa"></div>
+
+    <div class="crm-card-box crm-tabela-caixa" id="vista-tabela">
+      <table class="crm-tabela">
+        <thead><tr><th>Cliente</th><th>Etapa</th><th>Contrato</th><th>Próxima entrega</th><th>Atividades</th><th>Último movimento</th></tr></thead>
+        <tbody id="linhas"></tbody>
+      </table>
+    </div>
+
+    <div class="crm-quadro" id="funil" hidden></div>
+  </section>
+
 </main>
 
-<dialog id="ficha" aria-labelledby="ficha-titulo">
+<dialog id="novo-jan" aria-labelledby="novo-titulo">
   <header class="modal__topo">
-    <b id="ficha-titulo">Cliente</b>
-    <button class="mini mini--ativo" type="submit" form="form">Salvar</button>
-    <button class="mini" type="button" id="fechar" aria-label="Fechar">Fechar</button>
+    <b id="novo-titulo">Novo cliente</b>
+    <button class="mini mini--ativo" type="submit" form="novo-form">Criar e abrir a ficha</button>
+    <button class="mini" type="button" data-fechar>Fechar</button>
   </header>
   <div class="modal__corpo">
-    <form id="form">
+    <form id="novo-form">
+      <label><span>Nome</span><input type="text" name="nome" required maxlength="160"></label>
       <div class="linha linha--2">
-        <label><span>Nome</span><input type="text" name="nome" required maxlength="160"></label>
-        <label><span>Etapa</span><select name="etapa" id="f-etapa"></select></label>
+        <label><span>Etapa</span><select name="etapa" id="novo-etapa"></select></label>
+        <label><span>O que contratou</span><input type="text" name="servico" maxlength="300" placeholder="Ex.: site institucional"></label>
       </div>
-      <label><span>O que contratou</span><input type="text" name="servico" maxlength="300" placeholder="Ex.: site institucional, criativos mensais"></label>
-      <label><span>Próximo passo</span><input type="text" name="proximoPasso" maxlength="500" placeholder="O que precisa acontecer agora"></label>
-      <label><span>Contato</span><input type="text" name="contato" maxlength="300" placeholder="Nome, WhatsApp, e-mail"></label>
-      <label><span>Notas</span><textarea name="notas" maxlength="8000"></textarea></label>
     </form>
-
-    <section class="crm-sec">
-      <h2>Atividades</h2>
-      <ul class="crm-ativ" id="atividades"></ul>
-      <form class="crm-add" id="add-ativ">
-        <input type="text" id="nova-ativ" placeholder="Nova atividade" maxlength="300" aria-label="Nova atividade">
-        <button class="mini" type="submit">Adicionar</button>
-      </form>
-    </section>
-
-    <section class="crm-sec" id="sec-docs" hidden>
-      <h2>No painel</h2>
-      <ul class="crm-docs" id="docs"></ul>
-    </section>
-
-    <section class="crm-sec" id="sec-linha" hidden>
-      <h2>Linha do tempo</h2>
-      <form class="crm-add" id="add-linha">
-        <input type="text" id="nova-linha" placeholder="O que aconteceu" maxlength="4000" aria-label="Anotar na linha do tempo">
-        <button class="mini" type="submit">Anotar</button>
-      </form>
-      <ol class="crm-linha" id="linha"></ol>
-    </section>
   </div>
 </dialog>
 
-<script type="module" src="./crm.js?v=1"></script>
+<script type="module" src="/admin/crm/crm.js?v=7"></script>
 </body>
 </html>

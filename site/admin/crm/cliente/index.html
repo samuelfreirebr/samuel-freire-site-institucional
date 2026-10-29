@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cliente | CRM Samuel Freire</title>
+<link rel="icon" href="/img/favicon.png" type="image/png">
+<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
+<link rel="stylesheet" href="/styles/base.css?v=20260911a">
+<link rel="stylesheet" href="/admin/painel.css?v=9">
+<link rel="stylesheet" href="/admin/crm/crm.css?v=7">
+<link rel="stylesheet" href="/admin/crm/cliente/cliente.css?v=1">
+</head>
+<body>
+
+<header class="topo">
+  <h1><a href="/admin/">Painel</a> <i>Samuel Freire</i><span class="sec"><a href="/admin/crm/#clientes">CRM</a></span><span class="sec" id="topo-nome">Cliente</span></h1>
+  <button class="mini" type="button" id="editar">Editar dados</button>
+</header>
+
+<p class="aviso" id="aviso" role="status"></p>
+
+<main class="crm-pagina crm-ficha" id="ficha">
+  <p class="vazio">Carregando…</p>
+</main>
+
+<template id="modelo">
+  <header class="fc-cab">
+    <span class="crm-avatar fc-avatar" id="avatar" aria-hidden="true"></span>
+    <div class="fc-cab__txt">
+      <h2 class="crm-titulo" id="nome"></h2>
+      <p class="crm-sub" id="servico"></p>
+    </div>
+    <label class="fc-etapa"><span>Etapa</span><select id="etapa"></select></label>
+  </header>
+
+  <div class="fc-meta" id="meta"></div>
+
+  <nav class="grupo fc-abas" aria-label="Partes da ficha">
+    <button type="button" data-aba="resumo" aria-selected="true">Resumo</button>
+    <button type="button" data-aba="documentos" aria-selected="false">Documentos <span id="n-docs"></span></button>
+    <button type="button" data-aba="linha" aria-selected="false">Linha do tempo</button>
+  </nav>
+
+  <section data-painel="resumo" class="fc-resumo">
+    <div class="fc-col">
+      <article class="crm-card-box fc-passo">
+        <h3>Próximo passo</h3>
+        <p id="passo"></p>
+      </article>
+      <article class="crm-card-box">
+        <div class="crm-box__topo"><h3>Atividades</h3><span class="crm-box__dica" id="n-ativ"></span></div>
+        <ul class="fc-ativ" id="atividades"></ul>
+        <form class="fc-add" id="add-ativ">
+          <input type="text" id="nova-ativ" placeholder="Nova atividade" maxlength="300" aria-label="Nova atividade" required>
+          <input type="date" id="nova-prazo" aria-label="Prazo da atividade">
+          <button class="mini mini--ativo" type="submit">Adicionar</button>
+        </form>
+      </article>
+    </div>
+    <div class="fc-col">
+      <article class="crm-card-box">
+        <h3>O que falta</h3>
+        <ul class="crm-lista" id="falta"></ul>
+      </article>
+      <article class="crm-card-box">
+        <h3>Notas</h3>
+        <p class="fc-notas" id="notas"></p>
+      </article>
+      <article class="crm-card-box">
+        <h3>Últimas mudanças</h3>
+        <ul class="crm-lista" id="ultimas"></ul>
+      </article>
+    </div>
+  </section>
+
+  <section data-painel="documentos" hidden>
+    <div class="crm-grade crm-grade--3" id="docs"></div>
+  </section>
+
+  <section data-painel="linha" hidden>
+    <article class="crm-card-box fc-linha-caixa">
+      <form class="fc-add" id="add-linha">
+        <input type="text" id="nova-linha" placeholder="O que aconteceu? Ex.: cliente aprovou o layout" maxlength="4000" aria-label="Anotar na linha do tempo" required>
+        <button class="mini mini--ativo" type="submit">Anotar</button>
+      </form>
+      <ol class="fc-linha" id="linha"></ol>
+    </article>
+  </section>
+</template>
+
+<dialog id="jan" aria-labelledby="jan-titulo">
+  <header class="modal__topo">
+    <b id="jan-titulo">Editar dados</b>
+    <button class="mini mini--ativo" type="submit" form="form">Salvar</button>
+    <button class="mini" type="button" id="fechar">Fechar</button>
+  </header>
+  <div class="modal__corpo">
+    <form id="form">
+      <div class="linha linha--2">
+        <label><span>Nome</span><input type="text" name="nome" required maxlength="160"></label>
+        <label><span>O que contratou</span><input type="text" name="servico" maxlength="300"></label>
+      </div>
+      <label><span>Próximo passo</span><input type="text" name="proximoPasso" maxlength="500" placeholder="O que precisa acontecer agora"></label>
+      <label><span>Contato</span><input type="text" name="contato" maxlength="300" placeholder="Nome, WhatsApp, e-mail"></label>
+      <fieldset class="fc-contrato">
+        <legend>Contrato</legend>
+        <div class="linha linha--3">
+          <label><span>Tipo</span><select name="tipo"><option value="">Não definido</option><option value="recorrente">Recorrente (por mês)</option><option value="pontual">Pontual (projeto)</option></select></label>
+          <label><span>Valor</span><input type="number" name="valor" min="0" step="0.01" placeholder="Ex.: 1500"><small>Só o número. Vazio: sem valor.</small></label>
+          <label><span>Moeda</span><select name="moeda"><option value="BRL">R$ (real)</option><option value="USD">US$ (dólar)</option><option value="EUR">€ (euro)</option></select></label>
+        </div>
+        <div class="linha linha--2">
+          <label><span>Início</span><input type="date" name="inicio"></label>
+          <label><span>Fim</span><input type="date" name="fim"><small>Vazio: sem data de fim.</small></label>
+        </div>
+      </fieldset>
+      <label><span>Notas</span><textarea name="notas" maxlength="8000" rows="5"></textarea></label>
+    </form>
+  </div>
+</dialog>
+
+<script type="module" src="/admin/crm/cliente/cliente.js?v=1"></script>
+</body>
+</html>
