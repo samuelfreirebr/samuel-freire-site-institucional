@@ -15,7 +15,6 @@ export const NOMES = {
   estado: { afazer: 'A fazer', andamento: 'Fazendo', aguardando: 'Aguardando', feita: 'Feita' },
   prioridade: { urgente: 'Urgente', alta: 'Alta', normal: 'Normal', baixa: 'Baixa' },
   origem: { whatsapp: 'WhatsApp', instagram: 'Instagram', indicacao: 'Indicação', prospeccao: 'Prospecção', site: 'Site', outro: 'Outro' },
-  projeto: { proximo: 'Próximo', andamento: 'Em andamento', pausado: 'Pausado', entregue: 'Entregue' },
   claude: { fila: 'Na fila do Claude', trabalhando: 'Claude trabalhando', feita: 'Feita pelo Claude' },
   grupo: { atrasada: 'Atrasadas', hoje: 'Hoje', semana: 'Próximos 7 dias', depois: 'Depois', semprazo: 'Sem prazo', aguardando: 'Aguardando alguém', feita: 'Feitas' },
 };
@@ -120,7 +119,8 @@ export const visiveis = (clientes) => clientes.filter((c) => !c.interno);
 export const abertas = (c) => (c.atividades || []).filter((a) => a.estado !== 'feita');
 export const atrasadas = (c) => abertas(c).filter((a) => a.prazo && a.prazo < hojeIso());
 export const proximaEntrega = (c) => abertas(c).filter((a) => a.prazo && a.prazo >= hojeIso()).sort((x, y) => x.prazo.localeCompare(y.prazo))[0] || null;
-export const projetoAtual = (c) => c.projetos.find((p) => p.estado === 'andamento') || c.projetos.find((p) => p.estado === 'proximo') || null;
+// A próxima tarefa do cliente: a aberta mais urgente, com prazo mais perto.
+export const proximaTarefa = (c) => ordenarTarefas(abertas(c).map((t) => ({ ...t, cliente: c })))[0] || null;
 
 export function diasNaEtapa(c) {
   const desde = c.etapaDesde || [...(c.linha || [])].reverse().find((l) => l.texto.startsWith('Etapa:'))?.data || c.criadoEm;
@@ -167,7 +167,6 @@ export function linhaTarefa(t, { mostrarCliente = true } = {}) {
   const feita = t.estado === 'feita';
   const atraso = !feita && t.prazo && t.prazo < hojeIso();
   const feitos = t.checklist.filter((i) => i.feito).length;
-  const projeto = t.projeto && t.cliente.projetos.find((p) => p.id === t.projeto);
   const quem = t.cliente.interno ? 'Empresa' : t.cliente.nome;
   return `<li class="tf" data-cliente="${t.cliente.id}" data-tarefa="${t.id}" data-feita="${feita ? 1 : 0}">
     <label class="tf__check" title="${feita ? 'Reabrir' : 'Marcar como feita'}"><input type="checkbox" data-acao="feita"${feita ? ' checked' : ''} aria-label="Feita: ${esc(t.titulo)}"></label>
@@ -175,7 +174,6 @@ export function linhaTarefa(t, { mostrarCliente = true } = {}) {
       <span class="tf__titulo">${t.tipo === 'entrega' ? '<span class="tf__entrega">Entrega</span>' : ''}${esc(t.titulo)}</span>
       <span class="tf__meta">
         ${mostrarCliente ? `<span>${esc(quem)}</span>` : ''}
-        ${projeto ? `<span>${esc(projeto.nome)}</span>` : ''}
         ${t.checklist.length ? `<span>${feitos}/${t.checklist.length} itens</span>` : ''}
         ${t.estado === 'andamento' ? '<span>Fazendo</span>' : ''}
         ${t.claude ? `<span class="claude">${NOMES.claude[t.claude]}</span>` : t.origem === 'claude' ? '<span class="claude">Criada pelo Claude</span>' : ''}
@@ -258,10 +256,7 @@ function janelaTarefa() {
           <label><span>Prioridade</span><select name="prioridade">${Object.entries(NOMES.prioridade).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
           <label><span>Situação</span><select name="estado">${Object.entries(NOMES.estado).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
         </div>
-        <div class="linha linha--2">
-          <label><span>Tipo</span><select name="tipo"><option value="tarefa">Tarefa</option><option value="entrega">Entrega para o cliente</option></select></label>
-          <label><span>Projeto</span><select name="projeto"></select></label>
-        </div>
+        <label><span>Tipo</span><select name="tipo"><option value="tarefa">Tarefa</option><option value="entrega">Entrega para o cliente</option></select></label>
         <label><span>Detalhes</span><textarea name="descricao" rows="3" maxlength="4000" placeholder="O que precisa saber para fazer"></textarea></label>
         <div class="jt-check">
           <span class="jt-rotulo">Checklist</span>
@@ -279,10 +274,10 @@ function janelaTarefa() {
 }
 
 /* Abre o editor. Sem `tarefa`, cria. Sem `cliente`, mostra o seletor. */
-export function abrirTarefa({ cliente = null, tarefa = null, clientes = [], aoSalvar, prazo = '', projeto = '' }) {
+export function abrirTarefa({ cliente = null, tarefa = null, clientes = [], aoSalvar, prazo = '' }) {
   const d = janelaTarefa();
   const f = $('#jt-form', d);
-  const t = structuredClone(tarefa || { titulo: '', prazo, prioridade: 'normal', estado: 'afazer', tipo: 'tarefa', projeto, descricao: '', checklist: [], claude: '', origem: 'painel' });
+  const t = structuredClone(tarefa || { titulo: '', prazo, prioridade: 'normal', estado: 'afazer', tipo: 'tarefa', descricao: '', checklist: [], claude: '', origem: 'painel' });
   delete t.cliente;
   $('#jt-titulo', d).textContent = tarefa ? 'Editar tarefa' : 'Nova tarefa';
 
@@ -291,12 +286,9 @@ export function abrirTarefa({ cliente = null, tarefa = null, clientes = [], aoSa
   f.elements.cliente.innerHTML = '<option value="">Sem cliente (tarefa da empresa)</option>'
     + opcoes.sort((a, b) => a.nome.localeCompare(b.nome)).map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
 
-  const projetosDe = (c) => '<option value="">Nenhum</option>' + (c?.projetos || []).map((p) => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   const atual = () => cliente || clientes.find((c) => c.id === f.elements.cliente.value) || null;
-  f.elements.projeto.innerHTML = projetosDe(atual());
-  f.elements.cliente.onchange = () => { f.elements.projeto.innerHTML = projetosDe(atual()); };
 
-  for (const k of ['titulo', 'prazo', 'prioridade', 'estado', 'tipo', 'projeto', 'descricao', 'claude']) f.elements[k].value = t[k] || '';
+  for (const k of ['titulo', 'prazo', 'prioridade', 'estado', 'tipo', 'descricao', 'claude']) f.elements[k].value = t[k] || '';
   const nota = $('#jt-nota-claude', d);
   nota.hidden = !t.notaClaude;
   nota.textContent = t.notaClaude ? `Nota do Claude: ${t.notaClaude}` : '';
@@ -318,7 +310,7 @@ export function abrirTarefa({ cliente = null, tarefa = null, clientes = [], aoSa
 
   f.onsubmit = async (e) => {
     e.preventDefault();
-    for (const k of ['titulo', 'prazo', 'prioridade', 'estado', 'tipo', 'projeto', 'descricao', 'claude']) t[k] = f.elements[k].value;
+    for (const k of ['titulo', 'prazo', 'prioridade', 'estado', 'tipo', 'descricao', 'claude']) t[k] = f.elements[k].value;
     try {
       const dono = atual() || await registroInterno(clientes);
       aoSalvar(await salvarTarefa(dono, t));
@@ -341,7 +333,7 @@ export function pedidoClaude(t, c) {
     t.prazo && `Prazo: ${dataLonga(t.prazo)}`,
     `Prioridade: ${NOMES.prioridade[t.prioridade]}`,
     t.checklist.length && `Checklist:\n${t.checklist.map((i) => `- [${i.feito ? 'x' : ' '}] ${i.texto}`).join('\n')}`,
-    !c.interno && c.proximoPasso && `Próximo passo do cliente: ${c.proximoPasso}`,
+    !c.interno && c.drive && `Pasta de materiais no Drive: ${c.drive}`,
     !c.interno && c.materiais.some((m) => m.estado === 'falta') && `Materiais que ainda faltam: ${c.materiais.filter((m) => m.estado === 'falta').map((m) => m.nome).join(', ')}`,
     !c.interno && `Pasta do projeto: procure em ${PASTA_PROJETOS}/ pelo nome do cliente.`,
     '',

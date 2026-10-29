@@ -9,10 +9,10 @@
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="/admin/painel.css?v=20261029b">
-<link rel="stylesheet" href="/admin/casca.css?v=20261029b">
-<script type="module" src="/admin/casca.js?v=20261029b"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029b">
+<link rel="stylesheet" href="/admin/painel.css?v=20261029c">
+<link rel="stylesheet" href="/admin/casca.css?v=20261029c">
+<script type="module" src="/admin/casca.js?v=20261029c"></script>
+<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029c">
 <link rel="modulepreload" href="/admin/icones.js">
 <link rel="modulepreload" href="/admin/crm/comum.js">
 <link rel="modulepreload" href="/admin/crm/graficos.js">
@@ -82,8 +82,8 @@
         <ul class="crm-lista" id="leads-atencao"></ul>
       </article>
       <article class="crm-card-box">
-        <header class="crm-box__topo"><h3>Projetos</h3><span class="crm-box__dica">Em andamento e próximos</span></header>
-        <ul class="crm-lista" id="projetos"></ul>
+        <header class="crm-box__topo"><h3>Clientes ativos</h3><span class="crm-box__dica">Próxima tarefa de cada um</span></header>
+        <ul class="crm-lista" id="ativos"></ul>
       </article>
     </div>
 
@@ -127,7 +127,7 @@
     <div class="crm-cab">
       <div>
         <h2 class="crm-titulo" id="t-cal">Calendário</h2>
-        <p class="crm-sub">Prazos de tarefas e entregas, follow-ups de leads e fim de contratos.</p>
+        <p class="crm-sub">Prazos de tarefas e entregas e follow-ups de leads.</p>
       </div>
       <div class="crm-cab__acoes">
         <button class="mini" type="button" id="mes-ant" aria-label="Mês anterior">←</button>
@@ -137,7 +137,7 @@
       </div>
     </div>
     <div class="cal" id="cal"></div>
-    <p class="crm-legenda"><span class="cal-ev cal-ev--entrega">Entrega</span><span class="cal-ev">Tarefa</span><span class="cal-ev cal-ev--lead">Follow-up</span><span class="cal-ev cal-ev--contrato">Fim de contrato</span> Clique num dia vazio para criar uma tarefa nele.</p>
+    <p class="crm-legenda"><span class="cal-ev cal-ev--entrega">Entrega</span><span class="cal-ev">Tarefa</span><span class="cal-ev cal-ev--lead">Follow-up</span>Clique num dia vazio para criar uma tarefa nele.</p>
   </section>
 
   <!-- ===================== Leads ===================== -->
@@ -181,7 +181,7 @@
       <header class="crm-tabela-topo"><h3>Todos os clientes</h3><span class="crm-box__dica">Mude a etapa direto na linha. Clique na linha para a prévia.</span></header>
       <div class="crm-tabela-rola">
         <table class="crm-tabela">
-          <thead><tr><th>Cliente</th><th>Etapa</th><th>Projeto atual</th><th>Próxima entrega</th><th>Tarefas</th><th>Último movimento</th><th><span class="sr">Abrir</span></th></tr></thead>
+          <thead><tr><th>Cliente</th><th>Etapa</th><th>Próxima tarefa</th><th>Tarefas</th><th>Último movimento</th><th><span class="sr">Abrir</span></th></tr></thead>
           <tbody id="linhas"></tbody>
         </table>
       </div>
@@ -238,7 +238,7 @@
         <label><span>Contato</span><input type="text" name="contato" maxlength="300" placeholder="Nome, WhatsApp, e-mail"></label>
         <label><span>Tipo</span><select name="tipo"><option value="">Não definido</option><option value="recorrente">Recorrente (com contrato)</option><option value="pontual">Pontual (projeto)</option></select></label>
       </div>
-      <label><span>Próximo passo</span><input type="text" name="proximoPasso" maxlength="500" placeholder="O que precisa acontecer agora"></label>
+      <label><span>Primeira tarefa</span><input type="text" name="primeiraTarefa" maxlength="300" placeholder="Ex.: mandar a proposta"><small>Vira uma tarefa do cliente.</small></label>
       <label><span>Nota</span><textarea name="nota" rows="4" maxlength="4000" placeholder="Contexto, dores, prazos, país, Instagram, site"></textarea><small>Vai para a aba Notas da ficha.</small></label>
     </form>
   </div>
@@ -269,6 +269,6 @@
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/crm.js?v=20261029b"></script>
+<script type="module" src="/admin/crm/crm.js?v=20261029c"></script>
 </body>
 </html>

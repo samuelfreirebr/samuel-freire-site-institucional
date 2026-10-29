@@ -7,7 +7,7 @@
 import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, NOMES, LEADS, DIAS_PROXIMAS,
   hojeIso, dataCurta, diasAte, quando, prazoTexto, somarDias, iniciais, visiveis, abertas, atrasadas,
-  proximaEntrega, projetoAtual, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
+  proximaEntrega, proximaTarefa, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
   grupoPrazo, todasTarefas, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
 } from './comum.js';
 import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js';
@@ -51,8 +51,7 @@ function desenharGeral() {
   const urgentes = tarefas.filter((t) => t.prioridade === 'urgente');
   const fila = tarefas.filter((t) => t.claude === 'fila' || t.claude === 'trabalhando');
   const leadsAtencao = visiveis(clientes).filter(leadPedeAtencao);
-  const projetos = visiveis(clientes).flatMap((c) => c.projetos.map((p) => ({ ...p, cliente: c })));
-  const emAndamento = projetos.filter((p) => p.estado === 'andamento');
+  const emAndamento = visiveis(clientes).filter((c) => c.etapa === 'andamento' || c.etapa === 'recorrente');
 
   // Resumo da manhã: uma frase com o que pede atenção.
   const partes = [];
@@ -73,7 +72,7 @@ function desenharGeral() {
     kpi('Vencem hoje', hoje.length, hoje.length ? 'Prazo é hoje' : 'Nada para hoje', '#tarefas', 'tarefas'),
     kpi('Atrasadas', vencidas.length, vencidas.length ? 'Passaram do prazo' : 'Tudo no prazo', '#tarefas', 'calendario', vencidas.length ? ' crm-kpi--alerta' : ''),
     kpi('Follow-ups', leadsAtencao.length, leadsAtencao.length ? 'Leads para falar ou parados' : 'Leads em dia', '#leads', 'leads', leadsAtencao.length ? ' crm-kpi--alerta' : ''),
-    kpi('Projetos em andamento', emAndamento.length, `${projetos.filter((p) => p.estado === 'proximo').length} na fila para começar`, '#clientes', 'painel'),
+    kpi('Clientes ativos', emAndamento.length, `${visiveis(clientes).filter((c) => c.etapa === 'fechado').length} fechados sem começar`, '#clientes', 'painel'),
     kpi('Fila do Claude', fila.length, fila.length ? 'Peça: "pega a fila do CRM"' : 'Nada na fila', '#tarefas', 'enviar'),
   ].join('');
 
@@ -102,10 +101,11 @@ function desenharGeral() {
     .map((c) => item(ficha(c), c.proximoContato ? prazoTexto(c.proximoContato) : `${diasSemMovimento(c)}d`, true, c.nome, situacaoLead(c).texto)).join('')
     || '<li class="vazio">Nenhum lead pedindo follow-up.</li>';
 
-  $('#projetos').innerHTML = projetos.filter((p) => p.estado === 'andamento' || p.estado === 'proximo')
-    .sort((a, b) => (a.estado !== 'andamento') - (b.estado !== 'andamento') || (a.prazo || '9').localeCompare(b.prazo || '9')).slice(0, 7)
-    .map((p) => item(ficha(p.cliente) + '&projetos', p.prazo ? prazoTexto(p.prazo) : '...', p.prazo && p.prazo < hojeIso(), p.nome, `${NOMES.projeto[p.estado]} · ${p.cliente.nome}`)).join('')
-    || '<li class="vazio">Nenhum projeto cadastrado. Cadastre na ficha do cliente, aba Projetos.</li>';
+  // Ativos (em produção e recorrentes): cada um com a próxima tarefa.
+  $('#ativos').innerHTML = emAndamento.map((c) => ({ c, t: proximaTarefa(c) }))
+    .sort((a, b) => (a.t?.prazo || '9').localeCompare(b.t?.prazo || '9')).slice(0, 7)
+    .map(({ c, t }) => item(ficha(c), t?.prazo ? prazoTexto(t.prazo) : '...', t?.prazo && t.prazo < hojeIso(), c.nome, t ? t.titulo : 'Sem tarefa aberta')).join('')
+    || '<li class="vazio">Nenhum cliente ativo.</li>';
 
   const linhas = clientes.flatMap((c) => (c.linha || []).map((l) => ({ ...l, cliente: c }))).sort((a, b) => b.data.localeCompare(a.data));
   $('#mudancas').innerHTML = linhas.slice(0, 10).map((l) => `<li><a href="${l.cliente.interno ? '#tarefas' : ficha(l.cliente)}"${l.cliente.interno ? '' : ' target="_blank" rel="noopener"'}>
@@ -205,8 +205,6 @@ function eventosDoMes() {
   }
   for (const c of visiveis(clientes)) {
     if (c.proximoContato && LEADS.includes(c.etapa)) ev.push({ data: c.proximoContato, tipo: 'lead', txt: `Falar com ${c.nome}`, apoio: 'Follow-up', cliente: c });
-    if (c.fim && c.etapa !== 'encerrado') ev.push({ data: c.fim, tipo: 'contrato', txt: `Fim do contrato: ${c.nome}`, apoio: 'Vigência', cliente: c });
-    for (const p of c.projetos) if (p.prazo && p.estado !== 'entregue') ev.push({ data: p.prazo, tipo: 'entrega', txt: `Projeto: ${p.nome}`, apoio: c.nome, cliente: c });
   }
   return ev;
 }
@@ -343,12 +341,12 @@ function desenharClientes() {
   const lista = visiveis(clientes).filter((c) => !busca || c.nome.toLowerCase().includes(busca) || (c.servico || '').toLowerCase().includes(busca) || (c.contato || '').toLowerCase().includes(busca));
   const conta = (id) => lista.filter((c) => c.etapa === id).length;
 
-  // Números do topo, como no studio-admin: total, em andamento, recorrentes, leads.
+  // Números do topo, como no studio-admin: total, em produção, recorrentes, leads.
   const todos = visiveis(clientes);
   const n = (f) => todos.filter(f).length;
   $('#cli-numeros').innerHTML = [
     ['Clientes e leads', todos.length, 'No CRM', 'clientes'],
-    ['Em andamento', n((c) => c.etapa === 'andamento'), `${n((c) => c.etapa === 'fechado')} fechados sem começar`, 'painel'],
+    ['Em produção', n((c) => c.etapa === 'andamento'), `${n((c) => c.etapa === 'fechado')} fechados sem começar`, 'painel'],
     ['Recorrentes', n((c) => selo(c)), 'Ativos com contrato', 'calendario'],
     ['Leads em aberto', n((c) => LEADS.includes(c.etapa)), `${n(leadPedeAtencao)} pedem follow-up`, 'leads'],
   ].map(([r, v, a, ic]) => `<div class="crm-kpi crm-kpi--baixo"><span class="crm-kpi__ico">${ico(ic).outerHTML}</span><span class="crm-kpi__rotulo">${r}</span><b class="crm-kpi__valor">${v}</b><span class="crm-kpi__apoio">${a}</span></div>`).join('');
@@ -364,15 +362,14 @@ function desenharClientes() {
   const fatia = daqui.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA);
 
   $('#linhas').innerHTML = fatia.map((c) => {
-    const prox = proximaEntrega(c), atr = atrasadas(c).length, abertasN = abertas(c).length, proj = projetoAtual(c);
+    const prox = proximaTarefa(c), atr = atrasadas(c).length, abertasN = abertas(c).length;
     const ultima = (c.linha || []).at(-1);
     return `<tr data-id="${c.id}" class="clicavel">
       <td><a class="crm-cli" href="${ficha(c)}" target="_blank" rel="noopener">
         <span class="crm-avatar" data-etapa="${c.etapa}" aria-hidden="true">${esc(iniciais(c.nome))}</span>
         <span><b>${esc(c.nome)}${selo(c)}</b><small>${esc(c.servico || 'Sem serviço na ficha')}</small></span></a></td>
       <td>${seletorEtapa(c)}<small class="crm-dias">há ${plural(diasNaEtapa(c), 'dia', 'dias')}</small></td>
-      <td>${proj ? `<b>${esc(proj.nome)}</b><small>${NOMES.projeto[proj.estado]}</small>` : '<small>Nenhum</small>'}</td>
-      <td>${prox ? `<b>${prazoTexto(prox.prazo)}</b><small>${esc(prox.titulo)}</small>` : '<small>Sem prazo</small>'}</td>
+      <td>${prox ? `<b>${esc(prox.titulo)}</b><small>${prox.prazo ? prazoTexto(prox.prazo) : 'Sem prazo'}</small>` : '<small>Nenhuma tarefa aberta</small>'}</td>
       <td>${abertasN ? `<b>${abertasN}</b>${atr ? ` <span class="crm-atraso">${atr} atrasada${atr > 1 ? 's' : ''}</span>` : ''}` : '<small>Nenhuma</small>'}</td>
       <td><small>${ultima ? quando(ultima.data) : ''}${ultima?.origem === 'claude' ? ' · Claude' : ''}</small></td>
       <td class="crm-tabela__acoes"><a class="crm-icone" href="${ficha(c)}" target="_blank" rel="noopener" title="Abrir a ficha" aria-label="Abrir a ficha de ${esc(c.nome)}">${ico('externo').outerHTML}</a></td>
@@ -395,14 +392,14 @@ function desenharClientes() {
 }
 
 function cartao(c) {
-  const abertasN = abertas(c).length, s = situacaoLead(c), proj = projetoAtual(c), prox = proximaEntrega(c);
+  const abertasN = abertas(c).length, s = situacaoLead(c), prox = proximaTarefa(c);
   return `<article class="crm-card" draggable="true" data-id="${c.id}" data-etapa="${c.etapa}">
     <a class="crm-card__nome" href="${ficha(c)}" target="_blank" rel="noopener">${esc(c.nome)}</a>
     ${selo(c) || s ? `<span class="crm-card__tags">${selo(c)}${s ? `<span class="crm-card__lead${s.alerta ? ' alerta' : ''}">${esc(s.texto)}</span>` : ''}</span>` : ''}
-    <span class="crm-card__serv">${esc(proj ? proj.nome : c.servico || 'Sem serviço na ficha')}</span>
+    <span class="crm-card__serv">${esc(prox ? prox.titulo : c.servico || 'Sem serviço na ficha')}</span>
     <footer class="crm-card__pe">
       <span title="Tarefas abertas">${ico('tarefas').outerHTML}${abertasN}</span>
-      ${prox ? `<span title="Próxima entrega">${ico('calendario').outerHTML}${prazoTexto(prox.prazo)}</span>` : ''}
+      ${prox?.prazo ? `<span title="Prazo da próxima tarefa">${ico('calendario').outerHTML}${prazoTexto(prox.prazo)}</span>` : ''}
       <span class="crm-card__dias" title="Dias nesta etapa">${diasNaEtapa(c)}d na etapa</span>
     </footer>
   </article>`;
@@ -451,10 +448,9 @@ function previa(c) {
     <div class="pv-topo">${etiqueta(c.etapa)}${selo(c)}<small>há ${plural(diasNaEtapa(c), 'dia', 'dias')} nesta etapa</small></div>
     ${s ? `<p class="crm-situacao${s.alerta ? ' alerta' : ''}">${esc(s.texto)}</p>` : ''}
     <dl class="pv-dados">
-      <dt>Próximo passo</dt><dd>${esc(c.proximoPasso || 'Sem próximo passo')}</dd>
+      <dt>Próxima tarefa</dt><dd>${esc(proximaTarefa(c)?.titulo || 'Nenhuma tarefa aberta')}</dd>
       <dt>O que quer ou contratou</dt><dd>${esc(c.servico || 'Não informado')}</dd>
       <dt>Contato</dt><dd class="pv-contato">${esc(c.contato || 'Sem contato')}${whatsapp(c) ? `<a class="mini mini--whats" href="${whatsapp(c)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</dd>
-      ${projetoAtual(c) ? `<dt>Projeto atual</dt><dd>${esc(projetoAtual(c).nome)}</dd>` : ''}
     </dl>
     <h3 class="pv-h">Tarefas abertas</h3>
     <ul class="tf-lista tf-lista--compacta">${tarefas.map((t) => linhaTarefa(t, { mostrarCliente: false })).join('') || '<li class="vazio">Nenhuma.</li>'}</ul>
@@ -490,7 +486,7 @@ funil.addEventListener('drop', async (e) => {
 $('#pv-apagar').onclick = async () => {
   const id = $('#pv-abrir').href.split('#')[1];
   const c = achar(id);
-  if (!c || !confirm(`Apagar ${c.nome} do CRM? Some com tarefas, projetos e notas. Não dá para desfazer.`)) return;
+  if (!c || !confirm(`Apagar ${c.nome} do CRM? Some com tarefas e notas. Não dá para desfazer.`)) return;
   const r = await fetch(`/api/crm/${id}`, { method: 'DELETE' });
   if (!r.ok) return avisar((await r.json().catch(() => ({}))).erro || 'Não deu para apagar.', 'erro');
   clientes = clientes.filter((x) => x.id !== id);
@@ -545,7 +541,8 @@ $('#ia-ler').onclick = async () => {
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.erro || 'A IA não conseguiu ler.');
     const f = $('#novo-form').elements, x = d.ficha;
-    for (const k of ['nome', 'etapa', 'servico', 'origemLead', 'proximoContato', 'contato', 'tipo', 'proximoPasso']) if (x[k]) f[k].value = x[k];
+    for (const k of ['nome', 'etapa', 'servico', 'origemLead', 'proximoContato', 'contato', 'tipo']) if (x[k]) f[k].value = x[k];
+    if (x.proximoPasso) f.primeiraTarefa.value = x.proximoPasso;
     if (x.nota) f.nota.value = x.nota;
     tarefasDaIa = x.tarefas || [];
     const ja = clientes.find((c) => c.nome.toLowerCase() === (x.nome || '').toLowerCase());
@@ -562,9 +559,12 @@ $('#novo-form').addEventListener('submit', async (e) => {
     return avisar('Já existe um cliente com esse nome. Abra a ficha dele.', 'erro');
   }
   try {
-    const dado = { nome: f.nome.value, etapa: f.etapa.value, servico: f.servico.value, origemLead: f.origemLead.value, proximoContato: f.proximoContato.value, contato: f.contato.value, tipo: f.tipo.value, proximoPasso: f.proximoPasso.value };
+    const dado = { nome: f.nome.value, etapa: f.etapa.value, servico: f.servico.value, origemLead: f.origemLead.value, proximoContato: f.proximoContato.value, contato: f.contato.value, tipo: f.tipo.value };
     if (existente) dado.id = existente.id;
-    if (tarefasDaIa.length) dado.atividades = [...(existente?.atividades || []), ...tarefasDaIa.map((t) => ({ titulo: t.titulo, prazo: t.prazo, estado: 'afazer', prioridade: 'normal', tipo: 'tarefa', origem: 'painel' }))];
+    // A "Primeira tarefa" do formulário e as tarefas que a IA achou entram como tarefas do cliente.
+    const novas = [...(f.primeiraTarefa.value.trim() ? [{ titulo: f.primeiraTarefa.value.trim(), prazo: '' }] : []), ...tarefasDaIa]
+      .filter((t, i, l) => l.findIndex((x) => x.titulo === t.titulo) === i);
+    if (novas.length) dado.atividades = [...(existente?.atividades || []), ...novas.map((t) => ({ titulo: t.titulo, prazo: t.prazo, estado: 'afazer', prioridade: 'normal', tipo: 'tarefa', origem: 'painel' }))];
     let salvo = await salvarCliente(dado);
     if (f.nota.value.trim()) salvo = await anotar(salvo.id, f.nota.value.trim(), 'nota');
     tarefasDaIa = [];

@@ -25,8 +25,9 @@ export const ETAPAS = [
   { id: 'lead', nome: 'Lead' },
   { id: 'proposta', nome: 'Proposta enviada' },
   { id: 'fechado', nome: 'Fechado, sem começar' },
-  { id: 'andamento', nome: 'Em andamento' },
-  { id: 'entregue', nome: 'Entregue / Manutenção' },
+  { id: 'andamento', nome: 'Em produção' },
+  { id: 'recorrente', nome: 'Recorrente ativo' },
+  { id: 'entregue', nome: 'Entregue' },
   { id: 'encerrado', nome: 'Encerrado' },
 ];
 export const ESTADOS_ATIVIDADE = ['afazer', 'andamento', 'aguardando', 'feita'];
@@ -110,6 +111,7 @@ function limpar(d) {
     })).filter((p) => p.nome),
     // Propostas do painel ligadas a este cliente (id da proposta = id do briefing e do contrato).
     propostas: [...new Set((Array.isArray(d.propostas) ? d.propostas : []).map((x) => corte(x, 61)).filter((x) => /^[a-z0-9][a-z0-9-]{1,60}$/.test(x)))].slice(0, 30),
+    drive: link(d.drive),   // pasta do Drive com os materiais do cliente
     materiais: (Array.isArray(d.materiais) ? d.materiais : []).slice(0, 100).map((m) => ({
       id: idDe(m.id), nome: corte(m.nome, 200), estado: m.estado === 'recebido' ? 'recebido' : 'falta', link: link(m.link),
     })).filter((m) => m.nome),
@@ -129,6 +131,7 @@ export function salvar(dado, origem = 'painel') {
     if (i < 0 && dado.nome) i = lista.findIndex((x) => x.nome.toLowerCase() === corte(dado.nome, 160).toLowerCase());
     const antigo = i >= 0 ? lista[i] : null;
     const item = limpar({ ...antigo, ...dado });
+    if (item.etapa === 'recorrente') item.tipo = 'recorrente';   // etapa de cliente fixo: a etiqueta vem junto
     const linha = antigo?.linha ? [...antigo.linha] : [];
     const anota = (texto) => linha.push({ id: novoId(), data: agora, texto, origem, tipo: 'evento' });
     let etapaDesde = antigo?.etapaDesde || antigo?.criadoEm || agora;
@@ -205,7 +208,7 @@ const sistemaCadastro = (hoje) => `Você cadastra clientes e leads no CRM do Sam
 Leia o material (conversa, print, documento, proposta, cartão) e devolva a ficha. Hoje é ${hoje}.
 Regras:
 - nome: nome da empresa; se não houver, o da pessoa. Sem inventar.
-- etapa: lead (só conversa ou interesse), proposta (proposta enviada), fechado (aceitou, ainda não começou), andamento (projeto rodando), entregue (entregue ou manutenção), encerrado (não fechou ou acabou).
+- etapa: lead (só conversa ou interesse), proposta (proposta enviada), fechado (aceitou, ainda não começou), andamento (projeto sendo feito), recorrente (cliente fixo com contrato mensal ativo), entregue (projeto entregue), encerrado (não fechou ou acabou).
 - servico: o que quer ou contratou, até 12 palavras.
 - contato: pessoa, telefone/WhatsApp e e-mail que aparecerem, separados por " · ". Nunca senha nem dado bancário.
 - origemLead: whatsapp, instagram, indicacao, prospeccao, site, outro, ou vazio se não der para saber.

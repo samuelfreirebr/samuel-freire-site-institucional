@@ -4,14 +4,14 @@
 
 import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, documentos, mesmoCliente, NOMES, LEADS,
-  hojeIso, dataCurta, dataLonga, diasAte, quando, prazoTexto, iniciais, selo, whatsapp, abertas, atrasadas, proximaEntrega, projetoAtual,
+  dataCurta, quando, prazoTexto, iniciais, selo, whatsapp, abertas, atrasadas, proximaTarefa,
   diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, copiar,
 } from '../comum.js';
 
 const [id, abaInicial] = decodeURIComponent(location.hash.slice(1)).split('&');
-let c = null, todos = [], etapas = [], origens = [], estadosProjeto = [], docs = { propostas: [], formularios: [] };
-const CAMPOS = ['nome', 'servico', 'proximoPasso', 'contato', 'origemLead', 'proximoContato', 'motivoPerda', 'tipo', 'inicio', 'fim'];
-// Materiais que quase todo projeto pede. Clique para pôr na lista.
+let c = null, todos = [], etapas = [], origens = [], docs = { propostas: [], formularios: [] };
+const CAMPOS = ['nome', 'servico', 'contato', 'origemLead', 'proximoContato', 'motivoPerda', 'tipo'];
+// Materiais que quase todo cliente manda. Clique para pôr na lista.
 const SUGESTOES = ['Logo em alta', 'Fotos', 'Textos', 'Acesso ao domínio', 'Acesso à hospedagem', 'Identidade visual', 'Depoimentos', 'Redes sociais'];
 
 function guardar(salvo) {
@@ -38,24 +38,20 @@ function desenharCabecalho() {
   $('#etapa').value = c.etapa;
   $('#ficha').dataset.etapa = c.etapa;
 
-  const lead = LEADS.includes(c.etapa), s = situacaoLead(c), prox = proximaEntrega(c);
+  const lead = LEADS.includes(c.etapa), s = situacaoLead(c), prox = proximaTarefa(c);
+  const faltam = c.materiais.filter((m) => m.estado === 'falta').length;
   const bloco = (rotulo, valor, apoio, alerta = false) => `<div class="fc-meta__item${alerta ? ' alerta' : ''}"><span>${rotulo}</span><b>${valor}</b><small>${apoio}</small></div>`;
-  let vig = bloco('Vigência', 'Sem datas', c.tipo ? (c.tipo === 'recorrente' ? 'Recorrente' : 'Pontual') : 'Use "Editar dados"');
-  if (c.fim) {
-    const d = diasAte(c.fim);
-    vig = bloco('Vigência', `até ${dataLonga(c.fim)}`, d < 0 ? `Venceu há ${-d} dia${d < -1 ? 's' : ''}` : d === 0 ? 'Vence hoje' : `Vence em ${d} dia${d > 1 ? 's' : ''}`, d <= 30);
-  } else if (c.inicio) vig = bloco('Vigência', `desde ${dataLonga(c.inicio)}`, 'Sem data de fim');
   $('#meta').innerHTML = [
     bloco('Na etapa', `${diasNaEtapa(c)} dia${diasNaEtapa(c) === 1 ? '' : 's'}`, etapas.find((e) => e.id === c.etapa)?.nome || ''),
     lead ? bloco('Follow-up', c.proximoContato ? prazoTexto(c.proximoContato) : 'Sem data', s ? esc(s.texto) : '', Boolean(s?.alerta))
-      : bloco('Próxima entrega', prox ? prazoTexto(prox.prazo) : 'Nenhuma', prox ? esc(prox.titulo) : 'Sem prazo marcado'),
-    lead ? bloco('Origem', c.origemLead ? NOMES.origem[c.origemLead] : 'Não informada', c.motivoPerda ? esc(c.motivoPerda) : 'De onde veio') : vig,
+      : bloco('Próxima tarefa', prox ? (prox.prazo ? prazoTexto(prox.prazo) : 'Sem prazo') : 'Nenhuma', prox ? esc(prox.titulo) : 'Nenhuma tarefa aberta'),
+    lead ? bloco('Origem', c.origemLead ? NOMES.origem[c.origemLead] : 'Não informada', c.motivoPerda ? esc(c.motivoPerda) : 'De onde veio')
+      : bloco('Materiais', faltam ? `${faltam} faltando` : 'Em dia', c.drive ? 'Pasta do Drive ligada' : 'Sem pasta do Drive', faltam > 0),
     bloco('Tarefas abertas', abertas(c).length, atrasadas(c).length ? `${atrasadas(c).length} atrasada${atrasadas(c).length > 1 ? 's' : ''}` : 'Nenhuma atrasada', atrasadas(c).length > 0),
   ].join('');
 
   const contar = (sel, n) => { $(sel).textContent = n || ''; };
   contar('#n-tarefas', abertas(c).length);
-  contar('#n-projetos', c.projetos.length);
   contar('#n-materiais', c.materiais.filter((m) => m.estado === 'falta').length && `${c.materiais.filter((m) => m.estado === 'falta').length} faltando`);
   contar('#n-notas', (c.linha || []).filter((l) => l.tipo === 'nota').length + (c.notas ? 1 : 0));
 }
@@ -63,8 +59,6 @@ function desenharCabecalho() {
 /* ---------- Resumo ---------- */
 
 function desenharResumo() {
-  $('#passo').textContent = c.proximoPasso || 'Nenhum próximo passo. Clique em "Mudar" e escreva o que precisa acontecer agora.';
-  $('#passo').classList.toggle('vazio', !c.proximoPasso);
   $('#resumo-tarefas').innerHTML = tarefasDaqui().filter((t) => t.estado !== 'feita').slice(0, 6).map((t) => linhaTarefa(t, { mostrarCliente: false })).join('')
     || '<li class="vazio">Nenhuma tarefa aberta.</li>';
 
@@ -75,15 +69,10 @@ function desenharResumo() {
     ...c.materiais.filter((m) => m.estado === 'falta').map((m) => ({ txt: `Material: ${m.nome}`, apoio: 'Ainda não chegou' })),
     ...forms.filter((f) => !f.respondidoEm).map((f) => ({ txt: 'Briefing sem resposta', apoio: f.titulo || 'Formulário enviado' })),
   ];
-  if (!c.proximoPasso) falta.push({ txt: 'Definir o próximo passo', apoio: 'Ninguém sabe o que vem agora' });
+  if (!abertas(c).length && !LEADS.includes(c.etapa) && c.etapa !== 'encerrado') falta.push({ txt: 'Nenhuma tarefa aberta', apoio: 'Crie a próxima tarefa deste cliente' });
   $('#falta').innerHTML = falta.slice(0, 8).map((f) => `<li><span class="fc-falta${f.alerta ? ' atraso' : ''}">
       <span class="crm-lista__txt"><b>${esc(f.txt)}</b><small>${esc(f.apoio || '')}</small></span></span></li>`).join('')
     || '<li class="vazio">Nada pendente. Tudo em dia.</li>';
-
-  const p = projetoAtual(c);
-  $('#projeto-atual').innerHTML = p
-    ? `<p class="fc-proj-nome">${esc(p.nome)}</p><p class="fc-dica">${NOMES.projeto[p.estado]}${p.prazo ? ` · prazo ${dataLonga(p.prazo)}` : ''} · ${c.atividades.filter((t) => t.projeto === p.id && t.estado !== 'feita').length} tarefa(s) abertas</p>`
-    : '<p class="vazio">Nenhum projeto em andamento.</p>';
 
   $('#ultimas').innerHTML = [...(c.linha || [])].reverse().slice(0, 4).map((l) => `<li><span class="crm-lista__txt"><b>${esc(l.texto)}</b><small>${quando(l.data)}${l.origem === 'claude' ? ' · Claude' : ''}</small></span></li>`).join('');
 }
@@ -96,31 +85,13 @@ function desenharTarefas() {
     || '<li class="vazio">Nenhuma tarefa. Use "Nova tarefa".</li>';
 }
 
-/* ---------- Projetos ---------- */
-
-function desenharProjetos() {
-  const ops = (sel) => estadosProjeto.map((e) => `<option value="${e}"${e === sel ? ' selected' : ''}>${NOMES.projeto[e]}</option>`).join('');
-  $('#add-projeto').elements.estado.innerHTML = ops('proximo');
-  $('#projetos').innerHTML = c.projetos.map((p, i) => {
-    const ts = c.atividades.filter((t) => t.projeto === p.id);
-    const feitas = ts.filter((t) => t.estado === 'feita').length;
-    return `<article class="crm-card-box fc-proj" data-i="${i}" data-estado="${p.estado}">
-      <div class="crm-box__topo"><h3>${esc(p.nome)}</h3><select data-campo="estado" aria-label="Situação de ${esc(p.nome)}">${ops(p.estado)}</select></div>
-      <div class="fc-proj__datas">
-        <label><span>Início</span><input type="date" data-campo="inicio" value="${p.inicio}"></label>
-        <label><span>Prazo</span><input type="date" data-campo="prazo" value="${p.prazo}"></label>
-      </div>
-      <div class="fc-proj__barra" title="${feitas} de ${ts.length} tarefas feitas"><span style="width:${ts.length ? (feitas / ts.length) * 100 : 0}%"></span></div>
-      <p class="fc-dica">${ts.length ? `${feitas} de ${ts.length} tarefas feitas` : 'Nenhuma tarefa neste projeto ainda'}${p.prazo && p.estado !== 'entregue' && p.prazo < hojeIso() ? ' · <b class="claude">prazo passou</b>' : ''}</p>
-      <ul class="tf-lista tf-lista--compacta">${ts.filter((t) => t.estado !== 'feita').map((t) => linhaTarefa({ ...t, cliente: c }, { mostrarCliente: false })).join('')}</ul>
-      <button class="mini" type="button" data-nova-no-projeto="${p.id}">Nova tarefa neste projeto</button>
-    </article>`;
-  }).join('') || '<p class="vazio">Nenhum projeto ainda. Projeto é um trabalho com começo e fim dentro do cliente, como "LP Mentoria Alpha".</p>';
-}
-
 /* ---------- Materiais ---------- */
 
 function desenharMateriais() {
+  const campo = $('#drive-form').elements.drive;
+  if (document.activeElement !== campo) campo.value = c.drive || '';
+  $('#drive-abrir').hidden = !c.drive;
+  if (c.drive) $('#drive-abrir').href = c.drive;
   $('#materiais').innerHTML = c.materiais.map((m, i) => `<li data-i="${i}" data-estado="${m.estado}">
       <label class="fc-mat__check"><input type="checkbox" data-campo="recebido"${m.estado === 'recebido' ? ' checked' : ''}> <span>${esc(m.nome)}</span></label>
       <span class="fc-mat__estado">${m.estado === 'recebido' ? 'Recebido' : 'Falta'}</span>
@@ -198,7 +169,7 @@ function desenharNotas() {
   $('#linha').innerHTML = [...(c.linha || [])].reverse().map(itemLinha).join('');
 }
 
-function desenhar() { desenharCabecalho(); desenharResumo(); desenharTarefas(); desenharProjetos(); desenharMateriais(); desenharBriefing(); desenharNotas(); }
+function desenhar() { desenharCabecalho(); desenharResumo(); desenharTarefas(); desenharMateriais(); desenharBriefing(); desenharNotas(); }
 
 /* ---------- ações ---------- */
 
@@ -215,34 +186,18 @@ function ligar() {
     const ir = e.target.closest('[data-ir]');
     if (ir) irPara(ir.dataset.ir);
     if (e.target.closest('[data-nova-tarefa]')) nova();
-    const np = e.target.closest('[data-nova-no-projeto]');
-    if (np) nova({ projeto: np.dataset.novaNoProjeto });
-    if (e.target.closest('[data-editar-passo]')) {
-      const v = prompt('Próximo passo:', c.proximoPasso || '');
-      if (v !== null) salvar({ proximoPasso: v }).catch((err) => avisar(err.message, 'erro'));
-    }
   });
 
   $('#etapa').addEventListener('change', (e) => salvar({ etapa: e.target.value }).then(() => avisar('Etapa atualizada.')).catch((err) => avisar(err.message, 'erro')));
-  for (const raiz of ['#resumo-tarefas', '#tarefas', '#projetos']) ligarLista($(raiz), { achar: () => c, aoSalvar: guardar, clientes: () => todos });
+  for (const raiz of ['#resumo-tarefas', '#tarefas']) ligarLista($(raiz), { achar: () => c, aoSalvar: guardar, clientes: () => todos });
   $('#ver-feitas').addEventListener('change', desenharTarefas);
 
-  // Projetos: situação e datas salvam ao mudar.
-  $('#projetos').addEventListener('change', (e) => {
-    const campo = e.target.dataset.campo, card = e.target.closest('.fc-proj');
-    if (!campo || !card) return;
-    const projetos = structuredClone(c.projetos);
-    projetos[card.dataset.i][campo] = e.target.value;
-    salvar({ projetos }).catch((err) => avisar(err.message, 'erro'));
-  });
-  $('#add-projeto').addEventListener('submit', async (e) => {
+  // Pasta do Drive com os materiais do cliente.
+  $('#drive-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    const f = e.target.elements;
-    try {
-      await salvar({ projetos: [...c.projetos, { nome: f.nome.value, estado: f.estado.value, prazo: f.prazo.value, inicio: f.estado.value === 'andamento' ? hojeIso() : '' }] });
-      e.target.reset();
-      avisar('Projeto criado.');
-    } catch (err) { avisar(err.message, 'erro'); }
+    const v = e.target.elements.drive.value.trim();
+    if (v && !/^https?:\/\//i.test(v)) return avisar('O link precisa começar com https://.', 'erro');
+    salvar({ drive: v }).then(() => avisar(v ? 'Pasta do Drive salva.' : 'Pasta do Drive tirada.')).catch((err) => avisar(err.message, 'erro'));
   });
 
   // Materiais: marcar recebido e colar o link salvam na hora.
@@ -323,7 +278,7 @@ $('#form').addEventListener('submit', async (e) => {
 
 async function carregar() {
   const [d, ds] = await Promise.all([carregarCrm(), documentos()]);
-  todos = d.clientes; etapas = d.etapas; origens = d.origens || []; estadosProjeto = d.estadosProjeto || []; docs = ds;
+  todos = d.clientes; etapas = d.etapas; origens = d.origens || []; docs = ds;
   const achado = todos.find((x) => x.id === id);
   if (!achado) {
     $('#ficha').innerHTML = '<p class="vazio">Cliente não encontrado. <a href="/admin/crm/#clientes">Voltar para a lista</a>.</p>';

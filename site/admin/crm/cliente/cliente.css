@@ -48,29 +48,9 @@
 .fc-resumo { display: grid; gap: var(--crm-espaco); align-items: start; }
 @media (min-width: 900px) { .fc-resumo { grid-template-columns: var(--fc-coluna-larga) var(--fc-coluna-estreita); } }
 .fc-col { display: grid; gap: var(--crm-espaco); min-width: 0; }
-.fc-passo { border-left: var(--hair-2) solid var(--brand); }
-.fc-passo p { font-size: var(--t-lead); font-weight: var(--w-semi); letter-spacing: -.02em; line-height: var(--lh-lead); }
-.fc-passo p.vazio { font-size: var(--t-small); font-weight: var(--w-book); padding: 0; }
-.fc-proj-nome { font-weight: var(--w-bold); margin-bottom: 2px; }
 .fc-falta { display: flex; padding: var(--sp-2xs) 0 var(--sp-2xs) var(--sp-xs); border-left: var(--hair-2) solid var(--line-2); margin: var(--sp-3xs) 0; }
 .fc-falta.atraso { border-left-color: var(--brand); }
 .crm-lista li:has(.fc-falta) + li { border-top: 0; }
-
-/* ---------- Projetos ---------- */
-.fc-projetos { display: grid; gap: var(--crm-espaco); grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
-.fc-projetos > .vazio { grid-column: 1 / -1; }
-.fc-proj { display: grid; gap: var(--sp-xs); align-content: start; }
-.fc-proj[data-estado="andamento"] { border-top: var(--hair-2) solid var(--brand); }
-.fc-proj[data-estado="entregue"] h3, .fc-proj[data-estado="pausado"] h3 { color: var(--muted); }
-.fc-proj select { width: auto; padding: .35em .6em; font-size: var(--t-eyebrow); }
-.fc-proj__datas { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-xs); }
-.fc-proj__datas label { margin: 0; }
-.fc-proj__datas span { font-size: var(--t-eyebrow); color: var(--muted); }
-.fc-proj__datas input { padding: .45em .6em; font-size: var(--t-small); }
-.fc-proj__barra { height: 6px; border-radius: var(--radius-pill); background: var(--bg-2); overflow: hidden; }
-.fc-proj__barra span { display: block; height: 100%; background: var(--ink); border-radius: inherit; }
-.fc-proj .mini { justify-self: start; }
-.fc-select { width: auto; flex: none; padding: .6em .7em; font-size: var(--t-small); }
 
 /* ---------- Materiais ---------- */
 .fc-dica + .fc-materiais { margin-top: var(--sp-sm); }

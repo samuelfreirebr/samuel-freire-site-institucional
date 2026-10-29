@@ -506,3 +506,18 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
 /* Botão de abrir a conversa no WhatsApp (prévia e ficha). */
 .mini--whats::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
 .pv-contato { display: flex; align-items: center; gap: var(--sp-xs); flex-wrap: wrap; }
+
+/* ---------- Verde da recorrência ----------
+   Pedido do Samuel: recorrência é coisa boa, então é verde. Único verde
+   do painel, só aqui: etiqueta "Recorrente" e etapa "Recorrente ativo". */
+:root {
+  --verde: #1E8A57;        /* texto e ponto */
+  --verde-fundo: #E6F4EC;  /* fundo claro da etiqueta */
+}
+.crm-selo { background: var(--verde-fundo); color: var(--verde); }
+[data-etapa="recorrente"] { --etapa-cor: var(--verde); --etapa-fundo: var(--verde-fundo); --etapa-texto: var(--verde); }
+.crm-barras__cheio[data-etapa="recorrente"] { background: var(--verde); }
+
+/* Pasta do Drive nos materiais */
+.fc-drive { display: flex; align-items: flex-end; gap: var(--sp-2xs); flex-wrap: wrap; margin-bottom: var(--sp-sm); }
+.fc-drive label { flex: 1 1 18rem; margin: 0; }

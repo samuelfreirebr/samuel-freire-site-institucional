@@ -9,11 +9,11 @@
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="/admin/painel.css?v=20261029b">
-<link rel="stylesheet" href="/admin/casca.css?v=20261029b">
-<script type="module" src="/admin/casca.js?v=20261029b"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029b">
-<link rel="stylesheet" href="/admin/crm/cliente/cliente.css?v=20261029b">
+<link rel="stylesheet" href="/admin/painel.css?v=20261029c">
+<link rel="stylesheet" href="/admin/casca.css?v=20261029c">
+<script type="module" src="/admin/casca.js?v=20261029c"></script>
+<link rel="stylesheet" href="/admin/crm/crm.css?v=20261029c">
+<link rel="stylesheet" href="/admin/crm/cliente/cliente.css?v=20261029c">
 <link rel="modulepreload" href="/admin/icones.js">
 <link rel="modulepreload" href="/admin/crm/comum.js">
 </head>
@@ -47,7 +47,6 @@
   <nav class="grupo fc-abas" aria-label="Partes da ficha">
     <button type="button" data-aba="resumo" aria-selected="true">Resumo</button>
     <button type="button" data-aba="tarefas" aria-selected="false">Tarefas <span id="n-tarefas"></span></button>
-    <button type="button" data-aba="projetos" aria-selected="false">Projetos <span id="n-projetos"></span></button>
     <button type="button" data-aba="materiais" aria-selected="false">Materiais <span id="n-materiais"></span></button>
     <button type="button" data-aba="briefing" aria-selected="false">Proposta e contrato <span id="n-docs"></span></button>
     <button type="button" data-aba="notas" aria-selected="false">Notas <span id="n-notas"></span></button>
@@ -57,10 +56,6 @@
   <!-- Resumo -->
   <section data-painel="resumo" class="fc-resumo">
     <div class="fc-col">
-      <article class="crm-card-box fc-passo">
-        <div class="crm-box__topo"><h3>Próximo passo</h3><button class="mini" type="button" data-editar-passo>Mudar</button></div>
-        <p id="passo"></p>
-      </article>
       <article class="crm-card-box">
         <div class="crm-box__topo"><h3>Tarefas abertas</h3><button class="mini mini--ativo" type="button" data-nova-tarefa>Nova tarefa</button></div>
         <ul class="tf-lista" id="resumo-tarefas"></ul>
@@ -70,10 +65,6 @@
       <article class="crm-card-box">
         <h3>O que falta</h3>
         <ul class="crm-lista" id="falta"></ul>
-      </article>
-      <article class="crm-card-box">
-        <div class="crm-box__topo"><h3>Projeto atual</h3><button class="mini" type="button" data-ir="projetos">Projetos</button></div>
-        <div id="projeto-atual"></div>
       </article>
       <article class="crm-card-box">
         <div class="crm-box__topo"><h3>Últimas mudanças</h3><button class="mini" type="button" data-ir="linha">Ver tudo</button></div>
@@ -96,20 +87,6 @@
     </article>
   </section>
 
-  <!-- Projetos -->
-  <section data-painel="projetos" hidden>
-    <div class="fc-projetos" id="projetos"></div>
-    <article class="crm-card-box">
-      <h3>Novo projeto</h3>
-      <form class="fc-add" id="add-projeto">
-        <input type="text" name="nome" placeholder="Nome do projeto. Ex.: LP Mentoria Alpha" maxlength="200" aria-label="Nome do projeto" required>
-        <select name="estado" aria-label="Situação do projeto" class="fc-select"></select>
-        <input type="date" name="prazo" aria-label="Prazo do projeto">
-        <button class="mini mini--ativo" type="submit">Adicionar</button>
-      </form>
-    </article>
-  </section>
-
   <!-- Materiais -->
   <section data-painel="materiais" hidden>
     <article class="crm-card-box">
@@ -120,7 +97,12 @@
           <a class="mini" href="/admin/formularios/" target="_blank" rel="noopener" title="Formulário com envio de arquivos de até 20 MB">Criar formulário</a>
         </div>
       </div>
-      <p class="fc-dica">Marque o que já chegou. No link, cole a pasta do Drive ou o arquivo. "Pedir o que falta" copia uma mensagem para mandar no WhatsApp.</p>
+      <form class="fc-drive" id="drive-form">
+        <label><span>Pasta do Drive com os materiais</span><input type="url" name="drive" placeholder="Cole o link da pasta do Google Drive" maxlength="2000"></label>
+        <button class="mini mini--ativo" type="submit">Salvar link</button>
+        <a class="mini" id="drive-abrir" target="_blank" rel="noopener" hidden>Abrir a pasta</a>
+      </form>
+      <p class="fc-dica">Marque o que já chegou. Cada item também aceita o link do arquivo. "Pedir o que falta" copia uma mensagem para mandar no WhatsApp.</p>
       <ul class="fc-materiais" id="materiais"></ul>
       <div class="fc-sugestoes" id="sugestoes"></div>
       <form class="fc-add" id="add-material">
@@ -167,7 +149,6 @@
         <label><span>Nome</span><input type="text" name="nome" required maxlength="160"></label>
         <label><span>O que quer ou contratou</span><input type="text" name="servico" maxlength="300"></label>
       </div>
-      <label><span>Próximo passo</span><input type="text" name="proximoPasso" maxlength="500" placeholder="O que precisa acontecer agora"></label>
       <label><span>Contato</span><input type="text" name="contato" maxlength="300" placeholder="Nome, WhatsApp, e-mail"></label>
       <fieldset class="fc-grupo-campos">
         <legend>Lead</legend>
@@ -177,22 +158,15 @@
         </div>
         <label><span>Por que não fechou</span><input type="text" name="motivoPerda" maxlength="500" placeholder="Só se o lead não fechou"></label>
       </fieldset>
-      <fieldset class="fc-grupo-campos">
-        <legend>Contrato</legend>
-        <div class="linha linha--3">
-          <label><span>Tipo</span><select name="tipo"><option value="">Não definido</option><option value="recorrente">Recorrente</option><option value="pontual">Pontual (projeto)</option></select></label>
-          <label><span>Início</span><input type="date" name="inicio"></label>
-          <label><span>Fim</span><input type="date" name="fim"><small>Vazio: sem data de fim.</small></label>
-        </div>
-      </fieldset>
+      <label><span>Tipo de cliente</span><select name="tipo"><option value="">Não definido</option><option value="recorrente">Recorrente (contrato mensal)</option><option value="pontual">Pontual (projeto com fim)</option></select></label>
     </form>
     <div class="fc-perigo">
-      <p><b>Apagar este cliente</b><small>Some do CRM com tarefas, projetos, notas e linha do tempo. Propostas, briefings e contratos do painel continuam.</small></p>
+      <p><b>Apagar este cliente</b><small>Some do CRM com tarefas, notas e linha do tempo. Propostas, briefings e contratos do painel continuam.</small></p>
       <button class="mini mini--perigo" type="button" id="apagar">Apagar</button>
     </div>
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/cliente/cliente.js?v=20261029b"></script>
+<script type="module" src="/admin/crm/cliente/cliente.js?v=20261029c"></script>
 </body>
 </html>
