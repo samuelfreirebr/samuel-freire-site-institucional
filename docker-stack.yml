@@ -20,6 +20,10 @@
 #                       perguntas e contrato, Cofre e o áudio do
 #                       briefing. Sem ela: cada botão explica o que
 #                       falta e o áudio não aparece.
+#    CLICKUP_TOKEN_ETRIA  chave pessoal (pk_...) da conta samuel@grupoetria.com
+#    CLICKUP_TOKEN_EDA    chave pessoal (pk_...) da conta da Engenharia de Dados
+#                       O painel lê as tarefas do ClickUp com elas. Sem elas:
+#                       o CRM funciona igual, sem as tarefas do ClickUp.
 #    TOKEN_CLAUDE       chave que o Claude usa no painel inteiro pela
 #                       API (cabeçalho x-token): lê, cria e edita,
 #                       nunca apaga. Sem ela: só o painel com login.
@@ -66,6 +70,9 @@ services:
       # Chave do Claude para usar a API do painel (cabeçalho x-token):
       # tudo menos apagar. Vazia, só o painel com login.
       - TOKEN_CLAUDE=${TOKEN_CLAUDE:-}
+      # Chaves pessoais do ClickUp (Settings > Apps > API Token), uma por conta.
+      - CLICKUP_TOKEN_ETRIA=${CLICKUP_TOKEN_ETRIA:-}
+      - CLICKUP_TOKEN_EDA=${CLICKUP_TOKEN_EDA:-}
     volumes:
       # Textos, imagens enviadas, propostas e os leads da
       # prospecção. Sobrevive a update.
