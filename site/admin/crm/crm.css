@@ -50,7 +50,7 @@
 
 /* ---------- Ficha ---------- */
 .crm-sec { margin-top: var(--sp-lg); }
-.crm-sec h3 {
+.crm-sec h2 {
   font-size: var(--t-eyebrow); font-weight: var(--w-semi); letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
   padding-bottom: var(--sp-2xs); margin-bottom: var(--sp-sm); border-bottom: var(--hair) solid var(--line);
 }
