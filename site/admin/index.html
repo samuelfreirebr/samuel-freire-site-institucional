@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="/admin/painel.css?v=9">
 <link rel="stylesheet" href="/admin/casca.css?v=1">
 <script type="module" src="/admin/casca.js?v=1"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=8">
+<link rel="stylesheet" href="/admin/crm/crm.css?v=9">
 <link rel="stylesheet" href="/admin/inicio.css?v=1">
 </head>
 <body>
@@ -26,11 +26,9 @@
 
 <main class="crm-pagina ini">
 
-  <div class="crm-cab">
-    <div>
-      <h2 class="crm-titulo"><span id="saudacao">Olá</span>, Samuel</h2>
-      <p class="crm-sub" id="resumo-dia"></p>
-    </div>
+  <div id="boas"></div>
+
+  <div class="ini-linha">
     <form class="ini-cofre" action="/admin/cofre/" method="get">
       <label for="cofre-link">Cofre</label>
       <textarea id="cofre-link" name="link" rows="1" autocomplete="off" required placeholder="Cole um link ou texto para guardar"></textarea>
@@ -39,6 +37,23 @@
   </div>
 
   <div class="crm-kpis" id="kpis"><p class="vazio">Carregando…</p></div>
+
+  <div class="crm-grade crm-grade--2">
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Ritmo</h3><span class="crm-box__dica">Tarefas concluídas nos últimos 14 dias</span></header>
+      <div id="ritmo"></div>
+    </article>
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Abertas por prioridade</h3><a class="crm-box__link" href="/admin/crm/#tarefas">Tarefas</a></header>
+      <div id="rosca"></div>
+    </article>
+  </div>
+
+  <article class="crm-card-box">
+    <header class="crm-box__topo"><h3>Próximos 14 dias</h3><a class="crm-box__link" href="/admin/crm/#calendario">Calendário</a></header>
+    <div id="faixa"></div>
+    <p class="g-faixa-legenda"><span><i></i>Tarefa</span><span><i class="forte"></i>Entrega ou urgente</span><span><i class="lead"></i>Follow-up de lead</span></p>
+  </article>
 
   <div class="crm-grade crm-grade--2">
     <article class="crm-card-box">
@@ -77,6 +92,7 @@
 
 <script type="module">
 import { ico } from '/admin/icones.js';
+import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from '/admin/crm/graficos.js';
 import {
   $, esc, carregarCrm, normalizar, documentos, visiveis, todasTarefas, grupoPrazo, ordenarTarefas, linhaTarefa, ligarLista,
   leadPedeAtencao, situacaoLead, prazoTexto, diasSemMovimento, quando, ligarBusca,
@@ -100,7 +116,7 @@ $('#cofre-link').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !
 
 document.querySelectorAll('.ini-atalhos [data-ico]').forEach((a) => a.prepend(ico(a.dataset.ico)));
 const h = new Date().getHours();
-$('#saudacao').textContent = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+const saudacao = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
 
 let clientes = [];
 const ficha = (c) => `/admin/crm/cliente/#${c.id}`;
@@ -118,18 +134,21 @@ function desenhar(docs) {
   if (hoje.length) partes.push(`${hoje.length} tarefa${hoje.length > 1 ? 's' : ''} para hoje`);
   if (atrasadas.length) partes.push(`${atrasadas.length} atrasada${atrasadas.length > 1 ? 's' : ''}`);
   if (leads.length) partes.push(`${leads.length} lead${leads.length > 1 ? 's' : ''} para falar`);
-  $('#resumo-dia').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-    + '. ' + (partes.length ? partes.join(', ') + '.' : 'Nada urgente por enquanto.');
+  $('#boas').innerHTML = boasVindas({ saudacao, frase: partes.length ? partes.join(', ') + '.' : 'Nada urgente por enquanto.', clientes });
+  $('#ritmo').innerHTML = barrasRitmo(ritmo(clientes));
+  $('#rosca').innerHTML = roscaPrioridade(clientes);
+  $('#faixa').innerHTML = faixaPrazos(clientes);
 
-  const kpi = (rotulo, valor, apoio, link, extra = '') => `<a class="crm-kpi${extra}" href="${link}">
+  const kpi = (rotulo, valor, apoio, link, icone, extra = '') => `<a class="crm-kpi${extra}" href="${link}">
+      <span class="crm-kpi__ico">${ico(icone).outerHTML}</span>
       <span class="crm-kpi__rotulo">${rotulo}</span><b class="crm-kpi__valor">${valor}</b><span class="crm-kpi__apoio">${apoio}</span></a>`;
   $('#kpis').innerHTML = [
-    kpi('Para hoje', hoje.length, hoje.length ? 'Tarefas com prazo hoje' : 'Nada com prazo hoje', '/admin/crm/#tarefas', ' crm-kpi--destaque'),
-    kpi('Atrasadas', atrasadas.length, atrasadas.length ? 'Passaram do prazo' : 'Tudo no prazo', '/admin/crm/#tarefas', atrasadas.length ? ' crm-kpi--alerta' : ''),
-    kpi('Follow-ups', leads.length, leads.length ? 'Leads para falar ou parados' : 'Leads em dia', '/admin/crm/#leads', leads.length ? ' crm-kpi--alerta' : ''),
-    kpi('Propostas no ar', noAr, `${docs.propostas.length} no total`, '/admin/propostas/'),
-    kpi('Briefings sem resposta', semResposta, `${docs.formularios.length} formulário(s)`, '/admin/formularios/'),
-    kpi('Fila do Claude', fila, fila ? 'Peça: "pega a fila do CRM"' : 'Nada na fila', '/admin/crm/#tarefas'),
+    kpi('Para hoje', hoje.length, hoje.length ? 'Tarefas com prazo hoje' : 'Nada com prazo hoje', '/admin/crm/#tarefas', 'tarefas', ' crm-kpi--destaque'),
+    kpi('Atrasadas', atrasadas.length, atrasadas.length ? 'Passaram do prazo' : 'Tudo no prazo', '/admin/crm/#tarefas', 'calendario', atrasadas.length ? ' crm-kpi--alerta' : ''),
+    kpi('Follow-ups', leads.length, leads.length ? 'Leads para falar ou parados' : 'Leads em dia', '/admin/crm/#leads', 'leads', leads.length ? ' crm-kpi--alerta' : ''),
+    kpi('Propostas no ar', noAr, `${docs.propostas.length} no total`, '/admin/propostas/', 'proposta'),
+    kpi('Briefings sem resposta', semResposta, `${docs.formularios.length} formulário(s)`, '/admin/formularios/', 'formulario'),
+    kpi('Fila do Claude', fila, fila ? 'Peça: "pega a fila do CRM"' : 'Nada na fila', '/admin/crm/#tarefas', 'ia'),
   ].join('');
 
   $('#hoje').innerHTML = ordenarTarefas([...atrasadas, ...hoje, ...tarefas.filter((t) => t.prioridade === 'urgente' && !['hoje', 'atrasada'].includes(grupoPrazo(t)))])

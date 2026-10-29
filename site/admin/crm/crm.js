@@ -10,6 +10,8 @@ import {
   proximaEntrega, projetoAtual, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
   grupoPrazo, todasTarefas, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca,
 } from './comum.js';
+import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js';
+import { ico } from '../icones.js';
 
 let clientes = [], etapas = [], origens = [];
 let filtroEtapa = 'todos', filtroLead = 'atencao', visao = 'abertas', mes = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -43,7 +45,6 @@ addEventListener('hashchange', () => irPara(location.hash.slice(1)));
 
 function desenharGeral() {
   const h = new Date().getHours();
-  $('#saudacao').textContent = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
   const tarefas = todasTarefas(clientes).filter((t) => t.estado !== 'feita');
   const hoje = tarefas.filter((t) => grupoPrazo(t) === 'hoje');
   const vencidas = tarefas.filter((t) => grupoPrazo(t) === 'atrasada');
@@ -58,18 +59,22 @@ function desenharGeral() {
   if (hoje.length) partes.push(plural(hoje.length, 'tarefa vence hoje', 'tarefas vencem hoje'));
   if (vencidas.length) partes.push(plural(vencidas.length, 'está atrasada', 'estão atrasadas'));
   if (leadsAtencao.length) partes.push(plural(leadsAtencao.length, 'lead pede follow-up', 'leads pedem follow-up'));
-  $('#resumo-dia').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-    + '. ' + (partes.length ? partes.join(', ') + '.' : 'Nada urgente por enquanto.');
+  const saudacao = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  $('#boas').innerHTML = boasVindas({ saudacao, frase: partes.length ? partes.join(', ') + '.' : 'Nada urgente por enquanto.', clientes });
+  $('#ritmo').innerHTML = barrasRitmo(ritmo(clientes));
+  $('#rosca').innerHTML = roscaPrioridade(clientes);
+  $('#faixa').innerHTML = faixaPrazos(clientes);
 
-  const kpi = (rotulo, valor, apoio, link, extra = '') => `<a class="crm-kpi${extra}" href="${link}">
+  const kpi = (rotulo, valor, apoio, link, icone, extra = '') => `<a class="crm-kpi${extra}" href="${link}">
+      <span class="crm-kpi__ico">${ico(icone).outerHTML}</span>
       <span class="crm-kpi__rotulo">${rotulo}</span><b class="crm-kpi__valor">${valor}</b><span class="crm-kpi__apoio">${apoio}</span></a>`;
   $('#kpis').innerHTML = [
-    kpi('Urgentes', urgentes.length, urgentes.length ? 'Prioridade urgente, abertas' : 'Nenhuma urgência', '#tarefas', ' crm-kpi--destaque'),
-    kpi('Vencem hoje', hoje.length, hoje.length ? 'Prazo é hoje' : 'Nada para hoje', '#tarefas'),
-    kpi('Atrasadas', vencidas.length, vencidas.length ? 'Passaram do prazo' : 'Tudo no prazo', '#tarefas', vencidas.length ? ' crm-kpi--alerta' : ''),
-    kpi('Follow-ups', leadsAtencao.length, leadsAtencao.length ? 'Leads para falar ou parados' : 'Leads em dia', '#leads', leadsAtencao.length ? ' crm-kpi--alerta' : ''),
-    kpi('Projetos em andamento', emAndamento.length, `${projetos.filter((p) => p.estado === 'proximo').length} na fila para começar`, '#clientes'),
-    kpi('Fila do Claude', fila.length, fila.length ? 'Peça: "pega a fila do CRM"' : 'Nada na fila', '#tarefas'),
+    kpi('Urgentes', urgentes.length, urgentes.length ? 'Prioridade urgente, abertas' : 'Nenhuma urgência', '#tarefas', 'ia', ' crm-kpi--destaque'),
+    kpi('Vencem hoje', hoje.length, hoje.length ? 'Prazo é hoje' : 'Nada para hoje', '#tarefas', 'tarefas'),
+    kpi('Atrasadas', vencidas.length, vencidas.length ? 'Passaram do prazo' : 'Tudo no prazo', '#tarefas', 'calendario', vencidas.length ? ' crm-kpi--alerta' : ''),
+    kpi('Follow-ups', leadsAtencao.length, leadsAtencao.length ? 'Leads para falar ou parados' : 'Leads em dia', '#leads', 'leads', leadsAtencao.length ? ' crm-kpi--alerta' : ''),
+    kpi('Projetos em andamento', emAndamento.length, `${projetos.filter((p) => p.estado === 'proximo').length} na fila para começar`, '#clientes', 'painel'),
+    kpi('Fila do Claude', fila.length, fila.length ? 'Peça: "pega a fila do CRM"' : 'Nada na fila', '#tarefas', 'enviar'),
   ].join('');
 
   $('#hoje-lista').innerHTML = ordenarTarefas([...vencidas, ...hoje, ...urgentes.filter((t) => !['hoje', 'atrasada'].includes(grupoPrazo(t)))])

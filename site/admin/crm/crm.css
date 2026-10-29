@@ -53,7 +53,8 @@
 }
 
 /* ---------- Números do topo ---------- */
-.crm-kpis { display: grid; gap: var(--crm-espaco); grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.crm-kpis { display: grid; gap: var(--crm-espaco); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 1560px) { .crm-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .crm-kpi {
   display: flex; flex-direction: column; gap: var(--sp-2xs); min-height: 140px; color: var(--ink);
   padding: var(--crm-box); background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-img);
@@ -310,3 +311,90 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
   .crm-campo select { width: 100%; min-width: 0; }
   .crm-buscar kbd { display: none; }
 }
+
+/* ---------- Ícone laranja nos cartões de número ---------- */
+.crm-kpi { position: relative; }
+.crm-kpi__ico { position: absolute; top: var(--crm-box); right: var(--crm-box); display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; background: var(--brand-wash); color: var(--brand); }
+.crm-kpi__ico .ico { width: 1rem; height: 1rem; }
+.crm-kpi--destaque .crm-kpi__ico { background: var(--brand); color: var(--brand-ink); }
+.crm-kpi__rotulo { padding-right: 2.6rem; }
+
+/* ============================================================
+   Gráficos (graficos.js). Laranja é o dado que importa agora:
+   hoje, urgente, entrega, follow-up. O resto em tinta e cinza.
+   ============================================================ */
+
+/* Boas-vindas: faixa escura com o anel da semana */
+.g-boas {
+  position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--sp-lg);
+  padding: var(--sp-lg); border-radius: var(--radius-img); background: var(--bg-invert); color: var(--brand-ink);
+}
+.g-boas__txt { position: relative; max-width: 40rem; }
+.g-boas__olho { font-size: var(--t-eyebrow); font-weight: var(--w-semi); letter-spacing: .12em; text-transform: uppercase; color: var(--brand); }
+.g-boas__olho::first-letter { text-transform: uppercase; }
+.g-boas h2 { margin-top: var(--sp-2xs); font-size: var(--t-h3); font-weight: var(--w-black); letter-spacing: var(--ls-h3); line-height: var(--lh-h3); }
+.g-boas__txt > p:not(.g-boas__olho) { margin-top: var(--sp-2xs); color: var(--muted-invert); font-size: var(--t-small); }
+.g-boas__chips { display: flex; flex-wrap: wrap; gap: var(--sp-2xs); margin-top: var(--sp-md); }
+.g-boas__chips span { padding: .4em .85em; border-radius: var(--radius-pill); box-shadow: inset 0 0 0 var(--hair) var(--line-invert); font-size: var(--t-eyebrow); color: var(--muted-invert); }
+.g-boas__chips b { color: var(--brand-ink); margin-right: .25em; }
+.g-boas__anel { position: relative; display: grid; justify-items: center; gap: var(--sp-2xs); padding: var(--sp-sm); border-radius: var(--radius-img); background: var(--bg-invert); }
+.g-boas__anel small { font-size: var(--t-eyebrow); color: var(--muted-invert); }
+@media (max-width: 700px) {
+  .g-boas { grid-template-columns: 1fr; padding: var(--sp-md); }
+  .g-boas__anel { justify-items: start; justify-content: start; gap: var(--sp-sm); grid-auto-flow: column; align-items: center; padding: 0; }
+  .g-boas__anel .g-anel { width: 4.75rem; height: 4.75rem; }
+  .g-boas__anel .g-anel b { font-size: var(--t-small); }
+}
+
+/* Anel e rosca */
+.g-anel, .g-rosca__svg { position: relative; display: grid; place-items: center; width: 7.5rem; height: 7.5rem; }
+.g-anel svg, .g-rosca__svg svg { position: absolute; inset: 0; width: 100%; height: 100%; rotate: -90deg; }
+.g-anel__fundo { fill: none; stroke: var(--line-invert); stroke-width: 8; }
+.g-anel__cheio { fill: none; stroke: var(--brand); stroke-width: 8; stroke-linecap: round; }
+.g-anel b { font-size: var(--t-lead); font-weight: var(--w-black); letter-spacing: -.03em; }
+.g-rosca { display: flex; align-items: center; gap: var(--sp-lg); flex-wrap: wrap; }
+.g-rosca .g-anel__fundo { stroke: var(--bg-2); }
+.g-rosca__parte { fill: none; stroke-width: 10; stroke: var(--line-2); }
+.g-rosca__parte[data-p="urgente"] { stroke: var(--brand); }
+.g-rosca__parte[data-p="alta"] { stroke: var(--ink); }
+.g-rosca__parte[data-p="normal"] { stroke: var(--meta); }
+.g-rosca__svg b { display: grid; justify-items: center; font-size: var(--t-lead); font-weight: var(--w-black); line-height: 1; }
+.g-rosca__svg small { font-size: var(--t-eyebrow); font-weight: var(--w-semi); color: var(--muted); margin-top: 3px; }
+.g-legenda { display: grid; gap: var(--sp-2xs); flex: 1; min-width: 9rem; }
+.g-legenda li { display: flex; align-items: center; gap: .6em; font-size: var(--t-small); }
+.g-legenda li::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: var(--line-2); }
+.g-legenda li[data-p="urgente"]::before { background: var(--brand); }
+.g-legenda li[data-p="alta"]::before { background: var(--ink); }
+.g-legenda li[data-p="normal"]::before { background: var(--meta); }
+.g-legenda b { margin-left: auto; }
+
+/* Ritmo: barras dos últimos 14 dias */
+.g-ritmo { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; height: 190px; align-items: end; }
+.g-ritmo__dia { display: grid; grid-template-rows: 1.4em 1fr 1.4em; height: 100%; align-items: end; justify-items: center; min-width: 0; }
+.g-ritmo__n { font-size: 10px; font-weight: var(--w-bold); color: var(--muted); }
+.g-ritmo__barra { width: 100%; max-width: 30px; border-radius: 5px 5px 2px 2px; background: repeating-linear-gradient(135deg, var(--line-2) 0 2px, var(--bg-2) 2px 6px); }
+.g-ritmo__dia.hoje .g-ritmo__barra { background: var(--brand); }
+.g-ritmo__dia.hoje .g-ritmo__n, .g-ritmo__dia.hoje .g-ritmo__rot { color: var(--brand); font-weight: var(--w-bold); }
+.g-ritmo__dia:hover .g-ritmo__barra { background: var(--ink); }
+.g-ritmo__rot { font-size: 10px; color: var(--muted); text-transform: capitalize; }
+@media (max-width: 640px) { .g-ritmo { gap: 3px; height: 150px; } .g-ritmo__rot { font-size: 9px; } }
+
+/* Faixa de prazos dos próximos 14 dias */
+.g-faixa { display: grid; grid-template-columns: repeat(14, minmax(2.6rem, 1fr)); gap: 4px; overflow-x: auto; padding-bottom: 2px; }
+.g-faixa__dia { display: grid; justify-items: center; gap: 2px; padding: var(--sp-2xs) 0; border-radius: var(--radius-img); background: var(--bg-2); }
+.g-faixa__dia.fds { background: transparent; box-shadow: inset 0 0 0 var(--hair) var(--line); }
+.g-faixa__dia.hoje { background: var(--ink); color: var(--brand-ink); }
+.g-faixa__sem { font-size: 10px; color: var(--muted); text-transform: capitalize; }
+.g-faixa__dia.hoje .g-faixa__sem { color: var(--muted-invert); }
+.g-faixa__dia b { font-size: var(--t-small); }
+.g-faixa__pontos { display: flex; gap: 2px; min-height: 7px; align-items: center; }
+.g-faixa__pontos i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-2); }
+.g-faixa__dia.hoje .g-faixa__pontos i { background: var(--brand-ink); }
+.g-faixa__pontos i.forte, .g-faixa__dia.hoje .g-faixa__pontos i.forte { background: var(--brand); }
+.g-faixa__pontos i.lead { background: transparent; box-shadow: inset 0 0 0 1.5px var(--brand); }
+.g-faixa__pontos small { font-size: 9px; color: var(--muted); }
+.g-faixa__aviso { margin-top: var(--sp-xs); font-size: var(--t-eyebrow); font-weight: var(--w-semi); color: var(--brand); }
+.g-faixa-legenda { display: flex; gap: var(--sp-sm); flex-wrap: wrap; margin-top: var(--sp-xs); font-size: var(--t-eyebrow); color: var(--muted); }
+.g-faixa-legenda i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: .4em; background: var(--ink-2); vertical-align: .05em; }
+.g-faixa-legenda i.forte { background: var(--brand); }
+.g-faixa-legenda i.lead { background: transparent; box-shadow: inset 0 0 0 1.5px var(--brand); }

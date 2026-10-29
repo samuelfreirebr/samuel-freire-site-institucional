@@ -4,10 +4,11 @@
    ============================================================ */
 
 .ini > * + * { margin-top: var(--crm-respiro); }
+.ini > .ini-linha { margin-top: var(--sp-sm); display: flex; justify-content: flex-end; }
 
 /* Cofre direto da tela inicial: colou, Guardar, e o link já entra organizado. */
 .ini-cofre {
-  display: flex; align-items: center; gap: var(--sp-2xs); flex: 1 1 22rem; max-width: 34rem;
+  display: flex; align-items: center; gap: var(--sp-2xs); flex: 1 1 22rem; max-width: 40rem;
   padding: 4px 4px 4px var(--sp-sm); background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-pill);
 }
 .ini-cofre:focus-within { border-color: var(--ink); }

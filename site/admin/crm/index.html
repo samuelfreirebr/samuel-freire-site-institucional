@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="/admin/painel.css?v=9">
 <link rel="stylesheet" href="/admin/casca.css?v=1">
 <script type="module" src="/admin/casca.js?v=1"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=8">
+<link rel="stylesheet" href="/admin/crm/crm.css?v=9">
 </head>
 <body>
 
@@ -36,14 +36,27 @@
 
   <!-- ===================== Visão geral ===================== -->
   <section id="aba-geral" class="crm-aba" aria-labelledby="t-geral">
-    <div class="crm-cab">
-      <div>
-        <h2 class="crm-titulo" id="t-geral"><span id="saudacao">Olá</span>, Samuel</h2>
-        <p class="crm-sub" id="resumo-dia"></p>
-      </div>
-    </div>
+    <h2 class="sr" id="t-geral">Visão geral</h2>
+    <div id="boas"></div>
 
     <div class="crm-kpis" id="kpis"><p class="vazio">Carregando…</p></div>
+
+    <div class="crm-grade crm-grade--2">
+      <article class="crm-card-box">
+        <header class="crm-box__topo"><h3>Ritmo</h3><span class="crm-box__dica">Tarefas concluídas nos últimos 14 dias</span></header>
+        <div id="ritmo"></div>
+      </article>
+      <article class="crm-card-box">
+        <header class="crm-box__topo"><h3>Abertas por prioridade</h3><a class="crm-box__link" href="#tarefas">Tarefas</a></header>
+        <div id="rosca"></div>
+      </article>
+    </div>
+
+    <article class="crm-card-box">
+      <header class="crm-box__topo"><h3>Próximos 14 dias</h3><a class="crm-box__link" href="#calendario">Calendário</a></header>
+      <div id="faixa"></div>
+      <p class="g-faixa-legenda"><span><i></i>Tarefa</span><span><i class="forte"></i>Entrega ou urgente</span><span><i class="lead"></i>Follow-up de lead</span></p>
+    </article>
 
     <div class="crm-grade crm-grade--2">
       <article class="crm-card-box">
