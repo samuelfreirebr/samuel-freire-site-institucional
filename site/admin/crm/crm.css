@@ -126,7 +126,7 @@ a.crm-kpi:hover { border-color: var(--ink); }
 .tf__corpo { display: grid; gap: 2px; min-width: 0; text-align: left; padding: .2em 0; color: var(--ink); }
 .tf__titulo { font-size: var(--t-small); font-weight: var(--w-semi); overflow-wrap: anywhere; }
 .tf__corpo:hover .tf__titulo { text-decoration: underline; text-underline-offset: 3px; }
-.tf__entrega { display: inline-block; margin-right: .5em; padding: .05em .5em; border-radius: var(--radius-pill); background: var(--ink); color: var(--brand-ink); font-size: 10px; font-weight: var(--w-bold); letter-spacing: .06em; text-transform: uppercase; vertical-align: .15em; }
+.tf__entrega { display: inline-block; margin-right: .5em; padding: .2em .6em; border-radius: var(--radius-pill); background: var(--ink); color: var(--brand-ink); font-size: 10px; font-weight: var(--w-bold); letter-spacing: .06em; text-transform: uppercase; vertical-align: .15em; }
 .tf__meta { display: flex; flex-wrap: wrap; gap: 0 .9em; color: var(--muted); font-size: var(--t-eyebrow); }
 .tf__prio { font-size: var(--t-eyebrow); font-weight: var(--w-semi); color: var(--muted); white-space: nowrap; }
 .tf__prio::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: .45em; border-radius: 50%; background: var(--line-2); }
@@ -179,15 +179,18 @@ a.crm-kpi:hover { border-color: var(--ink); }
 .cal__n { font-size: var(--t-eyebrow); font-weight: var(--w-bold); color: var(--muted); }
 .cal__n small { display: none; }
 .cal__dia.hoje .cal__n { display: inline-grid; place-items: center; align-self: flex-start; min-width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--brand); color: var(--brand-ink); }
+/* Cada tipo de evento tem um ponto de cor antes do texto. */
 .cal-ev {
-  display: block; padding: .2em .5em; border-radius: 4px; font-size: 11px; font-weight: var(--w-semi); line-height: 1.35;
-  background: var(--bg-2); color: var(--ink); border-left: 3px solid var(--meta);
+  --cal-cor: var(--meta);
+  display: block; padding: .3em .55em; border-radius: 4px; font-size: 11px; font-weight: var(--w-semi); line-height: 1.35;
+  background: var(--bg-2); color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
 }
+.cal-ev::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: .45em; border-radius: 50%; background: var(--cal-cor); vertical-align: .08em; }
 .cal__dia:hover .cal-ev { background: var(--bg); }
-.cal-ev--entrega { border-left-color: var(--ink); }
-.cal-ev--lead { border-left-color: var(--brand); }
-.cal-ev--contrato { border-left-color: var(--line-2); color: var(--muted); }
+.cal-ev--entrega { --cal-cor: var(--ink); }
+.cal-ev--lead { --cal-cor: var(--brand); }
+.cal-ev--contrato { --cal-cor: var(--line-2); color: var(--muted); }
 .cal-ev.atraso { color: var(--brand); }
 .crm-legenda { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-xs); color: var(--muted); font-size: var(--t-eyebrow); margin-top: var(--sp-sm) !important; }
 .crm-legenda .cal-ev { display: inline-block; cursor: default; }
