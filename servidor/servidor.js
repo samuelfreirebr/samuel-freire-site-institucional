@@ -311,6 +311,12 @@ async function api(req, res, url) {
     if (!clickup.ligado()) return json(res, { ligado: false, tarefas: [], erros: [] });
     return json(res, { ligado: true, ...(await clickup.tarefas({ renovar: url.searchParams.has('renovar') })) });
   }
+  if (rota.startsWith('clickup/') && req.method === 'POST') {
+    const dado = await lerJson(req, res, 4096);
+    if (!dado) return;
+    try { return json(res, { tarefa: await clickup.mudarStatus(rota.slice('clickup/'.length), String(dado.status || '')) }); }
+    catch (e) { return json(res, { erro: e.message }, 400); }
+  }
 
   /* --- cofre: links úteis, só do painel --- */
   if (rota === 'cofre') {

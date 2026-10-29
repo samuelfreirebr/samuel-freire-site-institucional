@@ -4,8 +4,8 @@
 
 import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, documentos, mesmoCliente, NOMES, LEADS,
-  dataCurta, quando, prazoTexto, hojeIso, iniciais, selo, whatsapp, abertas, atrasadas, proximaTarefa,
-  diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, copiar,
+  dataCurta, quando, prazoTexto, iniciais, selo, whatsapp, abertas, atrasadas, proximaTarefa,
+  diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, tarefasClickup, ligarLista, abrirTarefa, ligarBusca, copiar,
 } from '../comum.js';
 
 const [id, abaInicial] = decodeURIComponent(location.hash.slice(1)).split('&');
@@ -89,34 +89,21 @@ function desenharTarefas() {
 
 let clickup = [];
 async function buscarClickup() {
-  try {
-    const r = await fetch('/api/clickup');
-    if (!r.ok) return;
-    clickup = (await r.json()).tarefas || [];
-  } catch { return; }
+  clickup = await tarefasClickup(todos);
   desenharResumo();
   desenharClickup();
 }
 
-const doClickup = () => clickup.filter((t) => mesmoCliente(c.nome, t.cliente));
+const doClickup = () => clickup.filter((t) => t.cliente.id === c.id);
 
 function desenharClickup() {
-  const daqui = doClickup()
-    .sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999'));
-  const linha = (t) => `<li class="tf fc-cu" data-feita="${t.estado === 'feita' ? 1 : 0}">
-      <span class="fc-cu__ponto" data-estado="${t.estado}" aria-hidden="true"></span>
-      <a class="tf__corpo" href="${esc(t.url)}" target="_blank" rel="noopener">
-        <span class="tf__titulo">${esc(t.titulo)}</span>
-        <span class="tf__meta"><span>${esc(t.lista)}</span><span>${esc(t.status)}</span></span>
-      </a>
-      <span class="tf__prazo${t.estado !== 'feita' && t.prazo && t.prazo < hojeIso() ? ' atraso' : ''}">${prazoTexto(t.prazo)}</span>
-    </li>`;
+  const daqui = doClickup().sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999'));
   for (const caixa of $$('[data-clickup]')) {
     caixa.hidden = !daqui.length;
     caixa.querySelector('.fc-cu-n').textContent = daqui.length;
   }
-  $('#resumo-clickup').innerHTML = daqui.filter((t) => t.estado !== 'feita').slice(0, 6).map(linha).join('');
-  $('#clickup').innerHTML = daqui.map(linha).join('');
+  $('#resumo-clickup').innerHTML = daqui.filter((t) => t.estado !== 'feita').slice(0, 6).map((t) => linhaTarefa(t, { mostrarCliente: false })).join('');
+  $('#clickup').innerHTML = daqui.map((t) => linhaTarefa(t, { mostrarCliente: false })).join('');
 }
 
 /* ---------- Materiais ---------- */

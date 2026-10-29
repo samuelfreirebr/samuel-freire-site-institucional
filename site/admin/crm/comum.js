@@ -172,20 +172,44 @@ export async function tarefasClickup(clientes) {
     return ((await r.json()).tarefas || []).map((t) => ({
       id: 'cu-' + t.id, titulo: t.titulo, estado: t.estado, prazo: t.prazo, prioridade: 'normal', tipo: 'tarefa', checklist: [],
       cliente: clientes.find((c) => mesmoCliente(c.nome, t.cliente)) || { id: '', nome: t.cliente },
-      clickup: { url: t.url, status: t.status, lista: t.lista },
+      clickup: { id: t.id, url: t.url, status: t.status, lista: t.lista, opcoes: t.opcoes || [], feito: t.feito || '' },
     }));
   } catch { return []; }
 }
 
-const linhaClickup = (t, mostrarCliente) => `<li class="tf tf--clickup" data-feita="${t.estado === 'feita' ? 1 : 0}">
-    <span class="tf__cu" data-estado="${t.estado}" aria-hidden="true"></span>
-    <a class="tf__corpo" href="${esc(t.clickup.url)}" target="_blank" rel="noopener">
+const linhaClickup = (t, mostrarCliente) => {
+  const cu = t.clickup, feita = cu.status === cu.feito;
+  return `<li class="tf tf--clickup" data-cu-id="${esc(cu.id)}" data-feito="${esc(cu.feito)}" data-aberto="${esc(cu.opcoes[0] || '')}" data-feita="${feita ? 1 : 0}">
+    <label class="tf__check" title="${feita ? 'Reabrir no ClickUp' : 'Marcar como feita no ClickUp'}"><input type="checkbox" data-cu="feito"${feita ? ' checked' : ''}${cu.feito ? '' : ' disabled'} aria-label="Feita: ${esc(t.titulo)}"></label>
+    <a class="tf__corpo" href="${esc(cu.url)}" target="_blank" rel="noopener" title="Abrir no ClickUp">
       <span class="tf__titulo">${esc(t.titulo)}</span>
-      <span class="tf__meta">${mostrarCliente ? `<span>${esc(t.cliente.nome)}</span>` : ''}<span>${esc(t.clickup.lista)}</span><span>ClickUp: ${esc(t.clickup.status)}</span></span>
+      <span class="tf__meta">${mostrarCliente ? `<span>${esc(t.cliente.nome)}</span>` : ''}<span>${esc(cu.lista)}</span><span>ClickUp</span></span>
     </a>
-    <span class="tf__prio"></span>
+    <select class="tf__status" data-cu="status" aria-label="Status no ClickUp">${cu.opcoes.map((o) => `<option${o === cu.status ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
     <span class="tf__prazo${t.estado !== 'feita' && t.prazo && t.prazo < hojeIso() ? ' atraso' : ''}">${prazoTexto(t.prazo)}</span>
   </li>`;
+};
+
+/* Mudou o status de uma linha do ClickUp (caixa de feita ou lista de
+   status): grava no próprio ClickUp. Vale para toda tela que mostra a linha. */
+document.addEventListener('change', async (e) => {
+  const campo = e.target.closest('[data-cu]');
+  if (!campo) return;
+  const li = campo.closest('.tf'), sel = li.querySelector('[data-cu="status"]'), caixa = li.querySelector('[data-cu="feito"]');
+  const antes = [...sel.options].find((o) => o.defaultSelected)?.value || sel.value;
+  const status = campo === caixa ? (caixa.checked ? li.dataset.feito : li.dataset.aberto) : sel.value;
+  li.setAttribute('aria-busy', 'true');
+  try {
+    await pedir('/api/clickup/' + encodeURIComponent(li.dataset.cuId), { method: 'POST', body: JSON.stringify({ status }) });
+    for (const o of sel.options) o.defaultSelected = o.selected = o.value === status;
+    caixa.checked = status === li.dataset.feito;
+    li.dataset.feita = caixa.checked ? 1 : 0;
+    avisar(`No ClickUp: ${status}.`);
+  } catch (err) {
+    sel.value = antes; caixa.checked = antes === li.dataset.feito;
+    avisar(err.message, 'erro');
+  } finally { li.removeAttribute('aria-busy'); }
+});
 
 export function linhaTarefa(t, { mostrarCliente = true } = {}) {
   if (t.clickup) return linhaClickup(t, mostrarCliente);

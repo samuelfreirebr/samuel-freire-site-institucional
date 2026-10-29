@@ -109,10 +109,3 @@
 .fc-perigo b { display: block; font-size: var(--t-small); }
 .fc-perigo small { color: var(--muted); font-size: var(--t-eyebrow); }
 
-/* ---------- Tarefas do ClickUp (só leitura) ---------- */
-.fc-cu { grid-template-columns: auto minmax(0, 1fr) 5.2em; }
-.fc-cu__ponto { width: 1.6rem; display: grid; place-items: center; }
-.fc-cu__ponto::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--line-2); }
-.fc-cu__ponto[data-estado="andamento"]::before { background: var(--ink); }
-.fc-cu__ponto[data-estado="aguardando"]::before { background: var(--brand); }
-.fc-cu__ponto[data-estado="feita"]::before { background: var(--verde, #1E8A57); }
