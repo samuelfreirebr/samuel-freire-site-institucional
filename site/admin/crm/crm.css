@@ -245,24 +245,89 @@ a.crm-kpi:hover { border-color: var(--ink); }
 }
 .crm-atraso { color: var(--brand); font-size: var(--t-eyebrow); font-weight: var(--w-semi); }
 
-/* ---------- Funil em colunas (arrastar muda a etapa) ---------- */
-.crm-quadro {
-  display: grid; grid-auto-flow: column; grid-auto-columns: var(--crm-coluna); gap: var(--crm-espaco);
-  min-height: 420px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: var(--sp-sm);
+/* ---------- Cor de cada etapa: degradê do laranja ao cinza ----------
+   Lead e proposta em laranja claro (ainda esquentando), fechado no
+   laranja cheio, em andamento na tinta com ponto laranja, entregue e
+   encerrado em cinza. Usado no ponto da coluna, no seletor e no avatar. */
+[data-etapa] { --etapa-cor: var(--meta); --etapa-fundo: var(--bg-2); --etapa-texto: var(--ink-2); }
+[data-etapa="lead"] { --etapa-cor: color-mix(in srgb, var(--brand) 45%, var(--bg)); --etapa-fundo: var(--brand-wash); --etapa-texto: var(--brand); }
+[data-etapa="proposta"] { --etapa-cor: color-mix(in srgb, var(--brand) 75%, var(--bg)); --etapa-fundo: color-mix(in srgb, var(--brand) 14%, var(--bg)); --etapa-texto: var(--brand); }
+[data-etapa="fechado"] { --etapa-cor: var(--brand); --etapa-fundo: var(--brand); --etapa-texto: var(--brand-ink); }
+[data-etapa="andamento"] { --etapa-cor: var(--ink); --etapa-fundo: var(--ink); --etapa-texto: var(--brand-ink); }
+[data-etapa="entregue"] { --etapa-cor: var(--muted); --etapa-fundo: var(--bg-2); --etapa-texto: var(--ink-2); }
+[data-etapa="encerrado"] { --etapa-cor: var(--line-2); --etapa-fundo: var(--bg-2); --etapa-texto: var(--muted); }
+
+/* Etapa como seletor (tabela): pílula na cor da etapa, muda na hora. */
+.crm-etapa-sel { position: relative; display: inline-flex; margin: 0; }
+.crm-etapa-sel select {
+  width: auto; padding: .38em 2em .38em 1.65em; border: 0; border-radius: var(--radius-pill);
+  background-color: var(--etapa-fundo); color: var(--etapa-texto); font-size: var(--t-eyebrow); font-weight: var(--w-semi); line-height: 1.3; cursor: pointer;
+  background-position: right .7em center; background-size: 10px;
 }
-@media (max-width: 640px) { :root { --crm-coluna: 84vw; } }
-.crm-col { display: flex; flex-direction: column; min-height: 0; scroll-snap-align: start; background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-img); }
-.crm-col.alvo { border-color: var(--brand); }
-.crm-col__topo { display: flex; align-items: center; gap: .5em; padding: var(--sp-sm) var(--sp-sm) var(--sp-2xs); font-size: var(--t-eyebrow); font-weight: var(--w-bold); letter-spacing: .12em; text-transform: uppercase; }
-.crm-col__n { color: var(--muted); font-weight: var(--w-semi); margin-left: auto; }
-.crm-col__lista { flex: 1; display: grid; align-content: start; gap: var(--crm-espaco); padding: var(--sp-2xs) var(--sp-sm) var(--sp-sm); }
-.crm-col__vazia { color: var(--muted); font-size: var(--t-eyebrow); padding: var(--sp-2xs) 0; }
-.crm-card { display: grid; gap: 4px; padding: var(--sp-sm); background: var(--bg-2); border: var(--hair) solid transparent; border-radius: var(--radius-img); color: var(--ink); }
-.crm-card:hover { border-color: var(--ink); }
-.crm-card__nome { font-weight: var(--w-bold); line-height: 1.25; }
-.crm-card__serv { color: var(--muted); font-size: var(--t-eyebrow); }
-.crm-card__prox { font-size: var(--t-small); line-height: 1.4; }
-.crm-card__pe { display: flex; flex-wrap: wrap; gap: 0 .8em; align-items: center; color: var(--muted); font-size: var(--t-eyebrow); margin-top: 2px; }
+.crm-etapa-sel::before { content: ""; position: absolute; left: .7em; top: 50%; translate: 0 -50%; width: 6px; height: 6px; border-radius: 50%; background: currentColor; color: var(--etapa-texto); pointer-events: none; }
+.crm-etapa-sel[data-etapa="andamento"]::before { color: var(--brand); }
+.crm-etapa-sel select:hover { filter: brightness(.96); }
+.crm-dias { margin-top: 4px; }
+
+/* Avatar na cor da etapa */
+.crm-avatar[data-etapa] { background: var(--etapa-fundo); color: var(--etapa-texto); }
+.crm-avatar[data-etapa="entregue"], .crm-avatar[data-etapa="encerrado"] { box-shadow: inset 0 0 0 var(--hair) var(--line-2); }
+
+/* Tabela como a do studio-admin: topo com título, linhas baixas, rodapé com páginas */
+.crm-kpis--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .crm-kpis--4 { grid-template-columns: 1fr 1fr; } }
+.crm-kpi--baixo { min-height: 116px; }
+.crm-tabela-topo { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-sm); flex-wrap: wrap; padding: var(--sp-md) var(--sp-md) var(--sp-sm); }
+.crm-tabela-topo h3 { display: flex; align-items: center; gap: .55em; font-size: var(--t-small); font-weight: var(--w-bold); }
+.crm-tabela-topo h3::before { content: ""; width: var(--bullet); height: var(--bullet); border-radius: 50%; background: var(--brand); }
+.crm-tabela-rola { overflow-x: auto; }
+.crm-tabela-pe { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-sm); flex-wrap: wrap; padding: var(--sp-sm) var(--sp-md); border-top: var(--hair) solid var(--line); color: var(--muted); font-size: var(--t-eyebrow); }
+.crm-pag { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.crm-pag__n { min-width: 2em; height: 2em; border-radius: 6px; font-size: var(--t-eyebrow); font-weight: var(--w-semi); color: var(--muted); }
+.crm-pag__n:hover { background: var(--bg-2); color: var(--ink); }
+.crm-pag__n[aria-current="true"] { background: var(--bg); color: var(--ink); box-shadow: inset 0 0 0 var(--hair) var(--line-2); }
+.crm-icone { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 6px; color: var(--muted); }
+.crm-icone:hover { background: var(--bg); color: var(--brand); }
+.crm-icone .ico { width: 1rem; height: 1rem; }
+
+/* ---------- Funil (kanban): colunas largas, cartões baixos ----------
+   Colunas de largura fixa que rolam para o lado, como o Kanban do
+   studio-admin; cada coluna com o ponto na cor da etapa e o "+". */
+.crm-quadro {
+  display: grid; grid-auto-flow: column; grid-auto-columns: var(--crm-coluna-funil, 272px); gap: var(--crm-espaco);
+  overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: var(--sp-sm); align-items: start;
+}
+@media (max-width: 640px) { .crm-quadro { --crm-coluna-funil: 82vw; } }
+.crm-col { display: flex; flex-direction: column; scroll-snap-align: start; background: var(--bg-2); border: var(--hair) solid var(--line); border-radius: 10px; max-height: 76vh; }
+.crm-col.alvo { border-color: var(--brand); background: var(--brand-wash); }
+.crm-col__topo { display: flex; align-items: center; gap: .55em; padding: var(--sp-sm) var(--sp-sm) var(--sp-xs); font-size: var(--t-small); font-weight: var(--w-bold); }
+.crm-col__ponto { width: 9px; height: 9px; border-radius: 50%; background: var(--etapa-cor); box-shadow: 0 0 0 3px color-mix(in srgb, var(--etapa-cor) 25%, transparent); }
+.crm-col__n { min-width: 1.7em; padding: .1em .5em; border-radius: var(--radius-pill); background: var(--bg); color: var(--muted); font-size: var(--t-eyebrow); text-align: center; box-shadow: inset 0 0 0 var(--hair) var(--line); }
+.crm-col__mais { margin-left: auto; width: 1.7rem; height: 1.7rem; border-radius: 6px; color: var(--muted); font-size: 1.1rem; line-height: 1; }
+.crm-col__mais:hover { background: var(--bg); color: var(--brand); }
+.crm-col__lista { flex: 1; overflow-y: auto; display: grid; align-content: start; gap: var(--sp-2xs); padding: 0 var(--sp-xs) var(--sp-xs); }
+.crm-col__vazia { color: var(--meta); font-size: var(--t-eyebrow); padding: var(--sp-sm); text-align: center; border: 1.5px dashed var(--line-2); border-radius: 8px; }
+
+.crm-card {
+  position: relative; display: grid; gap: 6px; padding: var(--sp-xs) var(--sp-sm); background: var(--bg);
+  border: var(--hair) solid var(--line); border-radius: 8px; color: var(--ink); cursor: grab;
+  transition: border-color var(--d-fast), translate var(--d-fast) var(--ease-out);
+}
+.crm-card:hover { border-color: var(--etapa-cor); translate: 0 -1px; }
+.crm-card:active { cursor: grabbing; }
+.crm-card__nome { font-size: var(--t-small); font-weight: var(--w-bold); line-height: 1.3; color: var(--ink); }
+.crm-card__nome:hover { color: var(--brand); }
+.crm-card__tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.crm-card__tags .crm-selo { margin-left: 0; }
+.crm-card__lead { padding: .2em .55em; border-radius: var(--radius-pill); background: var(--bg-2); color: var(--muted); font-size: 10px; font-weight: var(--w-semi); }
+.crm-card__lead.alerta { background: var(--brand-wash); color: var(--brand); }
+.crm-card__serv { color: var(--muted); font-size: var(--t-eyebrow); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crm-card__pe { display: flex; align-items: center; gap: .8em; padding-top: 6px; border-top: var(--hair) solid var(--line); color: var(--muted); font-size: 11px; }
+.crm-card__pe > span { display: inline-flex; align-items: center; gap: .3em; }
+.crm-card__pe .ico { width: .8rem; height: .8rem; }
+.crm-card__dias { margin-left: auto; }
+.crm-avatar--mini { width: 1.45rem; height: 1.45rem; font-size: 9px; }
+.crm-card .crm-avatar--mini { background: var(--etapa-fundo); color: var(--etapa-texto); }
 .claude { color: var(--brand); font-weight: var(--w-semi); }
 
 /* ---------- Janelas: prévia lateral, busca rápida, tarefa, contato ---------- */
@@ -408,3 +473,27 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
 .crm-selo::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .crm-titulo .crm-selo { font-size: 11px; vertical-align: .35em; }
 .pv-topo .crm-selo { margin-left: 0; }
+
+/* ---------- Área "Preencher com IA" do cadastro ---------- */
+.ia-solta {
+  display: grid; gap: var(--sp-xs); margin-bottom: var(--sp-md); padding: var(--sp-sm);
+  border: 1.5px dashed color-mix(in srgb, var(--brand) 45%, var(--bg)); border-radius: 18px; background: var(--brand-wash);
+  transition: border-color var(--d-fast), background var(--d-fast);
+}
+.ia-solta.ativa { border-color: var(--brand); border-style: solid; }
+.ia-solta.lendo { opacity: .7; pointer-events: none; }
+.ia-solta__topo { display: flex; gap: var(--sp-xs); align-items: flex-start; }
+.ia-solta__topo b { display: block; font-size: var(--t-small); }
+.ia-solta__topo small { color: var(--muted); font-size: var(--t-eyebrow); line-height: 1.45; }
+.ia-solta__ico { display: grid; place-items: center; flex: none; width: 2.1rem; height: 2.1rem; border-radius: 50%; background: var(--brand); color: var(--brand-ink); font-size: .95rem; }
+.ia-solta textarea { min-height: 4.5em; background: var(--bg); border-color: transparent; }
+.ia-solta__acoes { display: flex; align-items: center; gap: var(--sp-2xs); flex-wrap: wrap; }
+.ia-solta__arquivo { margin: 0; cursor: pointer; }
+.ia-solta__lista { flex: 1; min-width: 0; color: var(--muted); font-size: var(--t-eyebrow); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ia-solta__res { padding: var(--sp-xs) var(--sp-sm); border-radius: 12px; background: var(--bg); font-size: var(--t-small); }
+
+/* Ajustes da tabela: coluna do cliente com folga e pílula da etapa do tamanho do texto. */
+.crm-tabela th:first-child, .crm-tabela td:first-child { min-width: 290px; }
+.crm-tabela td:first-child b { display: flex; align-items: center; flex-wrap: wrap; gap: 0 .2em; }
+.crm-etapa-sel select { field-sizing: content; }
+.crm-tabela td { padding-block: .7rem; }

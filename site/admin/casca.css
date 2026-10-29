@@ -67,3 +67,56 @@ body.com-casca .topo h1 { font-size: var(--t-small); font-weight: var(--w-semi);
   .casca__abrir { display: inline-grid; }
 }
 @media (prefers-reduced-motion: reduce) { .casca { transition: none; } }
+
+/* ---------- Campos de escolha (select) ----------
+   A seta nativa ficava colada na borda e torta nos campos arredondados.
+   Aqui ela vira um ícone próprio, com respiro à direita. A cor do traço
+   é a de --muted (#5B6470), escrita no SVG porque url() não lê var(). */
+select:not([multiple]) {
+  -webkit-appearance: none; appearance: none;
+  padding-right: 2.4em !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%235B6470' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .8em center; background-size: 12px;
+}
+
+/* ---------- Janelas e campos mais redondos (todo o painel) ----------
+   Pedido do Samuel: o canto quase reto das janelas tinha cara de
+   gerado. Janela com canto bem redondo, campos com canto suave. */
+:root {
+  --janela-raio: 24px;          /* cantos das janelas (pop-ups) */
+  --campo-raio: 12px;           /* cantos dos campos de texto e escolha */
+}
+dialog { border-radius: var(--janela-raio) !important; }
+dialog .modal__topo { padding: var(--sp-md) var(--sp-md) var(--sp-sm); border-bottom: 0; }
+dialog .modal__topo b { font-size: var(--t-body); font-weight: var(--w-bold); letter-spacing: -.01em; }
+dialog .modal__corpo { padding: var(--sp-2xs) var(--sp-md) var(--sp-md); }
+dialog::backdrop { background: rgba(20, 21, 23, .42); backdrop-filter: blur(3px); }
+@media (max-width: 640px) {
+  dialog[open]:not(.lateral):not(.busca) { inset: auto 0 0 0; height: auto; max-height: 92dvh; border-radius: var(--janela-raio) var(--janela-raio) 0 0 !important; }
+}
+dialog.lateral[open] { border-radius: var(--janela-raio) 0 0 var(--janela-raio) !important; }
+input[type=text], input[type=number], input[type=password], input[type=url], input[type=search], input[type=date], textarea, select { border-radius: var(--campo-raio); }
+
+/* ---------- Topo do menu, botão de recolher e "Nova tarefa" ---------- */
+.casca__cab { display: flex; align-items: center; gap: var(--sp-2xs); }
+.casca__cab .casca__marca { flex: 1; min-width: 0; }
+.casca__recolher { display: grid; place-items: center; flex: none; width: 2rem; height: 2rem; border-radius: var(--casca-raio); color: var(--muted); }
+.casca__recolher:hover { background: var(--bg-2); color: var(--ink); }
+.casca__recolher .ico { width: 1.05rem; height: 1.05rem; transition: rotate var(--d-base) var(--ease-out); }
+.casca__criar { height: 2.65rem; margin: var(--sp-2xs) 0 var(--sp-xs); border-radius: 12px; }
+
+/* Menu recolhido: 72px, só ícones; o nome aparece ao parar o mouse (title). */
+@media (min-width: 901px) {
+  body.casca-recolhida { --casca-largura: 72px; }
+  body.casca-recolhida .casca { align-items: center; padding-inline: var(--sp-2xs); }
+  body.casca-recolhida .casca__cab { flex-direction: column; }
+  body.casca-recolhida .casca__marca span, body.casca-recolhida .casca__titulo,
+  body.casca-recolhida .casca__item span, body.casca-recolhida .casca__criar span { display: none; }
+  body.casca-recolhida .casca__marca { padding: 0; }
+  body.casca-recolhida .casca__recolher .ico { rotate: 180deg; }
+  body.casca-recolhida .casca__criar { width: 2.65rem; padding: 0; }
+  body.casca-recolhida .casca__criar::before { margin: 0; font-size: 1.3rem; }
+  body.casca-recolhida .casca__item { justify-content: center; width: 2.65rem; padding: 0; }
+  body.casca-recolhida .casca__grupo + .casca__grupo { padding-top: var(--sp-2xs); border-top: var(--hair) solid var(--line); }
+}
+@media (max-width: 900px) { .casca__recolher { display: none; } }

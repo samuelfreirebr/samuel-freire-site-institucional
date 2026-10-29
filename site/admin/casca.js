@@ -45,21 +45,34 @@ function montar() {
   nav.className = 'casca';
   nav.setAttribute('aria-label', 'Menu do painel');
   nav.innerHTML = `
-    <a class="casca__marca" href="/admin/"><img src="/img/samuel-retrato.jpg" alt=""><span>Samuel <i>Freire</i></span></a>
-    <a class="casca__criar" href="/admin/crm/?nova=tarefa">Nova tarefa</a>
+    <div class="casca__cab">
+      <a class="casca__marca" href="/admin/"><img src="/img/samuel-retrato.jpg" alt=""><span>Samuel <i>Freire</i></span></a>
+      <button class="casca__recolher" type="button" data-recolher aria-label="Recolher o menu" title="Recolher o menu"></button>
+    </div>
+    <a class="casca__criar" href="/admin/crm/?nova=tarefa" title="Nova tarefa"><span>Nova tarefa</span></a>
     <nav class="casca__nav">${MENU.map((g) => `
       <div class="casca__grupo">
         ${g.titulo ? `<p class="casca__titulo">${g.titulo}</p>` : ''}
-        ${g.itens.map((i) => `<a class="casca__item" href="${i.href}" data-ico="${i.ico}">${i.nome}</a>`).join('')}
+        ${g.itens.map((i) => `<a class="casca__item" href="${i.href}" data-ico="${i.ico}" title="${i.nome}"><span>${i.nome}</span></a>`).join('')}
       </div>`).join('')}
     </nav>
     <div class="casca__pe">
-      <a class="casca__item" href="/" target="_blank" rel="noopener" data-ico="externo">Ver o site</a>
-      <button class="casca__item" type="button" data-sair data-ico="sair">Sair</button>
+      <a class="casca__item" href="/" target="_blank" rel="noopener" data-ico="externo" title="Ver o site"><span>Ver o site</span></a>
+      <button class="casca__item" type="button" data-sair data-ico="sair" title="Sair"><span>Sair</span></button>
     </div>`;
   nav.querySelectorAll('[data-ico]').forEach((el) => el.prepend(ico(el.dataset.ico)));
+  nav.querySelector('[data-recolher]').append(ico('recolher'));
   document.body.prepend(nav);
   document.body.classList.add('com-casca');
+
+  // Recolher: o menu fica só com os ícones. A escolha fica guardada neste navegador.
+  const recolhida = () => { try { return localStorage.getItem('casca-recolhida') === '1'; } catch (e) { return false; } };
+  document.body.classList.toggle('casca-recolhida', recolhida());
+  nav.querySelector('[data-recolher]').onclick = () => {
+    const agora = !document.body.classList.contains('casca-recolhida');
+    document.body.classList.toggle('casca-recolhida', agora);
+    try { localStorage.setItem('casca-recolhida', agora ? '1' : '0'); } catch (e) {}
+  };
 
   const marcar = () => nav.querySelectorAll('.casca__nav .casca__item').forEach((a) => {
     const item = MENU.flatMap((g) => g.itens).find((i) => i.href === a.getAttribute('href'));

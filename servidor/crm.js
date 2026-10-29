@@ -9,14 +9,15 @@
    Tarefa da empresa, sem cliente, mora num registro marcado como
    "interno", que não aparece no funil nem na lista de clientes.
 
-   Nada se apaga daqui: cliente que sai vai para "Encerrado", tarefa
-   vai para "Feita". A linha do tempo só cresce.
+   Cliente que sai pode ir para "Encerrado" ou ser apagado pelo Samuel
+   no painel. Tarefa feita vai para "Feita". A linha do tempo só cresce.
    ============================================================ */
 
 import { promises as fs } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { RAIZ_DADOS } from './dados.js';
+import { pedirJsonIa, temChaveIa, prepararAnexos, semTravessao } from './proposta-ia.js';
 
 const ARQ = path.join(RAIZ_DADOS, 'crm.json');
 
@@ -107,6 +108,8 @@ function limpar(d) {
       id: idDe(p.id), nome: corte(p.nome, 200), estado: umDe(ESTADOS_PROJETO, p.estado, 'proximo'),
       inicio: data(p.inicio), prazo: data(p.prazo), descricao: corte(p.descricao, 2000),
     })).filter((p) => p.nome),
+    // Propostas do painel ligadas a este cliente (id da proposta = id do briefing e do contrato).
+    propostas: [...new Set((Array.isArray(d.propostas) ? d.propostas : []).map((x) => corte(x, 61)).filter((x) => /^[a-z0-9][a-z0-9-]{1,60}$/.test(x)))].slice(0, 30),
     materiais: (Array.isArray(d.materiais) ? d.materiais : []).slice(0, 100).map((m) => ({
       id: idDe(m.id), nome: corte(m.nome, 200), estado: m.estado === 'recebido' ? 'recebido' : 'falta', link: link(m.link),
     })).filter((m) => m.nome),
@@ -161,4 +164,81 @@ export function anotar(id, texto, origem = 'painel', tipo = 'evento') {
     await gravar(lista);
     return c;
   });
+}
+
+/* Apagar é do Samuel, logado no painel (a chave do Claude não apaga:
+   o servidor recusa DELETE com ela antes de chegar aqui). */
+export function apagar(id) {
+  return naFila(async () => {
+    const lista = await listar();
+    const resto = lista.filter((x) => x.id !== id);
+    if (resto.length === lista.length) return false;
+    await gravar(resto);
+    return true;
+  });
+}
+
+/* ---------- Cadastro pela IA ----------
+   O Samuel solta o que tiver (conversa do WhatsApp, print, PDF,
+   proposta, foto do cartão) e a IA devolve a ficha preenchida. Nada é
+   gravado aqui: a tela mostra o resultado no formulário para ele
+   conferir e só então salva. */
+
+const ESQUEMA_CADASTRO = {
+  type: 'object', additionalProperties: false,
+  required: ['nome', 'etapa', 'servico', 'contato', 'origemLead', 'proximoContato', 'proximoPasso', 'tipo', 'nota', 'tarefas'],
+  properties: {
+    nome: { type: 'string' },
+    etapa: { type: 'string', enum: ETAPAS.map((e) => e.id) },
+    servico: { type: 'string' },
+    contato: { type: 'string' },
+    origemLead: { type: 'string', enum: ['', ...ORIGENS] },
+    proximoContato: { type: 'string' },
+    proximoPasso: { type: 'string' },
+    tipo: { type: 'string', enum: ['', 'recorrente', 'pontual'] },
+    nota: { type: 'string' },
+    tarefas: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['titulo', 'prazo'], properties: { titulo: { type: 'string' }, prazo: { type: 'string' } } } },
+  },
+};
+
+const sistemaCadastro = (hoje) => `Você cadastra clientes e leads no CRM do Samuel Freire, web designer (sites, landing pages, criativos, identidade visual, sistemas) que atende o Brasil e negócios locais nos EUA.
+Leia o material (conversa, print, documento, proposta, cartão) e devolva a ficha. Hoje é ${hoje}.
+Regras:
+- nome: nome da empresa; se não houver, o da pessoa. Sem inventar.
+- etapa: lead (só conversa ou interesse), proposta (proposta enviada), fechado (aceitou, ainda não começou), andamento (projeto rodando), entregue (entregue ou manutenção), encerrado (não fechou ou acabou).
+- servico: o que quer ou contratou, até 12 palavras.
+- contato: pessoa, telefone/WhatsApp e e-mail que aparecerem, separados por " · ". Nunca senha nem dado bancário.
+- origemLead: whatsapp, instagram, indicacao, prospeccao, site, outro, ou vazio se não der para saber.
+- proximoContato: AAAA-MM-DD só se o material disser quando falar de novo; senão vazio.
+- proximoPasso: a próxima ação do Samuel, curta.
+- tipo: recorrente (mensal, contrato contínuo), pontual (projeto com fim) ou vazio.
+- nota: o que importa saber, em até 5 linhas: contexto, dores, prazos, valores citados, país e cidade, Instagram e site.
+- tarefas: só o que o material pede de concreto para o Samuel fazer, com prazo AAAA-MM-DD ou vazio.
+Português do Brasil, sem travessão. Campo sem informação fica vazio.`;
+
+export async function lerComIa({ texto, arquivos }) {
+  if (!temChaveIa()) return { erro: 'A leitura pela IA precisa da OPENROUTER_API_KEY na stack.', semChave: true };
+  const t = String(texto || '').trim();
+  if (!t && !(arquivos || []).length) return { erro: 'Cole um texto ou escolha um arquivo.' };
+  let anexos;
+  try { anexos = prepararAnexos(arquivos || []); }
+  catch (e) { return { erro: e.message }; }
+  const partes = [];
+  if (t) partes.push({ type: 'input_text', text: '--- Material colado ---\n' + t.slice(0, 60000) });
+  partes.push(...anexos.partes);
+  if (!partes.length) return { erro: 'Nenhum arquivo pôde ser lido. Use texto, imagem, PDF, DOCX ou ZIP.', lidos: anexos.lidos };
+  let ia;
+  try { ({ ia } = await pedirJsonIa(partes, { sistema: sistemaCadastro(new Date().toISOString().slice(0, 10)), esquema: ESQUEMA_CADASTRO, nome: 'ficha_do_cliente', tokens: 4000 })); }
+  catch (e) { return { erro: 'A IA não respondeu: ' + e.message, lidos: anexos.lidos }; }
+  const limpo = (v, max) => semTravessao(corte(v, max));
+  return {
+    lidos: anexos.lidos,
+    ficha: {
+      nome: limpo(ia.nome, 160), etapa: ETAPAS.some((e) => e.id === ia.etapa) ? ia.etapa : 'lead',
+      servico: limpo(ia.servico, 300), contato: limpo(ia.contato, 300), origemLead: umDe(ORIGENS, ia.origemLead, ''),
+      proximoContato: data(ia.proximoContato), proximoPasso: limpo(ia.proximoPasso, 500),
+      tipo: ['recorrente', 'pontual'].includes(ia.tipo) ? ia.tipo : '', nota: semTravessao(String(ia.nota || '').slice(0, 4000)).trim(),
+      tarefas: (Array.isArray(ia.tarefas) ? ia.tarefas : []).slice(0, 10).map((x) => ({ titulo: limpo(x.titulo, 300), prazo: data(x.prazo) })).filter((x) => x.titulo),
+    },
+  };
 }

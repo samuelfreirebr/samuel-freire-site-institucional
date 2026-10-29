@@ -225,8 +225,8 @@ function chaveDoClaude(req, res) {
 }
 
 /* CRM: GET lista, POST cria ou atualiza (só os campos enviados),
-   POST crm/<id>/linha anota na linha do tempo. Sem DELETE: cliente
-   que sai vai para a etapa Encerrado. */
+   POST crm/<id>/linha anota na linha do tempo, DELETE crm/<id> apaga
+   (só com sessão: a chave do Claude é barrada antes). */
 async function apiCrm(req, res, rota, origem) {
   if (rota === 'crm') {
     if (req.method === 'GET') return json(res, { clientes: await crm.listar(), etapas: crm.ETAPAS, estados: crm.ESTADOS_ATIVIDADE, prioridades: crm.PRIORIDADES, origens: crm.ORIGENS, estadosProjeto: crm.ESTADOS_PROJETO });
@@ -237,6 +237,19 @@ async function apiCrm(req, res, rota, origem) {
       catch (e) { return json(res, { erro: e.message }, 400); }
     }
     return json(res, { erro: 'Método não aceito.' }, 405);
+  }
+  if (rota === 'crm/ia' && req.method === 'POST') {
+    let corpo;
+    try { corpo = await lerCorpo(req, 32 * 1024 * 1024); }
+    catch (e) { return json(res, { erro: 'Os arquivos passam de 30 MB. Mande menos de uma vez.' }, 413); }
+    const form = lerMultipart(corpo, req.headers['content-type']);
+    if (!form) return json(res, { erro: 'Envio inválido.' }, 400);
+    const d = await crm.lerComIa({ texto: form.campos.texto || '', arquivos: form.lista || [] });
+    return json(res, d, d.erro ? (d.semChave ? 503 : 502) : 200);
+  }
+  const apagar = rota.match(/^crm\/([a-f0-9]{12})$/);
+  if (apagar && req.method === 'DELETE') {
+    return (await crm.apagar(apagar[1])) ? json(res, { ok: true }) : json(res, { erro: 'Cliente não encontrado.' }, 404);
   }
   const m = rota.match(/^crm\/([a-f0-9]{12})\/linha$/);
   if (m && req.method === 'POST') {

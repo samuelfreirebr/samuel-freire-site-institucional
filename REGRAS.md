@@ -76,7 +76,7 @@ ou IA) lê isto antes de começar.
    `TOKEN_REUNIOES`. A API do painel (`/api/...`) também aceita o
    `TOKEN_CLAUDE` no cabeçalho `x-token`, para o Claude trabalhar pela
    conversa: lê, cria e edita, mas **nunca apaga** (DELETE com a chave
-   volta 403). Apagar é só do Samuel, logado.
+   volta 403). Apagar é só do Samuel, logado (no CRM: ficha e prévia).
 3. Chave de serviço externo (Google, Anthropic, Serper) vem de variável de
    ambiente na stack, nunca escrita no código.
 4. Antes de dar por pronto: `node --check` nos arquivos JS alterados e teste

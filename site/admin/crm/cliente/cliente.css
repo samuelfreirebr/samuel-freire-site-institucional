@@ -108,3 +108,23 @@
 
 .fc-grupo-campos { margin: var(--sp-sm) 0 var(--sp-md); }
 .fc-grupo-campos legend { margin-bottom: var(--sp-sm); }
+
+/* ---------- Proposta e contrato: a trilha de cada proposta ligada ---------- */
+.fc-docs { display: grid; gap: var(--crm-espaco); grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); align-items: start; }
+.fc-docs > .vazio { grid-column: 1 / -1; }
+.fc-prop { display: grid; gap: var(--sp-sm); border-top: var(--hair-2) solid var(--brand); }
+.fc-trilha { display: grid; counter-reset: passo; }
+.fc-trilha li { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-xs); padding: var(--sp-2xs) 0; counter-increment: passo; }
+.fc-trilha li + li { border-top: var(--hair) solid var(--line); }
+.fc-trilha li > span:last-child { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.fc-estado { display: inline-flex; align-items: center; gap: .55em; font-size: var(--t-small); color: var(--muted); }
+.fc-estado::before { content: counter(passo); display: grid; place-items: center; width: 1.45rem; height: 1.45rem; flex: none; border-radius: 50%; background: var(--bg-2); color: var(--muted); font-size: 11px; font-weight: var(--w-bold); }
+.fc-estado.ok { color: var(--ink); font-weight: var(--w-semi); }
+.fc-estado.ok::before { content: "✓"; background: var(--brand); color: var(--brand-ink); }
+.fc-desligar { color: var(--muted); font-size: var(--t-eyebrow); text-decoration: underline; text-underline-offset: 3px; justify-self: start; }
+.fc-desligar:hover { color: var(--brand); }
+.fc-ligar select { flex: 1 1 14rem; min-width: 0; }
+
+.fc-perigo { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-sm); margin-top: var(--sp-md); padding-top: var(--sp-md); border-top: var(--hair) solid var(--line); }
+.fc-perigo b { display: block; font-size: var(--t-small); }
+.fc-perigo small { color: var(--muted); font-size: var(--t-eyebrow); }

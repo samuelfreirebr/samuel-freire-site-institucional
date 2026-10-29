@@ -10,9 +10,9 @@
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
 <link rel="stylesheet" href="/admin/painel.css?v=9">
-<link rel="stylesheet" href="/admin/casca.css?v=1">
-<script type="module" src="/admin/casca.js?v=1"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=10">
+<link rel="stylesheet" href="/admin/casca.css?v=3">
+<script type="module" src="/admin/casca.js?v=2"></script>
+<link rel="stylesheet" href="/admin/crm/crm.css?v=12">
 </head>
 <body>
 
@@ -159,10 +159,10 @@
     <div class="crm-cab">
       <div>
         <h2 class="crm-titulo" id="t-clientes">Clientes</h2>
-        <p class="crm-sub">Clique na linha para a prévia; no nome, a ficha abre em outra aba.</p>
+        <p class="crm-sub">Leads, propostas e clientes. O nome abre a ficha em outra aba.</p>
       </div>
       <div class="crm-cab__acoes">
-        <input class="crm-busca" type="search" id="busca" placeholder="Filtrar por nome" autocomplete="off" aria-label="Filtrar clientes por nome">
+        <input class="crm-busca" type="search" id="busca" placeholder="Buscar cliente" autocomplete="off" aria-label="Filtrar clientes por nome">
         <div class="grupo" role="group" aria-label="Formato">
           <button type="button" data-vista="tabela" aria-selected="true">Tabela</button>
           <button type="button" data-vista="funil" aria-selected="false">Funil</button>
@@ -170,13 +170,19 @@
       </div>
     </div>
 
+    <div class="crm-kpis crm-kpis--4" id="cli-numeros"></div>
+
     <div class="crm-pilulas crm-pilulas--filtro" id="filtros" role="group" aria-label="Filtrar por etapa"></div>
 
     <div class="crm-card-box crm-tabela-caixa" id="vista-tabela">
-      <table class="crm-tabela">
-        <thead><tr><th>Cliente</th><th>Etapa</th><th>Próximo passo</th><th>Projeto atual</th><th>Próxima entrega</th><th>Tarefas</th></tr></thead>
-        <tbody id="linhas"></tbody>
-      </table>
+      <header class="crm-tabela-topo"><h3>Todos os clientes</h3><span class="crm-box__dica">Mude a etapa direto na linha. Clique na linha para a prévia.</span></header>
+      <div class="crm-tabela-rola">
+        <table class="crm-tabela">
+          <thead><tr><th>Cliente</th><th>Etapa</th><th>Projeto atual</th><th>Próxima entrega</th><th>Tarefas</th><th>Último movimento</th><th><span class="sr">Abrir</span></th></tr></thead>
+          <tbody id="linhas"></tbody>
+        </table>
+      </div>
+      <footer class="crm-tabela-pe" id="paginacao"></footer>
     </div>
 
     <div class="crm-quadro" id="funil" hidden></div>
@@ -188,6 +194,7 @@
 <dialog id="previa" class="lateral" aria-labelledby="pv-nome">
   <header class="modal__topo"><b id="pv-nome">Cliente</b>
     <a class="mini mini--ativo" id="pv-abrir" target="_blank" rel="noopener">Abrir ficha</a>
+    <button class="mini mini--perigo" type="button" id="pv-apagar">Apagar</button>
     <button class="mini" type="button" data-fechar>Fechar</button></header>
   <div class="modal__corpo" id="pv-corpo"></div>
 </dialog>
@@ -200,6 +207,20 @@
     <button class="mini" type="button" data-fechar>Fechar</button>
   </header>
   <div class="modal__corpo">
+    <!-- Cadastro pela IA: solta ou cola qualquer material e ela preenche o formulário abaixo. -->
+    <div class="ia-solta" id="ia-solta">
+      <div class="ia-solta__topo">
+        <span class="ia-solta__ico" aria-hidden="true">✦</span>
+        <div><b>Preencher com IA</b><small>Solte aqui uma conversa, print, foto, PDF, proposta ou documento. Ou cole o texto. A IA lê e preenche a ficha para você conferir.</small></div>
+      </div>
+      <textarea id="ia-texto" rows="3" placeholder="Cole aqui a conversa do WhatsApp, o e-mail ou as anotações"></textarea>
+      <div class="ia-solta__acoes">
+        <label class="mini ia-solta__arquivo">Escolher arquivos<input type="file" id="ia-arquivos" multiple hidden></label>
+        <span class="ia-solta__lista" id="ia-lista"></span>
+        <button class="mini mini--ativo" type="button" id="ia-ler">Ler com IA</button>
+      </div>
+      <p class="ia-solta__res" id="ia-res" hidden></p>
+    </div>
     <form id="novo-form">
       <label><span>Nome</span><input type="text" name="nome" required maxlength="160"></label>
       <div class="linha linha--2">
@@ -210,6 +231,12 @@
         <label><span>Origem</span><select name="origemLead" id="novo-origem"></select></label>
         <label><span>Falar de novo em</span><input type="date" name="proximoContato"><small>Para lead: a data do próximo follow-up.</small></label>
       </div>
+      <div class="linha linha--2">
+        <label><span>Contato</span><input type="text" name="contato" maxlength="300" placeholder="Nome, WhatsApp, e-mail"></label>
+        <label><span>Tipo</span><select name="tipo"><option value="">Não definido</option><option value="recorrente">Recorrente (com contrato)</option><option value="pontual">Pontual (projeto)</option></select></label>
+      </div>
+      <label><span>Próximo passo</span><input type="text" name="proximoPasso" maxlength="500" placeholder="O que precisa acontecer agora"></label>
+      <label><span>Nota</span><textarea name="nota" rows="4" maxlength="4000" placeholder="Contexto, dores, prazos, país, Instagram, site"></textarea><small>Vai para a aba Notas da ficha.</small></label>
     </form>
   </div>
 </dialog>

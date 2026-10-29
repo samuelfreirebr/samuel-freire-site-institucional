@@ -331,57 +331,113 @@ function vista(v) {
 }
 $$('[data-vista]').forEach((b) => b.addEventListener('click', () => vista(b.dataset.vista)));
 
+/* Etapa como seletor: muda direto da tabela e do funil, sem abrir a ficha. */
+const seletorEtapa = (c) => `<label class="crm-etapa-sel" data-etapa="${c.etapa}"><span class="sr">Etapa de ${esc(c.nome)}</span>
+  <select data-mudar-etapa="${c.id}">${etapas.map((e) => `<option value="${e.id}"${e.id === c.etapa ? ' selected' : ''}>${esc(e.nome)}</option>`).join('')}</select></label>`;
+
+const POR_PAGINA = 15;   // linhas por página na tabela
+let pagina = 0;
+
 function desenharClientes() {
   const busca = $('#busca').value.trim().toLowerCase();
-  const lista = visiveis(clientes).filter((c) => !busca || c.nome.toLowerCase().includes(busca) || (c.servico || '').toLowerCase().includes(busca));
+  const lista = visiveis(clientes).filter((c) => !busca || c.nome.toLowerCase().includes(busca) || (c.servico || '').toLowerCase().includes(busca) || (c.contato || '').toLowerCase().includes(busca));
   const conta = (id) => lista.filter((c) => c.etapa === id).length;
+
+  // Números do topo, como no studio-admin: total, em andamento, recorrentes, leads.
+  const todos = visiveis(clientes);
+  const n = (f) => todos.filter(f).length;
+  $('#cli-numeros').innerHTML = [
+    ['Clientes e leads', todos.length, 'No CRM', 'clientes'],
+    ['Em andamento', n((c) => c.etapa === 'andamento'), `${n((c) => c.etapa === 'fechado')} fechados sem começar`, 'painel'],
+    ['Recorrentes', n((c) => selo(c)), 'Ativos com contrato', 'calendario'],
+    ['Leads em aberto', n((c) => LEADS.includes(c.etapa)), `${n(leadPedeAtencao)} pedem follow-up`, 'leads'],
+  ].map(([r, v, a, ic]) => `<div class="crm-kpi crm-kpi--baixo"><span class="crm-kpi__ico">${ico(ic).outerHTML}</span><span class="crm-kpi__rotulo">${r}</span><b class="crm-kpi__valor">${v}</b><span class="crm-kpi__apoio">${a}</span></div>`).join('');
+
   $('#filtros').innerHTML = [`<button type="button" data-filtro="todos" aria-pressed="${filtroEtapa === 'todos'}">Todos <span>${lista.length}</span></button>`,
     `<button type="button" data-filtro="recorrentes" aria-pressed="${filtroEtapa === 'recorrentes'}">Recorrentes <span>${lista.filter((c) => selo(c)).length}</span></button>`,
     ...etapas.map((e) => `<button type="button" data-filtro="${e.id}" aria-pressed="${filtroEtapa === e.id}">${esc(e.nome)} <span>${conta(e.id)}</span></button>`)].join('');
 
-  const daqui = lista.filter((c) => filtroEtapa === 'todos' || (filtroEtapa === 'recorrentes' ? selo(c) : c.etapa === filtroEtapa));
-  $('#linhas').innerHTML = daqui.map((c) => {
-    const prox = proximaEntrega(c), atr = atrasadas(c).length, n = abertas(c).length, proj = projetoAtual(c);
+  const daqui = lista.filter((c) => filtroEtapa === 'todos' || (filtroEtapa === 'recorrentes' ? selo(c) : c.etapa === filtroEtapa))
+    .sort((a, b) => Boolean(selo(b)) - Boolean(selo(a)) || String(b.atualizadoEm).localeCompare(String(a.atualizadoEm)));
+  const paginas = Math.max(1, Math.ceil(daqui.length / POR_PAGINA));
+  pagina = Math.min(pagina, paginas - 1);
+  const fatia = daqui.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA);
+
+  $('#linhas').innerHTML = fatia.map((c) => {
+    const prox = proximaEntrega(c), atr = atrasadas(c).length, abertasN = abertas(c).length, proj = projetoAtual(c);
+    const ultima = (c.linha || []).at(-1);
     return `<tr data-id="${c.id}" class="clicavel">
       <td><a class="crm-cli" href="${ficha(c)}" target="_blank" rel="noopener">
-        <span class="crm-avatar" aria-hidden="true">${esc(iniciais(c.nome))}</span>
+        <span class="crm-avatar" data-etapa="${c.etapa}" aria-hidden="true">${esc(iniciais(c.nome))}</span>
         <span><b>${esc(c.nome)}${selo(c)}</b><small>${esc(c.servico || 'Sem serviço na ficha')}</small></span></a></td>
-      <td>${etiqueta(c.etapa)}<small>há ${plural(diasNaEtapa(c), 'dia', 'dias')}</small></td>
-      <td><small class="forte crm-quebra">${esc(c.proximoPasso || 'Sem próximo passo')}</small></td>
+      <td>${seletorEtapa(c)}<small class="crm-dias">há ${plural(diasNaEtapa(c), 'dia', 'dias')}</small></td>
       <td>${proj ? `<b>${esc(proj.nome)}</b><small>${NOMES.projeto[proj.estado]}</small>` : '<small>Nenhum</small>'}</td>
-      <td>${prox ? `<b>${prazoTexto(prox.prazo)}</b><small>${esc(prox.titulo)}</small>` : '<small>Sem prazo marcado</small>'}</td>
-      <td>${n ? `<b>${n}</b>${atr ? ` <span class="crm-atraso">${atr} atrasada${atr > 1 ? 's' : ''}</span>` : ''}` : '<small>Nenhuma</small>'}</td>
+      <td>${prox ? `<b>${prazoTexto(prox.prazo)}</b><small>${esc(prox.titulo)}</small>` : '<small>Sem prazo</small>'}</td>
+      <td>${abertasN ? `<b>${abertasN}</b>${atr ? ` <span class="crm-atraso">${atr} atrasada${atr > 1 ? 's' : ''}</span>` : ''}` : '<small>Nenhuma</small>'}</td>
+      <td><small>${ultima ? quando(ultima.data) : ''}${ultima?.origem === 'claude' ? ' · Claude' : ''}</small></td>
+      <td class="crm-tabela__acoes"><a class="crm-icone" href="${ficha(c)}" target="_blank" rel="noopener" title="Abrir a ficha" aria-label="Abrir a ficha de ${esc(c.nome)}">${ico('externo').outerHTML}</a></td>
     </tr>`;
-  }).join('') || `<tr><td colspan="6" class="vazio">${lista.length ? 'Ninguém com esse filtro.' : 'Nenhum cliente ainda. Comece por "Novo cliente ou lead".'}</td></tr>`;
+  }).join('') || `<tr><td colspan="7" class="vazio">${lista.length ? 'Ninguém com esse filtro.' : 'Nenhum cliente ainda. Comece por "Novo cliente ou lead".'}</td></tr>`;
+  const de = daqui.length ? pagina * POR_PAGINA + 1 : 0;
+  $('#paginacao').innerHTML = `<span>Mostrando ${de} a ${pagina * POR_PAGINA + fatia.length} de ${daqui.length}</span>
+    <span class="crm-pag"><button class="mini" type="button" data-pagina="-1"${pagina ? '' : ' disabled'}>Anterior</button>
+    ${Array.from({ length: paginas }, (_, k) => `<button class="crm-pag__n" type="button" data-ir-pagina="${k}" aria-current="${k === pagina}">${k + 1}</button>`).join('')}
+    <button class="mini" type="button" data-pagina="1"${pagina < paginas - 1 ? '' : ' disabled'}>Próxima</button></span>`;
 
   $('#funil').innerHTML = etapas.map((e) => {
-    const coluna = lista.filter((c) => c.etapa === e.id);
+    const coluna = lista.filter((c) => c.etapa === e.id).sort((a, b) => Boolean(selo(b)) - Boolean(selo(a)) || a.nome.localeCompare(b.nome));
     return `<section class="crm-col" data-etapa="${e.id}">
-      <div class="crm-col__topo">${esc(e.nome)}<span class="crm-col__n">${coluna.length}</span></div>
-      <div class="crm-col__lista">${coluna.map(cartao).join('') || '<p class="crm-col__vazia">Ninguém aqui.</p>'}</div>
+      <header class="crm-col__topo"><span class="crm-col__ponto"></span>${esc(e.nome)}<span class="crm-col__n">${coluna.length}</span>
+        <button class="crm-col__mais" type="button" data-novo-na="${e.id}" title="Novo nesta etapa" aria-label="Novo cliente em ${esc(e.nome)}">+</button></header>
+      <div class="crm-col__lista">${coluna.map(cartao).join('') || '<p class="crm-col__vazia">Arraste um cartão para cá.</p>'}</div>
     </section>`;
   }).join('');
 }
 
 function cartao(c) {
-  const n = abertas(c).length, s = situacaoLead(c);
-  return `<a class="crm-card" href="${ficha(c)}" target="_blank" rel="noopener" draggable="true" data-id="${c.id}">
-    <span class="crm-card__nome">${esc(c.nome)}${selo(c)}</span>
-    ${c.servico ? `<span class="crm-card__serv">${esc(c.servico)}</span>` : ''}
-    ${c.proximoPasso ? `<span class="crm-card__prox">${esc(c.proximoPasso)}</span>` : ''}
-    <span class="crm-card__pe">${s ? `<span class="${s.alerta ? 'claude' : ''}">${esc(s.texto)}</span>` : ''}${n ? `<span>${plural(n, 'tarefa', 'tarefas')}</span>` : ''}<span>${diasNaEtapa(c)}d na etapa</span></span>
-  </a>`;
+  const abertasN = abertas(c).length, s = situacaoLead(c), proj = projetoAtual(c), prox = proximaEntrega(c);
+  return `<article class="crm-card" draggable="true" data-id="${c.id}" data-etapa="${c.etapa}">
+    <a class="crm-card__nome" href="${ficha(c)}" target="_blank" rel="noopener">${esc(c.nome)}</a>
+    ${selo(c) || s ? `<span class="crm-card__tags">${selo(c)}${s ? `<span class="crm-card__lead${s.alerta ? ' alerta' : ''}">${esc(s.texto)}</span>` : ''}</span>` : ''}
+    <span class="crm-card__serv">${esc(proj ? proj.nome : c.servico || 'Sem serviço na ficha')}</span>
+    <footer class="crm-card__pe">
+      <span title="Tarefas abertas">${ico('tarefas').outerHTML}${abertasN}</span>
+      ${prox ? `<span title="Próxima entrega">${ico('calendario').outerHTML}${prazoTexto(prox.prazo)}</span>` : ''}
+      <span class="crm-card__dias" title="Dias nesta etapa">${diasNaEtapa(c)}d na etapa</span>
+    </footer>
+  </article>`;
 }
 
 $('#filtros').addEventListener('click', (e) => {
   const b = e.target.closest('[data-filtro]');
-  if (b) { filtroEtapa = b.dataset.filtro; desenharClientes(); }
+  if (b) { filtroEtapa = b.dataset.filtro; pagina = 0; desenharClientes(); }
 });
-$('#busca').addEventListener('input', desenharClientes);
+$('#busca').addEventListener('input', () => { pagina = 0; desenharClientes(); });
+$('#paginacao').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pagina], [data-ir-pagina]');
+  if (!b) return;
+  pagina = b.dataset.irPagina !== undefined ? +b.dataset.irPagina : pagina + +b.dataset.pagina;
+  desenharClientes();
+});
+// Mudar a etapa pelo seletor (tabela ou funil).
+$('#aba-clientes').addEventListener('change', async (e) => {
+  const id = e.target.dataset.mudarEtapa;
+  if (!id) return;
+  try { guardar(await salvarCliente({ id, etapa: e.target.value })); avisar(`Etapa: ${nomeEtapa(e.target.value)}.`); }
+  catch (err) { avisar(err.message, 'erro'); }
+});
+$('#funil').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-novo-na]');
+  if (!b) return;
+  $('#novo-form').reset();
+  $('#novo-etapa').value = b.dataset.novoNa;
+  $('#novo-jan').showModal();
+  $('#novo-form').elements.nome.focus();
+});
 
 /* Prévia lateral: clicar na linha (fora do nome) mostra o resumo sem sair da lista. */
 $('#linhas').addEventListener('click', (e) => {
-  if (e.target.closest('a')) return;
+  if (e.target.closest('a, select, label')) return;
   const tr = e.target.closest('tr[data-id]');
   if (tr) previa(achar(tr.dataset.id));
 });
@@ -431,21 +487,87 @@ funil.addEventListener('drop', async (e) => {
   catch (err) { avisar(err.message, 'erro'); }
 });
 
+$('#pv-apagar').onclick = async () => {
+  const id = $('#pv-abrir').href.split('#')[1];
+  const c = achar(id);
+  if (!c || !confirm(`Apagar ${c.nome} do CRM? Some com tarefas, projetos e notas. Não dá para desfazer.`)) return;
+  const r = await fetch(`/api/crm/${id}`, { method: 'DELETE' });
+  if (!r.ok) return avisar((await r.json().catch(() => ({}))).erro || 'Não deu para apagar.', 'erro');
+  clientes = clientes.filter((x) => x.id !== id);
+  $('#previa').close();
+  desenhar();
+  avisar(`${c.nome} apagado.`);
+};
+
 /* ---------- novo cliente, nova tarefa ---------- */
 
+let tarefasDaIa = [];
+let arquivosIa = [];
+function limparIa() {
+  tarefasDaIa = []; arquivosIa = [];
+  $('#ia-texto').value = ''; $('#ia-arquivos').value = ''; $('#ia-lista').textContent = '';
+  $('#ia-res').hidden = true;
+}
 $('#novo').onclick = () => {
   $('#novo-form').reset();
+  limparIa();
   $('#novo-jan').showModal();
-  $('#novo-form').elements.nome.focus();
+  $('#ia-texto').focus();
+};
+
+/* Cadastro pela IA: arquivos por clique ou arrastando para a área. */
+const mostrarArquivos = () => { $('#ia-lista').textContent = arquivosIa.length ? arquivosIa.map((a) => a.name).join(', ') : ''; };
+$('#ia-arquivos').addEventListener('change', (e) => { arquivosIa = [...arquivosIa, ...e.target.files]; mostrarArquivos(); });
+const solta = $('#ia-solta');
+solta.addEventListener('dragover', (e) => { e.preventDefault(); solta.classList.add('ativa'); });
+solta.addEventListener('dragleave', (e) => { if (!solta.contains(e.relatedTarget)) solta.classList.remove('ativa'); });
+solta.addEventListener('drop', (e) => {
+  e.preventDefault(); solta.classList.remove('ativa');
+  arquivosIa = [...arquivosIa, ...e.dataTransfer.files];
+  const txt = e.dataTransfer.getData('text');
+  if (txt && !e.dataTransfer.files.length) $('#ia-texto').value += (($('#ia-texto').value ? '\n' : '') + txt);
+  mostrarArquivos();
+});
+$('#ia-texto').addEventListener('paste', (e) => {
+  const imgs = [...(e.clipboardData?.files || [])];
+  if (imgs.length) { e.preventDefault(); arquivosIa = [...arquivosIa, ...imgs]; mostrarArquivos(); }
+});
+$('#ia-ler').onclick = async () => {
+  const texto = $('#ia-texto').value.trim();
+  if (!texto && !arquivosIa.length) return avisar('Cole um texto ou escolha um arquivo.', 'erro');
+  const b = $('#ia-ler'), res = $('#ia-res');
+  b.disabled = true; b.textContent = 'Lendo…'; solta.classList.add('lendo');
+  try {
+    const corpo = new FormData();
+    corpo.append('texto', texto);
+    arquivosIa.forEach((a) => corpo.append('arquivos', a, a.name));
+    const r = await fetch('/api/crm/ia', { method: 'POST', body: corpo });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.erro || 'A IA não conseguiu ler.');
+    const f = $('#novo-form').elements, x = d.ficha;
+    for (const k of ['nome', 'etapa', 'servico', 'origemLead', 'proximoContato', 'contato', 'tipo', 'proximoPasso']) if (x[k]) f[k].value = x[k];
+    if (x.nota) f.nota.value = x.nota;
+    tarefasDaIa = x.tarefas || [];
+    const ja = clientes.find((c) => c.nome.toLowerCase() === (x.nome || '').toLowerCase());
+    res.hidden = false;
+    res.innerHTML = `Pronto. Confira os campos abaixo${tarefasDaIa.length ? ` e as ${tarefasDaIa.length} tarefa(s) que vão junto: <b>${tarefasDaIa.map((t) => esc(t.titulo)).join('; ')}</b>` : ''}.${ja ? ` <b>Já existe "${esc(ja.nome)}" no CRM:</b> salvar vai atualizar a ficha dele.` : ''}`;
+  } catch (err) { avisar(err.message, 'erro'); }
+  finally { b.disabled = false; b.textContent = 'Ler com IA'; solta.classList.remove('lendo'); }
 };
 $('#novo-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target.elements;
-  if (clientes.some((c) => c.nome.toLowerCase() === f.nome.value.trim().toLowerCase())) {
+  const existente = clientes.find((c) => c.nome.toLowerCase() === f.nome.value.trim().toLowerCase());
+  if (existente && !tarefasDaIa.length && !f.nota.value.trim()) {
     return avisar('Já existe um cliente com esse nome. Abra a ficha dele.', 'erro');
   }
   try {
-    const salvo = await salvarCliente({ nome: f.nome.value, etapa: f.etapa.value, servico: f.servico.value, origemLead: f.origemLead.value, proximoContato: f.proximoContato.value });
+    const dado = { nome: f.nome.value, etapa: f.etapa.value, servico: f.servico.value, origemLead: f.origemLead.value, proximoContato: f.proximoContato.value, contato: f.contato.value, tipo: f.tipo.value, proximoPasso: f.proximoPasso.value };
+    if (existente) dado.id = existente.id;
+    if (tarefasDaIa.length) dado.atividades = [...(existente?.atividades || []), ...tarefasDaIa.map((t) => ({ titulo: t.titulo, prazo: t.prazo, estado: 'afazer', prioridade: 'normal', tipo: 'tarefa', origem: 'painel' }))];
+    let salvo = await salvarCliente(dado);
+    if (f.nota.value.trim()) salvo = await anotar(salvo.id, f.nota.value.trim(), 'nota');
+    tarefasDaIa = [];
     guardar(salvo);
     $('#novo-jan').close();
     window.open(ficha(salvo), '_blank', 'noopener');

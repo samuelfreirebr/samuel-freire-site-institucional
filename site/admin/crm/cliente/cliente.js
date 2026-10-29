@@ -129,21 +129,56 @@ function desenharMateriais() {
   $('#sugestoes').innerHTML = faltam.length ? '<span>Sugestões:</span>' + faltam.map((s) => `<button class="mini" type="button" data-sugestao="${esc(s)}">+ ${esc(s)}</button>`).join('') : '';
 }
 
-/* ---------- Briefing e proposta ---------- */
+/* ---------- Documentos: proposta, briefing e contrato ----------
+   Valem as propostas ligadas ao cliente (c.propostas) e, enquanto não
+   houver ligação, as que têm o mesmo nome. O briefing e o contrato de
+   uma proposta usam o mesmo id dela. */
+
+const contratos = {};   // id da proposta -> contrato (busca uma vez por proposta)
+const ligadas = () => {
+  const ids = new Set(c.propostas || []);
+  return docs.propostas.filter((p) => ids.has(p.id) || (!ids.size && mesmoCliente(c.nome, p.cliente)));
+};
+const FASE = { preparo: 'Em preparo', enviada: 'Enviada', aprovada: 'Aprovada', contrato: 'Contrato enviado', assinado: 'Contrato assinado', briefing: 'Briefing enviado', producao: 'Em produção', entregue: 'Entregue' };
+
+async function buscarContratos() {
+  await Promise.all(ligadas().filter((p) => !(p.id in contratos)).map((p) =>
+    fetch(`/api/contratos/${encodeURIComponent(p.id)}`).then((r) => (r.ok ? r.json() : {})).then((k) => { contratos[p.id] = k; }).catch(() => { contratos[p.id] = {}; })));
+  desenharBriefing();
+}
 
 function desenharBriefing() {
-  const props = docs.propostas.filter((p) => mesmoCliente(c.nome, p.cliente));
-  const forms = docs.formularios.filter((f) => mesmoCliente(c.nome, f.cliente || f.titulo));
-  const caixa = (titulo, acao, itens, vazio) => `<article class="crm-card-box"><div class="crm-box__topo"><h3>${titulo}</h3>${acao}</div>
-      <ul class="crm-lista">${itens.join('') || `<li class="vazio">${vazio}</li>`}</ul></article>`;
-  $('#briefing').innerHTML = [
-    caixa('Briefings', '<a class="mini mini--ativo" href="/admin/formularios/" target="_blank" rel="noopener">Criar briefing</a>', forms.map((f) => `<li class="fc-doc">
-        <span class="crm-lista__txt"><b>${esc(f.titulo || 'Briefing')}</b><small>${f.perguntas} pergunta${f.perguntas === 1 ? '' : 's'} · ${f.respondidoEm ? `respondido ${quando(f.respondidoEm)}` : f.parciais ? 'cliente começou a responder' : 'sem resposta'}</small></span>
-        <span class="fc-doc__acoes"><button class="mini" type="button" data-copiar-link="${esc(f.link)}">Copiar link</button><a class="mini" href="/admin/formularios/" target="_blank" rel="noopener">Ver respostas</a></span>
-      </li>`), 'Nenhum briefing com o nome deste cliente. "Criar briefing" monta um a partir da proposta ou em branco.'),
-    caixa('Propostas', '<a class="mini" href="/admin/propostas/" target="_blank" rel="noopener">Abrir propostas</a>', props.map((p) => `<li><a href="/admin/propostas/#${encodeURIComponent(p.id)}" target="_blank" rel="noopener">
-        <span class="crm-lista__txt"><b>${esc(p.titulo || p.cliente)}</b><small>${p.publicada ? 'No ar' : 'Rascunho'}${p.briefing?.respondidoEm ? ' · briefing respondido' : ''}</small></span></a></li>`), 'Nenhuma proposta com o nome deste cliente.'),
-  ].join('');
+  const props = ligadas();
+  const ids = new Set(c.propostas || []);
+  const forms = docs.formularios.filter((f) => props.some((p) => p.id === f.proposta || p.id === f.id) || (!props.length && mesmoCliente(c.nome, f.cliente || f.titulo)));
+  const estado = (ok, sim, nao) => `<span class="fc-estado${ok ? ' ok' : ''}">${ok ? sim : nao}</span>`;
+  const cartao = (p) => {
+    const f = forms.find((x) => x.proposta === p.id || x.id === p.id);
+    const k = contratos[p.id];
+    const temContrato = Boolean(k?.texto);
+    return `<article class="crm-card-box fc-prop">
+      <div class="crm-box__topo"><h3>${esc(p.cliente || p.titulo)}</h3>${p.fase ? `<span class="crm-etapa" data-etapa="${p.fase === 'aprovada' || p.fase === 'assinado' ? 'andamento' : 'proposta'}">${FASE[p.fase] || p.fase}</span>` : ''}</div>
+      <p class="fc-dica">${esc(p.titulo || '')}</p>
+      <ol class="fc-trilha">
+        <li>${estado(p.publicada, 'Proposta no ar', 'Proposta em rascunho')}
+          <span><a class="mini" href="/admin/propostas/#${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Editar</a>${p.publicada ? `<a class="mini" href="/propostas/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Ver</a>` : ''}</span></li>
+        <li>${f ? estado(f.respondidoEm, `Briefing respondido ${quando(f.respondidoEm || '')}`, f.parciais ? 'Briefing começado' : 'Briefing sem resposta') : estado(false, '', 'Sem briefing')}
+          <span>${f ? `<button class="mini" type="button" data-copiar-link="${esc(f.link)}">Copiar link</button><a class="mini" href="/admin/formularios/" target="_blank" rel="noopener">Respostas</a>` : '<a class="mini" href="/admin/formularios/" target="_blank" rel="noopener">Criar</a>'}</span></li>
+        <li>${k === undefined ? '<span class="fc-estado">Contrato…</span>' : estado(temContrato, 'Contrato gerado', 'Sem contrato')}
+          <span>${temContrato ? `<a class="mini" href="/contratos/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Abrir</a>` : '<a class="mini" href="/admin/contratos/" target="_blank" rel="noopener">Gerar</a>'}</span></li>
+      </ol>
+      ${ids.has(p.id) ? `<button class="fc-desligar" type="button" data-desligar="${esc(p.id)}">Desligar esta proposta</button>` : '<p class="fc-dica">Ligada pelo nome. <button class="fc-desligar" type="button" data-ligar="' + esc(p.id) + '">Confirmar ligação</button></p>'}
+    </article>`;
+  };
+  const livres = docs.propostas.filter((p) => !props.includes(p));
+  $('#briefing').innerHTML = (props.map(cartao).join('') || '<p class="vazio">Nenhuma proposta ligada a este cliente.</p>') + `
+    <article class="crm-card-box fc-ligar">
+      <h3>Ligar uma proposta</h3>
+      <p class="fc-dica">A proposta traz junto o briefing e o contrato dela.</p>
+      <div class="fc-add"><select id="ligar-proposta" aria-label="Proposta para ligar"><option value="">Escolha a proposta</option>${livres.map((p) => `<option value="${esc(p.id)}">${esc(p.cliente || p.id)}: ${esc((p.titulo || '').replace(/\s+/g, ' ').slice(0, 50))}</option>`).join('')}</select>
+      <button class="mini mini--ativo" type="button" data-ligar-escolhida>Ligar</button></div>
+    </article>`;
+  $('#n-docs').textContent = props.length || '';
 }
 
 /* ---------- Notas e linha do tempo ---------- */
@@ -240,6 +275,16 @@ function ligar() {
   $('#briefing').addEventListener('click', (e) => {
     const b = e.target.closest('[data-copiar-link]');
     if (b) copiar(`${location.origin}/perguntas/${b.dataset.copiarLink}`, 'Link do briefing copiado.');
+    // Ligar e desligar propostas: só mexe na lista do cliente, nunca na proposta.
+    const atual = new Set(c.propostas || []);
+    const ligar = (id) => { atual.add(id); return salvar({ propostas: [...atual] }).then(buscarContratos); };
+    if (e.target.closest('[data-ligar]')) ligar(e.target.closest('[data-ligar]').dataset.ligar).catch((err) => avisar(err.message, 'erro'));
+    if (e.target.closest('[data-ligar-escolhida]')) {
+      const id = $('#ligar-proposta').value;
+      if (id) ligar(id).then(() => avisar('Proposta ligada.')).catch((err) => avisar(err.message, 'erro'));
+    }
+    const d = e.target.closest('[data-desligar]');
+    if (d) { atual.delete(d.dataset.desligar); salvar({ propostas: [...atual] }).catch((err) => avisar(err.message, 'erro')); }
   });
 
   $('#add-nota').addEventListener('submit', async (e) => {
@@ -259,6 +304,12 @@ $('#editar').onclick = () => {
   $('#jan').showModal();
 };
 $('#jan [data-fechar]').onclick = () => $('#jan').close();
+$('#apagar').onclick = async () => {
+  if (!c || !confirm(`Apagar ${c.nome} do CRM? Não dá para desfazer.`)) return;
+  const r = await fetch(`/api/crm/${c.id}`, { method: 'DELETE' });
+  if (!r.ok) return avisar((await r.json().catch(() => ({}))).erro || 'Não deu para apagar.', 'erro');
+  location.replace('/admin/crm/#clientes');
+};
 $('#form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target.elements, dado = {};
@@ -286,6 +337,7 @@ async function carregar() {
     irPara(abaInicial || 'resumo');
   }
   desenhar();
+  buscarContratos();
 }
 
 $('#buscar').onclick = ligarBusca(() => todos);

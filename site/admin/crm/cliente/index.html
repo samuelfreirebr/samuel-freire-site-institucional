@@ -10,9 +10,9 @@
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
 <link rel="stylesheet" href="/admin/painel.css?v=9">
-<link rel="stylesheet" href="/admin/casca.css?v=1">
-<script type="module" src="/admin/casca.js?v=1"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=10">
+<link rel="stylesheet" href="/admin/casca.css?v=3">
+<script type="module" src="/admin/casca.js?v=2"></script>
+<link rel="stylesheet" href="/admin/crm/crm.css?v=12">
 <link rel="stylesheet" href="/admin/crm/cliente/cliente.css?v=2">
 </head>
 <body>
@@ -46,7 +46,7 @@
     <button type="button" data-aba="tarefas" aria-selected="false">Tarefas <span id="n-tarefas"></span></button>
     <button type="button" data-aba="projetos" aria-selected="false">Projetos <span id="n-projetos"></span></button>
     <button type="button" data-aba="materiais" aria-selected="false">Materiais <span id="n-materiais"></span></button>
-    <button type="button" data-aba="briefing" aria-selected="false">Briefing</button>
+    <button type="button" data-aba="briefing" aria-selected="false">Proposta e contrato <span id="n-docs"></span></button>
     <button type="button" data-aba="notas" aria-selected="false">Notas <span id="n-notas"></span></button>
     <button type="button" data-aba="linha" aria-selected="false">Linha do tempo</button>
   </nav>
@@ -130,7 +130,7 @@
 
   <!-- Briefing -->
   <section data-painel="briefing" hidden>
-    <div class="crm-grade crm-grade--2" id="briefing"></div>
+    <div class="fc-docs" id="briefing"></div>
   </section>
 
   <!-- Notas -->
@@ -183,6 +183,10 @@
         </div>
       </fieldset>
     </form>
+    <div class="fc-perigo">
+      <p><b>Apagar este cliente</b><small>Some do CRM com tarefas, projetos, notas e linha do tempo. Propostas, briefings e contratos do painel continuam.</small></p>
+      <button class="mini mini--perigo" type="button" id="apagar">Apagar</button>
+    </div>
   </div>
 </dialog>
 
