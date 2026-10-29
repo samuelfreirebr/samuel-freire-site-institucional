@@ -9,12 +9,11 @@
 
 /* cliente: nome igual ao do CRM. so: id do Samuel quando a área tem
    muita gente e só interessam as tarefas dele. fica: filtro extra.
-   Casa SW (pedido do Samuel em 29/10/2026): só "em aberto" com prazo de
-   novembro em diante; o que está esperando aprovação do médico fica fora,
-   e Reels nunca entra. */
+   Casa SW (pedido do Samuel em 29/10/2026): tudo que não está concluído,
+   com prazo de novembro em diante; Reels nunca entra. */
 const AREAS = [
   { cliente: 'SW Surgical World', chave: 'CLICKUP_TOKEN_EDA', time: '90171444669', so: null,
-    fica: (t) => t.status === 'em aberto' && t.prazo >= '2026-11-01' && !/^\s*reels?\b/i.test(t.titulo) },
+    fica: (t) => t.prazo >= '2026-11-01' && !/^\s*reels?\b/i.test(t.titulo) },
   { cliente: 'Etria', chave: 'CLICKUP_TOKEN_ETRIA', time: '90133035284', so: '112137541' },
 ];
 
@@ -68,7 +67,7 @@ async function daArea(a) {
     listaId: t.list?.id || '',
     url: t.url,
     cliente: a.cliente,
-  })).filter(a.fica || Boolean);
+  })).filter((t) => t.estado !== 'feita' && (!a.fica || a.fica(t)));
   const listas = Object.fromEntries(await Promise.all([...new Set(tarefas.map((t) => t.listaId))]
     .map(async (id) => [id, await statusDaLista(a, id)])));
   return tarefas.map((t) => ({ ...t, ...listas[t.listaId] }));
