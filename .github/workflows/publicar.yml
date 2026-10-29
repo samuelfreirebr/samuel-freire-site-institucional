@@ -55,3 +55,14 @@ jobs:
           tags: |
             ${{ steps.nome.outputs.imagem }}:latest
             ${{ steps.nome.outputs.imagem }}:${{ github.sha }}
+
+      # Avisa o Portainer para baixar a imagem nova e reiniciar o
+      # serviço, sem ninguém clicar em "Update the stack". O endereço
+      # é o "Service webhook" do serviço links_app no Portainer,
+      # guardado no secret PORTAINER_WEBHOOK do repositório.
+      # Sem o secret, o passo é pulado e o update continua manual.
+      - name: Atualizar no Portainer
+        env:
+          WEBHOOK: ${{ secrets.PORTAINER_WEBHOOK }}
+        if: env.WEBHOOK != ''
+        run: curl -fsS -X POST "$WEBHOOK"
