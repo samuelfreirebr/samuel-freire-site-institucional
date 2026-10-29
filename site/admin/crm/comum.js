@@ -101,6 +101,9 @@ export function prazoTexto(iso) {
 
 /* ---------- regras de cliente, lead e tarefa ---------- */
 
+// Etiqueta de quem é cliente recorrente com contrato (campo tipo).
+export const selo = (c) => (c.tipo === 'recorrente' && c.etapa !== 'encerrado' ? '<span class="crm-selo" title="Cliente ativo, recorrente, com contrato">Recorrente</span>' : '');
+
 export const iniciais = (nome) => String(nome || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
 export const visiveis = (clientes) => clientes.filter((c) => !c.interno);
 export const abertas = (c) => (c.atividades || []).filter((a) => a.estado !== 'feita');

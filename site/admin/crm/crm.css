@@ -398,3 +398,13 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
 .g-faixa-legenda i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: .4em; background: var(--ink-2); vertical-align: .05em; }
 .g-faixa-legenda i.forte { background: var(--brand); }
 .g-faixa-legenda i.lead { background: transparent; box-shadow: inset 0 0 0 1.5px var(--brand); }
+
+/* Etiqueta de cliente recorrente com contrato: laranja, ao lado do nome. */
+.crm-selo {
+  display: inline-flex; align-items: center; gap: .35em; margin-left: .55em; padding: .2em .6em; vertical-align: .12em;
+  border-radius: var(--radius-pill); background: var(--brand-wash); color: var(--brand);
+  font-size: 10px; font-weight: var(--w-bold); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+}
+.crm-selo::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.crm-titulo .crm-selo { font-size: 11px; vertical-align: .35em; }
+.pv-topo .crm-selo { margin-left: 0; }

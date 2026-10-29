@@ -8,7 +8,7 @@ import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, NOMES, LEADS, DIAS_PROXIMAS,
   hojeIso, dataCurta, diasAte, quando, prazoTexto, somarDias, iniciais, visiveis, abertas, atrasadas,
   proximaEntrega, projetoAtual, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
-  grupoPrazo, todasTarefas, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca,
+  grupoPrazo, todasTarefas, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo,
 } from './comum.js';
 import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js';
 import { ico } from '../icones.js';
@@ -336,15 +336,16 @@ function desenharClientes() {
   const lista = visiveis(clientes).filter((c) => !busca || c.nome.toLowerCase().includes(busca) || (c.servico || '').toLowerCase().includes(busca));
   const conta = (id) => lista.filter((c) => c.etapa === id).length;
   $('#filtros').innerHTML = [`<button type="button" data-filtro="todos" aria-pressed="${filtroEtapa === 'todos'}">Todos <span>${lista.length}</span></button>`,
+    `<button type="button" data-filtro="recorrentes" aria-pressed="${filtroEtapa === 'recorrentes'}">Recorrentes <span>${lista.filter((c) => selo(c)).length}</span></button>`,
     ...etapas.map((e) => `<button type="button" data-filtro="${e.id}" aria-pressed="${filtroEtapa === e.id}">${esc(e.nome)} <span>${conta(e.id)}</span></button>`)].join('');
 
-  const daqui = lista.filter((c) => filtroEtapa === 'todos' || c.etapa === filtroEtapa);
+  const daqui = lista.filter((c) => filtroEtapa === 'todos' || (filtroEtapa === 'recorrentes' ? selo(c) : c.etapa === filtroEtapa));
   $('#linhas').innerHTML = daqui.map((c) => {
     const prox = proximaEntrega(c), atr = atrasadas(c).length, n = abertas(c).length, proj = projetoAtual(c);
     return `<tr data-id="${c.id}" class="clicavel">
       <td><a class="crm-cli" href="${ficha(c)}" target="_blank" rel="noopener">
         <span class="crm-avatar" aria-hidden="true">${esc(iniciais(c.nome))}</span>
-        <span><b>${esc(c.nome)}</b><small>${esc(c.servico || 'Sem serviço na ficha')}</small></span></a></td>
+        <span><b>${esc(c.nome)}${selo(c)}</b><small>${esc(c.servico || 'Sem serviço na ficha')}</small></span></a></td>
       <td>${etiqueta(c.etapa)}<small>há ${plural(diasNaEtapa(c), 'dia', 'dias')}</small></td>
       <td><small class="forte crm-quebra">${esc(c.proximoPasso || 'Sem próximo passo')}</small></td>
       <td>${proj ? `<b>${esc(proj.nome)}</b><small>${NOMES.projeto[proj.estado]}</small>` : '<small>Nenhum</small>'}</td>
@@ -365,7 +366,7 @@ function desenharClientes() {
 function cartao(c) {
   const n = abertas(c).length, s = situacaoLead(c);
   return `<a class="crm-card" href="${ficha(c)}" target="_blank" rel="noopener" draggable="true" data-id="${c.id}">
-    <span class="crm-card__nome">${esc(c.nome)}</span>
+    <span class="crm-card__nome">${esc(c.nome)}${selo(c)}</span>
     ${c.servico ? `<span class="crm-card__serv">${esc(c.servico)}</span>` : ''}
     ${c.proximoPasso ? `<span class="crm-card__prox">${esc(c.proximoPasso)}</span>` : ''}
     <span class="crm-card__pe">${s ? `<span class="${s.alerta ? 'claude' : ''}">${esc(s.texto)}</span>` : ''}${n ? `<span>${plural(n, 'tarefa', 'tarefas')}</span>` : ''}<span>${diasNaEtapa(c)}d na etapa</span></span>
@@ -391,7 +392,7 @@ function previa(c) {
   const ultimas = [...(c.linha || [])].reverse().slice(0, 4);
   const s = situacaoLead(c);
   $('#pv-corpo').innerHTML = `
-    <div class="pv-topo">${etiqueta(c.etapa)}<small>há ${plural(diasNaEtapa(c), 'dia', 'dias')} nesta etapa</small></div>
+    <div class="pv-topo">${etiqueta(c.etapa)}${selo(c)}<small>há ${plural(diasNaEtapa(c), 'dia', 'dias')} nesta etapa</small></div>
     ${s ? `<p class="crm-situacao${s.alerta ? ' alerta' : ''}">${esc(s.texto)}</p>` : ''}
     <dl class="pv-dados">
       <dt>Próximo passo</dt><dd>${esc(c.proximoPasso || 'Sem próximo passo')}</dd>

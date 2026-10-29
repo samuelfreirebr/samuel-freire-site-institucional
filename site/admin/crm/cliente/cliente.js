@@ -4,7 +4,7 @@
 
 import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, documentos, mesmoCliente, NOMES, LEADS,
-  hojeIso, dataCurta, dataLonga, diasAte, quando, prazoTexto, iniciais, abertas, atrasadas, proximaEntrega, projetoAtual,
+  hojeIso, dataCurta, dataLonga, diasAte, quando, prazoTexto, iniciais, selo, abertas, atrasadas, proximaEntrega, projetoAtual,
   diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, copiar,
 } from '../comum.js';
 
@@ -30,7 +30,7 @@ function desenharCabecalho() {
   document.title = `${c.nome} | CRM Samuel Freire`;
   $('#topo-nome').textContent = c.nome;
   $('#avatar').textContent = iniciais(c.nome);
-  $('#nome').textContent = c.nome;
+  $('#nome').innerHTML = esc(c.nome) + selo(c);
   $('#servico').textContent = [c.servico || 'Sem serviço na ficha', c.contato].filter(Boolean).join(' · ');
   $('#etapa').value = c.etapa;
   $('#ficha').dataset.etapa = c.etapa;
