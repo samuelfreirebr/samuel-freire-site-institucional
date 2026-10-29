@@ -76,7 +76,7 @@ a.crm-kpi:hover { border-color: var(--ink); }
   padding: .45em .9em; border-radius: var(--radius-pill); font-size: var(--t-eyebrow); font-weight: var(--w-semi);
   color: var(--muted); box-shadow: inset 0 0 0 var(--hair) var(--line-2); background: var(--bg);
 }
-.crm-pilulas button span { color: var(--meta); }
+.crm-pilulas button span { color: var(--muted); }
 .crm-pilulas button[aria-pressed="true"] { background: var(--ink); color: var(--brand-ink); box-shadow: none; }
 .crm-pilulas button[aria-pressed="true"] span { color: var(--muted-invert); }
 .crm-pilulas [data-tirar] { margin-left: .2em; padding: 0 .2em; font-size: 1.1em; line-height: 1; }
@@ -176,7 +176,7 @@ a.crm-kpi:hover { border-color: var(--ink); }
 .cal__dia:nth-of-type(7n) { border-right: 0; }
 .cal__dia:hover { background: var(--bg-2); }
 .cal__dia.fora { background: var(--bg-2); }
-.cal__dia.fora .cal__n { color: var(--meta); }
+.cal__dia.fora .cal__n { color: var(--muted); }
 .cal__n { font-size: var(--t-eyebrow); font-weight: var(--w-bold); color: var(--muted); }
 .cal__n small { display: none; }
 .cal__dia.hoje .cal__n { display: inline-grid; place-items: center; align-self: flex-start; min-width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--brand); color: var(--brand-ink); }
@@ -306,7 +306,7 @@ a.crm-kpi:hover { border-color: var(--ink); }
 .crm-col__mais { margin-left: auto; width: 1.7rem; height: 1.7rem; border-radius: 6px; color: var(--muted); font-size: 1.1rem; line-height: 1; }
 .crm-col__mais:hover { background: var(--bg); color: var(--brand); }
 .crm-col__lista { flex: 1; overflow-y: auto; display: grid; align-content: start; gap: var(--sp-2xs); padding: 0 var(--sp-xs) var(--sp-xs); }
-.crm-col__vazia { color: var(--meta); font-size: var(--t-eyebrow); padding: var(--sp-sm); text-align: center; border: 1.5px dashed var(--line-2); border-radius: 8px; }
+.crm-col__vazia { color: var(--muted); font-size: var(--t-eyebrow); padding: var(--sp-sm); text-align: center; border: 1.5px dashed var(--line-2); border-radius: 8px; }
 
 .crm-card {
   position: relative; display: grid; gap: 6px; padding: var(--sp-xs) var(--sp-sm); background: var(--bg);
@@ -497,3 +497,10 @@ input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-heigh
 .crm-tabela td:first-child b { display: flex; align-items: center; flex-wrap: wrap; gap: 0 .2em; }
 .crm-etapa-sel select { field-sizing: content; }
 .crm-tabela td { padding-block: .7rem; }
+
+/* Texto laranja pequeno sobre o fundo laranja claro não passava no
+   contraste (WCAG AA). Nesses rótulos o laranja escurece um pouco,
+   puxado para a tinta: continua sendo o laranja da marca. */
+:root { --brand-texto: color-mix(in srgb, var(--brand) 72%, var(--ink)); }
+.crm-selo, .crm-card__lead.alerta, .crm-lista__data.atraso, .crm-etapa[data-etapa="fechado"] { color: var(--brand-texto); }
+[data-etapa="lead"], [data-etapa="proposta"] { --etapa-texto: var(--brand-texto); }

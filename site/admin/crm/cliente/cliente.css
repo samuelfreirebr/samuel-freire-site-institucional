@@ -41,7 +41,7 @@
 
 .fc-abas { width: max-content; max-width: 100%; overflow-x: auto; }
 .fc-abas button { flex: none; white-space: nowrap; }
-.fc-abas span { color: var(--meta); margin-left: .2em; }
+.fc-abas span { color: var(--muted); margin-left: .2em; }
 .fc-abas button[aria-selected="true"] span { color: var(--muted); }
 
 /* ---------- Resumo ---------- */
