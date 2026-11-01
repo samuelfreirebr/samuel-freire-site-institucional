@@ -867,3 +867,173 @@ body.proposta { overflow: visible; }
 .prop-faq__pe .arrow { width: .9em; height: .9em; }
 @media (prefers-reduced-motion: reduce) { .prop-faq__mais::before, .prop-faq__mais::after { transition: none; } }
 @media print { .prop-faq { display: block; } }
+
+/* ---------- Opções (planos) --------------------------------------------
+   Colunas lado a lado, hairline em volta, como as condições. A opção
+   em destaque vem em tinta, com o selo laranja: o olho cai nela.
+   No celular empilham, a do destaque no lugar dela (sem reordenar). */
+
+.prop-planos__cab { max-width: 52rem; }
+.prop-planos__titulo { margin-top: var(--sp-sm); }
+.prop-planos__texto { margin-top: var(--sp-md); max-width: var(--maxw-text); }
+.prop-planos__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: var(--sp-sm);
+  margin-top: var(--sp-xl);
+  align-items: stretch;
+}
+.prop-plano {
+  display: flex; flex-direction: column;
+  padding: var(--sp-lg) var(--sp-md);
+  background: var(--bg);
+  border: var(--hair) solid var(--line-2);
+  border-radius: var(--radius-img);
+}
+.prop-plano--destaque { background: var(--bg-invert); border-color: var(--bg-invert); color: #FFFFFF; }
+.prop-plano__topo { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-xs); flex-wrap: wrap; }
+.prop-plano__num {
+  font-size: var(--t-eyebrow);
+  font-weight: var(--w-semi);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.on-dark .prop-plano__num { color: var(--muted-invert); }
+.prop-plano__selo {
+  padding: .35em .8em;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: var(--t-eyebrow);
+  font-weight: var(--w-bold);
+  letter-spacing: .04em;
+}
+.prop-plano__nome { margin-top: var(--sp-md); }
+.on-dark .prop-plano__nome { color: #FFFFFF; }
+.prop-plano__para { margin-top: var(--sp-xs); font-size: var(--t-small); line-height: 1.5; }
+.prop-plano__valor {
+  margin-top: var(--sp-lg);
+  font-size: var(--t-h1);
+  font-weight: var(--w-black);
+  letter-spacing: var(--ls-h1);
+  line-height: .9;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.on-dark .prop-plano__valor { color: #FFFFFF; }
+.prop-plano__apoio { margin-top: var(--sp-2xs); }
+.on-dark .prop-plano__apoio { color: var(--muted-invert); }
+.prop-plano__itens {
+  list-style: none;
+  display: grid; gap: var(--sp-xs);
+  margin-top: var(--sp-lg);
+  padding-top: var(--sp-md);
+  border-top: var(--hair) solid var(--line);
+  flex: 1;
+  align-content: start;
+}
+.on-dark .prop-plano__itens { border-top-color: var(--line-invert); }
+.prop-plano__itens li { display: flex; gap: var(--sp-xs); font-size: var(--t-small); line-height: 1.45; color: var(--ink-2); }
+.on-dark .prop-plano__itens li { color: #FFFFFF; }
+.prop-plano__tick { flex: none; width: 18px; height: 18px; color: var(--brand); margin-top: .05em; }
+.prop-plano__btn { margin-top: var(--sp-lg); align-self: flex-start; }
+.prop-planos__pe { margin-top: var(--sp-md); max-width: var(--maxw-text); }
+
+/* ---------- Calculadora de retorno -------------------------------------
+   Esquerda: os cenários (botões grandes, fáceis de tocar) e as duas
+   réguas. Direita: o resultado em número grande, com a régua laranja. */
+
+.prop-roi__cab { max-width: 52rem; }
+.prop-roi__titulo { margin-top: var(--sp-sm); }
+.prop-roi__texto { margin-top: var(--sp-md); max-width: var(--maxw-text); }
+.prop-roi__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--sp-xl);
+  margin-top: var(--sp-xl);
+  align-items: start;
+}
+/* Os cenários dividem a linha por igual: no celular os três cabem lado a lado. */
+.prop-roi__cenarios { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr)); gap: var(--sp-2xs); }
+.prop-roi__cenario {
+  padding: .8em .6em;
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 var(--hair) var(--line-2);
+  font: inherit;
+  font-size: var(--t-small);
+  font-weight: var(--w-semi);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--d-fast) var(--ease-out), color var(--d-fast) var(--ease-out);
+}
+.prop-roi__cenario:hover { background: var(--ink); color: #FFFFFF; box-shadow: none; }
+.prop-roi__cenario[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); box-shadow: none; }
+.prop-roi__campo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--sp-2xs) var(--sp-sm);
+  margin-top: var(--sp-lg);
+  padding-top: var(--sp-md);
+  border-top: var(--hair) solid var(--line-2);
+}
+.prop-roi__rot { font-size: var(--t-small); color: var(--muted); }
+.prop-roi__val { font-size: var(--t-h3); font-weight: var(--w-black); letter-spacing: var(--ls-h3); color: var(--ink); font-variant-numeric: tabular-nums; }
+.prop-roi__campo input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--brand); cursor: pointer; }
+.prop-roi__resultado { padding: var(--sp-lg) var(--sp-md); background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-img); }
+.prop-roi__resultado .rule { margin-bottom: var(--sp-md); }
+.prop-roi__n {
+  margin-top: var(--sp-sm);
+  font-size: var(--t-metric);
+  font-weight: var(--w-black);
+  letter-spacing: var(--ls-display);
+  line-height: .9;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.prop-roi__apoio { margin-top: var(--sp-xs); }
+.prop-roi__linhas { display: grid; gap: var(--sp-xs); margin-top: var(--sp-lg); }
+.prop-roi__linhas > div {
+  display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-sm);
+  padding-top: var(--sp-xs);
+  border-top: var(--hair) solid var(--line);
+}
+.prop-roi__linhas dt { font-size: var(--t-small); color: var(--muted); }
+.prop-roi__linhas dd { margin: 0; font-weight: var(--w-black); color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.prop-roi__nota { margin-top: var(--sp-md); }
+
+/* ---------- Programa de indicação --------------------------------------- */
+
+.prop-indicacao__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--sp-2xl);
+  align-items: start;
+}
+.prop-indicacao__valor .rule { margin-bottom: var(--sp-md); }
+.prop-indicacao__n {
+  margin-top: var(--sp-md);
+  font-size: var(--t-metric);
+  font-weight: var(--w-black);
+  letter-spacing: var(--ls-display);
+  line-height: .9;
+  color: var(--brand);
+}
+.prop-indicacao__regra { margin-top: var(--sp-md); max-width: 34ch; color: var(--ink-2); }
+.prop-indicacao__txt > .body { margin-top: var(--sp-sm); }
+.prop-indicacao__titulo + .body { margin-top: var(--sp-md); }
+.prop-indicacao__passos { list-style: none; display: grid; gap: var(--sp-xs); margin-top: var(--sp-lg); }
+.prop-indicacao__passos li {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-sm);
+  padding-top: var(--sp-xs);
+  border-top: var(--hair) solid var(--line);
+  font-size: var(--t-body); color: var(--ink-2);
+}
+.prop-indicacao__num { font-size: var(--t-eyebrow); font-weight: var(--w-bold); color: var(--brand); padding-top: .3em; }
+.prop-indicacao__nota { margin-top: var(--sp-md); }
+
+@media (prefers-reduced-motion: reduce) { .prop-roi__cenario { transition: none; } }
+@media print { .prop-plano, .prop-roi__grade, .prop-indicacao__grade { break-inside: avoid; } }

@@ -82,18 +82,26 @@ export function chave({ rotulo, dica, ler, escrever, grande = false }) {
   return el;
 }
 
-// p.visivel guarda só o que está desligado; ligar tudo de novo apaga
-// o objeto, para a proposta voltar a ser igual à que estava salva.
+// Seções que chegaram depois nascem desligadas (proposta antiga não
+// muda). Gêmea de DESLIGADAS_DE_INICIO em servidor/proposta-html.js.
+export const DESLIGADAS_DE_INICIO = ['planos', 'roi', 'indicacao'];
+export const estaLigada = (p, parte) => (DESLIGADAS_DE_INICIO.includes(parte)
+  ? p?.visivel?.[parte] === true
+  : p?.visivel?.[parte] !== false);
+
+// p.visivel guarda só o que foge do padrão; voltar ao padrão apaga a
+// chave, para a proposta voltar a ser igual à que estava salva.
 export function ligarParte(p, parte, ligada) {
   p.visivel ||= {};
-  if (ligada) delete p.visivel[parte]; else p.visivel[parte] = false;
+  if (DESLIGADAS_DE_INICIO.includes(parte)) { if (ligada) p.visivel[parte] = true; else delete p.visivel[parte]; }
+  else if (ligada) delete p.visivel[parte]; else p.visivel[parte] = false;
   if (!Object.keys(p.visivel).length) delete p.visivel;
 }
 
 // Chave que liga uma parte da página (p.visivel[parte]) e esmaece o
 // bloco que depende dela. Desligar não apaga nada.
 export function chaveParte(p, parte, rotulo, dica, bloco) {
-  const ler = () => p.visivel?.[parte] !== false;
+  const ler = () => estaLigada(p, parte);
   const aplicar = () => bloco?.classList.toggle('ed-desligado', !ler());
   const el = chave({
     rotulo, dica, ler,

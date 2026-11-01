@@ -12,7 +12,7 @@
 import { escapar } from './listas.js';
 import { metaCompartilhar } from './compartilhar.js';
 
-const V = 'p10';   // versão do proposta.css, para o cache
+const V = 'p11';   // versão do proposta.css, para o cache
 
 const linhas = (t) => String(t || '').split('\n').filter((l) => l.trim());
 
@@ -33,27 +33,33 @@ const talvez = (cond, montar) => (cond ? (typeof montar === 'function' ? montar(
 export const PARTES = [
   'ficha', 'escopo', 'inclui', 'incluiGrupos', 'processo', 'investimento', 'pagamento', 'conta',
   'condicoes', 'sobre', 'metricas', 'galeria', 'assinatura', 'ecossistema',
-  'encerramento', 'botaoDuvidas', 'contatos', 'faq',
+  'encerramento', 'botaoDuvidas', 'contatos', 'faq', 'planos', 'roi', 'indicacao',
 ];
-const ligada = (p, parte) => p?.visivel?.[parte] !== false;
+/* Seções que chegaram depois nascem desligadas: proposta antiga não
+   tem a chave e continua igual. Ligar grava { planos: true }. A mesma
+   lista mora em site/admin/propostas/ui.js. */
+export const DESLIGADAS_DE_INICIO = ['planos', 'roi', 'indicacao'];
+const ligada = (p, parte) => (DESLIGADAS_DE_INICIO.includes(parte)
+  ? p?.visivel?.[parte] === true
+  : p?.visivel?.[parte] !== false);
 
 /* Ordem das seções. p.ordem guarda a sequência escolhida no editor;
    o que não estiver nela entra depois, na ordem padrão, então uma
    proposta antiga (sem o campo) e uma seção nova (que a proposta
    ainda não conhece) saem no lugar de sempre. Capa é sempre a
    primeira e o rodapé o último: não entram na lista. */
-export const ORDEM_PADRAO = ['escopo', 'inclui', 'processo', 'investimento', 'condicoes', 'sobre', 'ecossistema', 'encerramento', 'faq'];
+export const ORDEM_PADRAO = ['escopo', 'inclui', 'processo', 'planos', 'roi', 'investimento', 'indicacao', 'condicoes', 'sobre', 'ecossistema', 'encerramento', 'faq'];
 export function ordemDe(p) {
   const pedida = Array.isArray(p?.ordem) ? p.ordem.filter((s) => ORDEM_PADRAO.includes(s)) : [];
   return [...new Set([...pedida, ...ORDEM_PADRAO])];
 }
 
-function secEscopo(itens) {
+function secEscopo(itens, rotulo) {
   if (!Array.isArray(itens) || !itens.length) return '';
   return `
   <section class="section prop-escopo" id="escopo">
     <div class="wrap">
-      <p class="eyebrow reveal">Escopo</p>
+      <p class="eyebrow reveal">${escapar(rotulo || 'Escopo')}</p>
       <ol class="prop-lista">
         ${itens.map((it, i) => `
         <li class="prop-item reveal" style="--delay:${(i * 0.06).toFixed(2)}s">
@@ -181,6 +187,163 @@ function secInvestimento(inv, pag, comConta = true) {
         </div>`)}
       </div>`)}
 
+    </div>
+  </section>`;
+}
+
+/* "$" + 297 → "$297"; "R$" + 297 → "R$ 297". Mesma regra do investimento. */
+function formatarDinheiro(moeda = '$') {
+  // Com centavos, sempre dois dígitos: $148.50, nunca $148.5.
+  const local = moeda === 'R$' ? 'pt-BR' : 'en-US';
+  return (n) => `${moeda}${moeda.length > 1 ? ' ' : ''}${new Intl.NumberFormat(local, { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 }).format(n)}`;
+}
+
+/* ---------- opções (planos) ----------
+   Duas a quatro opções lado a lado, cada uma com o próprio botão de
+   WhatsApp já dizendo qual foi escolhida. A marcada como destaque
+   vem escura, com o selo: é a que se quer vender. */
+function secPlanos(p) {
+  const pl = p.planos || {};
+  const itens = (Array.isArray(pl.itens) ? pl.itens : []).filter((o) => o && (o.nome || Number(o.valor) > 0));
+  if (!itens.length) return '';
+  const dinheiro = formatarDinheiro(pl.moeda || '$');
+  const c = p.contato || {};
+  const zap = c.whatsapp || (c.link && /wa\.me|whatsapp/.test(c.link) ? c.link : '');
+  const base = c.link || (zap && linkZap(zap)) || (c.email && 'mailto:' + c.email) || '';
+
+  return `
+  <section class="section prop-planos" id="planos">
+    <div class="wrap">
+      <header class="prop-planos__cab reveal">
+        <p class="eyebrow">${escapar(pl.rotulo || 'Suas opções')}</p>
+        <h2 class="h2 prop-planos__titulo">${escapar(pl.titulo || 'Escolha o caminho')}</h2>
+        ${talvez(pl.texto, () => `<p class="lead prop-planos__texto">${escapar(pl.texto)}</p>`)}
+      </header>
+      <div class="prop-planos__grade" data-n="${itens.length}">
+        ${itens.map((o, i) => {
+          const valor = Number(o.valor) || 0;
+          const n = Math.max(1, Math.round(Number(o.parcelas) || 1));
+          const apoio = o.apoio || (n > 1 ? `ou ${n}x de ${dinheiro(Math.round((valor / n) * 100) / 100)}` : 'pagamento único');
+          const link = base && comMensagem(base, comCliente(`Oi, Samuel! Quero a opção ${o.nome || i + 1} da proposta.`, p.cliente));
+          return `
+        <article class="prop-plano${o.destaque ? ' prop-plano--destaque on-dark' : ''} reveal" style="--delay:${(i * 0.06).toFixed(2)}s">
+          <p class="prop-plano__topo">
+            <span class="prop-plano__num">${escapar(pl.rotuloOpcao || 'Opção')} ${String(i + 1).padStart(2, '0')}</span>
+            ${talvez(o.selo, () => `<span class="prop-plano__selo">${escapar(o.selo)}</span>`)}
+          </p>
+          <h3 class="h3 prop-plano__nome">${escapar(o.nome || '')}</h3>
+          ${talvez(o.para, () => `<p class="body prop-plano__para">${escapar(o.para)}</p>`)}
+          ${talvez(valor, () => `
+          <p class="prop-plano__valor">${escapar(dinheiro(valor))}</p>
+          <p class="small prop-plano__apoio">${escapar(apoio)}</p>`)}
+          ${talvez((o.itens || []).length, () => `
+          <ul class="prop-plano__itens">${o.itens.map((t) => `<li>${icone('check', 'ico prop-plano__tick')}<span>${escapar(t)}</span></li>`).join('')}</ul>`)}
+          ${talvez(link, () => `<a class="btn ${o.destaque ? 'btn--brand' : 'btn--ghost'} prop-plano__btn" href="${escapar(link)}" target="_blank" rel="noopener">${escapar(o.botao || pl.botao || 'Quero esta opção')}${SETA}</a>`)}
+        </article>`;
+        }).join('')}
+      </div>
+      ${talvez(pl.rodape, () => `<p class="small prop-planos__pe">${escapar(pl.rodape)}</p>`)}
+    </div>
+  </section>`;
+}
+
+/* ---------- calculadora de retorno ----------
+   Feita para quem não gosta de número: três cenários prontos para
+   clicar e duas réguas. O servidor já escreve o resultado do cenário
+   marcado, então sem JS a conta aparece do mesmo jeito; o proposta.js
+   só refaz a conta quando o cliente mexe. */
+function secRoi(p) {
+  const r = p.roi || {};
+  const cenarios = (Array.isArray(r.cenarios) ? r.cenarios : [])
+    .map((c) => ({ ...c, ticket: Number(c?.ticket) || 0, quantidade: Number(c?.quantidade) || 0 }))
+    .filter((c) => c.ticket > 0);
+  if (!cenarios.length) return '';
+  const moeda = r.moeda || p.planos?.moeda || '$';
+  const dinheiro = formatarDinheiro(moeda);
+  // Sem valor próprio, compara com a opção em destaque (ou a primeira).
+  const opcoes = Array.isArray(p.planos?.itens) ? p.planos.itens : [];
+  const investimento = Number(r.investimento) || Number((opcoes.find((o) => o?.destaque) || opcoes[0])?.valor) || 0;
+  // Abre no cenário marcado; sem marca, no do meio.
+  const marcado = cenarios.findIndex((c) => c.padrao);
+  const ini = marcado >= 0 ? marcado : Math.floor((cenarios.length - 1) / 2);
+  const atual = cenarios[ini];
+  const conta = (t, q) => {
+    const total = t * q;
+    return {
+      total: dinheiro(total),
+      vezes: investimento > 0 ? Math.floor(total / investimento) + 'x' : '',
+      paga: investimento > 0 ? Math.max(1, Math.ceil(investimento / t)) : 0,
+    };
+  };
+  const res = conta(atual.ticket, atual.quantidade);
+  const maxTicket = Math.max(...cenarios.map((c) => c.ticket)) * 2;
+  const maxQtd = Math.max(12, ...cenarios.map((c) => c.quantidade * 2));
+  const servicos = (n) => `${n} ${n === 1 ? 'serviço' : 'serviços'}`;
+
+  return `
+  <section class="section band-2 prop-roi" id="roi" data-roi data-investimento="${investimento}" data-moeda="${escapar(moeda)}">
+    <div class="wrap">
+      <header class="prop-roi__cab reveal">
+        <p class="eyebrow">${escapar(r.rotulo || 'Calculadora de retorno')}</p>
+        <h2 class="h2 prop-roi__titulo">${escapar(r.titulo || 'Quanto o site pode trazer de volta')}</h2>
+        ${talvez(r.texto, () => `<p class="lead prop-roi__texto">${escapar(r.texto)}</p>`)}
+      </header>
+      <div class="prop-roi__grade reveal" style="--delay:.08s">
+        <div class="prop-roi__controles">
+          <div class="prop-roi__cenarios" role="group" aria-label="Cenários">
+            ${cenarios.map((c, i) => `<button type="button" class="prop-roi__cenario" data-cenario data-ticket="${c.ticket}" data-quantidade="${c.quantidade}" aria-pressed="${i === ini}">${escapar(c.nome || 'Cenário ' + (i + 1))}</button>`).join('')}
+          </div>
+          <label class="prop-roi__campo">
+            <span class="prop-roi__rot">${escapar(r.rotuloTicket || 'Quanto você cobra, em média, por um serviço')}</span>
+            <output class="prop-roi__val" data-saida="ticket">${escapar(dinheiro(atual.ticket))}</output>
+            <input type="range" min="${Math.max(100, Math.round(maxTicket / 40 / 100) * 100)}" max="${maxTicket}" step="100" value="${atual.ticket}" data-entrada="ticket">
+          </label>
+          <label class="prop-roi__campo">
+            <span class="prop-roi__rot">${escapar(r.rotuloQuantidade || 'Quantos clientes a mais por ano chegam pelo site')}</span>
+            <output class="prop-roi__val" data-saida="quantidade">${atual.quantidade}</output>
+            <input type="range" min="0" max="${maxQtd}" step="1" value="${atual.quantidade}" data-entrada="quantidade">
+          </label>
+        </div>
+        <div class="prop-roi__resultado" aria-live="polite">
+          <span class="rule rule--brand" aria-hidden="true"></span>
+          <p class="eyebrow">${escapar(r.rotuloResultado || 'Em um ano')}</p>
+          <p class="prop-roi__n" data-saida="total">${escapar(res.total)}</p>
+          <p class="body prop-roi__apoio">${escapar(r.apoioResultado || 'a mais em serviços fechados')}</p>
+          ${talvez(investimento > 0, () => `
+          <dl class="prop-roi__linhas">
+            <div><dt>Para o site se pagar</dt><dd data-saida="paga">${escapar(servicos(res.paga))}</dd></div>
+            <div><dt>Retorno sobre ${escapar(dinheiro(investimento))}</dt><dd data-saida="vezes">${escapar(res.vezes)}</dd></div>
+          </dl>`)}
+          ${talvez(r.nota, () => `<p class="small prop-roi__nota">${escapar(r.nota)}</p>`)}
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ---------- programa de indicação ----------
+   O valor grande de um lado; a regra e os passos do outro. */
+function secIndicacao(ind) {
+  if (!ind || (!ind.valor && !ind.titulo)) return '';
+  const passos = linhas(Array.isArray(ind.passos) ? ind.passos.join('\n') : ind.passos);
+  return `
+  <section class="section prop-indicacao" id="indicacao">
+    <div class="wrap prop-indicacao__grade">
+      <div class="prop-indicacao__valor reveal">
+        <span class="rule rule--strong" aria-hidden="true"></span>
+        <p class="eyebrow">${escapar(ind.rotulo || 'Programa de indicação')}</p>
+        ${talvez(ind.valor, () => `<p class="prop-indicacao__n">${escapar(ind.valor)}</p>`)}
+        ${talvez(ind.regra, () => `<p class="body prop-indicacao__regra">${escapar(ind.regra)}</p>`)}
+      </div>
+      <div class="prop-indicacao__txt reveal" style="--delay:.08s">
+        ${talvez(ind.titulo, () => `<h2 class="h2 prop-indicacao__titulo">${escapar(ind.titulo)}</h2>`)}
+        ${linhas(ind.texto).map((l) => `<p class="body">${escapar(l)}</p>`).join('')}
+        ${talvez(passos.length, () => `
+        <ol class="prop-indicacao__passos">
+          ${passos.map((t, i) => `<li><span class="prop-indicacao__num" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span><span>${escapar(t)}</span></li>`).join('')}
+        </ol>`)}
+        ${talvez(ind.nota, () => `<p class="small prop-indicacao__nota">${escapar(ind.nota)}</p>`)}
+      </div>
     </div>
   </section>`;
 }
@@ -557,9 +720,12 @@ function fichaCapa(p) {
 /* Cada seção da página, pela chave da ordem. Ligar/desligar continua
    sendo de cada uma; a ordem só diz quem vem antes de quem. */
 const SECOES = {
-  escopo: (p) => talvez(ligada(p, 'escopo'), () => secEscopo(p.escopo)),
+  escopo: (p) => talvez(ligada(p, 'escopo'), () => secEscopo(p.escopo, p.escopoRotulo)),
   inclui: (p) => talvez(ligada(p, 'inclui'), () => secInclui(p.inclui, ligada(p, 'incluiGrupos'))),
   processo: (p) => talvez(ligada(p, 'processo'), () => secProcesso(p.processo)),
+  planos: (p) => talvez(ligada(p, 'planos'), () => secPlanos(p)),
+  roi: (p) => talvez(ligada(p, 'roi'), () => secRoi(p)),
+  indicacao: (p) => talvez(ligada(p, 'indicacao'), () => secIndicacao(p.indicacao)),
   investimento: (p) => secInvestimento(ligada(p, 'investimento') ? p.investimento : null, ligada(p, 'pagamento') ? p.pagamento : null, ligada(p, 'conta')),
   condicoes: (p) => talvez(ligada(p, 'condicoes'), () => secCondicoes(p.condicoes)),
   sobre: (p) => talvez(ligada(p, 'sobre'), () => secSobre(p.sobre, p.assinatura, { metricas: ligada(p, 'metricas'), galeria: ligada(p, 'galeria'), assinatura: ligada(p, 'assinatura') })),

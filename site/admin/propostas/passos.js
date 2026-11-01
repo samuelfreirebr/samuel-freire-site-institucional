@@ -95,8 +95,9 @@ export const PASSOS = [
   /* ---------- 3. escopo ---------- */
   {
     id: 'escopo', titulo: 'Escopo', resumo: 'O que será entregue, item por item.',
-    alvo: '#escopo', chaves: ['escopo'], parte: 'escopo',
+    alvo: '#escopo', chaves: ['escopo', 'escopoRotulo'], parte: 'escopo',
     montar: (p) => [
+      bloco('Cabeçalho', { filhos: [texto(p, 'escopoRotulo', 'Rótulo pequeno', { placeholder: 'Escopo', dica: 'Ex.: O que você me pediu.' })] }),
       bloco('Entregáveis', { dica: 'Cada um vira uma linha numerada, com ícone, descrição e etiqueta.', filhos: [
         repetidor({
           lista: (p.escopo ||= []), nome: 'Entregável',
@@ -164,6 +165,106 @@ export const PASSOS = [
           }),
         ] }),
         bloco('Rodapé', { filhos: [texto(proc, 'rodape', 'Frase abaixo das etapas', { dica: 'Opcional.' })] }),
+      ];
+    },
+  },
+
+  /* ---------- opções (planos) ----------
+     Nasce desligada: liga quando a proposta tem mais de um caminho.
+     Com ela ligada, costuma-se desligar o Investimento único. */
+  {
+    id: 'planos', titulo: 'Opções', resumo: 'De 2 a 4 caminhos lado a lado, cada um com preço e botão.',
+    alvo: '#planos', chaves: ['planos'], parte: 'planos',
+    montar: (p) => {
+      const pl = p.planos ||= { moeda: '$', itens: [] };
+      return [
+        bloco('Cabeçalho', { filhos: [
+          linha(texto(pl, 'rotulo', 'Rótulo pequeno', { placeholder: 'Suas opções' }), texto(pl, 'titulo', 'Título', { placeholder: 'Escolha o caminho' })),
+          texto(pl, 'texto', 'Texto de apoio', { area: true, linhas: 2 }),
+          linha(
+            opcoes('Moeda', MOEDAS, () => pl.moeda || '$', (m) => { pl.moeda = m; }),
+            texto(pl, 'botao', 'Texto do botão', { placeholder: 'Quero esta opção', dica: 'Vale para todas, se a opção não tiver o seu.' })),
+        ] }),
+        bloco('Opções', { dica: 'Cada botão abre o WhatsApp dizendo qual opção o cliente escolheu.', filhos: [
+          repetidor({
+            lista: (pl.itens ||= []), nome: 'Opção', max: 4,
+            novo: () => ({ nome: '', valor: 0, parcelas: 1, itens: [] }),
+            resumo: (o) => [o.nome, Number(o.valor) > 0 ? (pl.moeda || '$') + o.valor : ''].filter(Boolean).join('  '),
+            montar: (o, i, resumir) => [
+              linha(texto(o, 'nome', 'Nome', { placeholder: 'Site + Google', aoMudar: resumir }), texto(o, 'selo', 'Selo', { placeholder: 'Recomendada', dica: 'Opcional. Etiqueta laranja no topo.' })),
+              texto(o, 'para', 'Para quem é', { area: true, linhas: 2, dica: 'Uma frase curta abaixo do nome.' }),
+              linha(
+                texto(o, 'valor', 'Valor total', { tipo: 'number', dica: 'Só o número. Ex.: 297', aoMudar: resumir }),
+                opcoes('Parcelas', PARCELAS.slice(0, 4), () => Number(o.parcelas || 1), (n) => { o.parcelas = n; }, (n) => (n === 1 ? 'À vista' : n + 'x'))),
+              texto(o, 'apoio', 'Linha abaixo do preço', { dica: 'Vazio, escreve sozinho: "ou 2x de $148.50" ou "pagamento único".' }),
+              linhas(o, 'itens', 'O que inclui', { linhas: 6 }),
+              texto(o, 'botao', 'Texto do botão', { placeholder: 'Quero esta opção' }),
+              chave({ rotulo: 'Destaque', dica: 'Bloco escuro e botão laranja. Use em uma só: a que você quer vender.', ler: () => Boolean(o.destaque), escrever: (v) => { o.destaque = v; } }),
+            ],
+          }),
+        ] }),
+        bloco('Rodapé', { filhos: [texto(pl, 'rodape', 'Frase abaixo das opções', { dica: 'Opcional. Ex.: pode começar por uma e subir depois.' })] }),
+      ];
+    },
+  },
+
+  /* ---------- calculadora de retorno ---------- */
+  {
+    id: 'roi', titulo: 'Calculadora de retorno', resumo: 'Cenários prontos para o cliente clicar e ver o retorno.',
+    alvo: '#roi', chaves: ['roi'], parte: 'roi',
+    montar: (p) => {
+      const r = p.roi ||= { cenarios: [] };
+      return [
+        bloco('Cabeçalho', { filhos: [
+          linha(texto(r, 'rotulo', 'Rótulo pequeno', { placeholder: 'Calculadora de retorno' }), texto(r, 'titulo', 'Título', { placeholder: 'Quanto o site pode trazer de volta' })),
+          texto(r, 'texto', 'Texto de apoio', { area: true, linhas: 2 }),
+        ] }),
+        bloco('Perguntas das réguas', { filhos: [
+          texto(r, 'rotuloTicket', 'Régua do valor', { placeholder: 'Quanto você cobra, em média, por um serviço' }),
+          texto(r, 'rotuloQuantidade', 'Régua da quantidade', { placeholder: 'Quantos clientes a mais por ano chegam pelo site' }),
+        ] }),
+        bloco('Cenários', { dica: 'Abre no marcado como inicial; sem marca, no do meio.', filhos: [
+          repetidor({
+            lista: (r.cenarios ||= []), nome: 'Cenário', max: 4,
+            novo: () => ({ nome: '', ticket: 0, quantidade: 0 }),
+            resumo: (c) => c.nome,
+            montar: (c, i, resumir) => [
+              texto(c, 'nome', 'Nome do botão', { placeholder: 'Cenário médio', aoMudar: resumir }),
+              linha(
+                texto(c, 'ticket', 'Valor de um serviço', { tipo: 'number', dica: 'Só o número. Ex.: 3000' }),
+                texto(c, 'quantidade', 'Clientes a mais por ano', { tipo: 'number' })),
+              chave({ rotulo: 'Cenário inicial', ler: () => Boolean(c.padrao), escrever: (v) => { c.padrao = v; } }),
+            ],
+          }),
+        ] }),
+        bloco('Resultado', { filhos: [
+          linha(
+            texto(r, 'investimento', 'Comparar com o valor', { tipo: 'number', dica: 'Vazio, usa a opção em destaque.' }),
+            texto(r, 'rotuloResultado', 'Rótulo do resultado', { placeholder: 'Em um ano' })),
+          texto(r, 'apoioResultado', 'Frase abaixo do número', { placeholder: 'a mais em serviços fechados' }),
+          texto(r, 'nota', 'Observação', { area: true, linhas: 2, dica: 'Ex.: é uma simulação, não uma promessa.' }),
+        ] }),
+      ];
+    },
+  },
+
+  /* ---------- programa de indicação ---------- */
+  {
+    id: 'indicacao', titulo: 'Programa de indicação', resumo: 'Quanto o cliente ganha por indicar e como funciona.',
+    alvo: '#indicacao', chaves: ['indicacao'], parte: 'indicacao',
+    montar: (p) => {
+      const ind = p.indicacao ||= { passos: [] };
+      return [
+        bloco('Valor', { filhos: [
+          linha(texto(ind, 'rotulo', 'Rótulo pequeno', { placeholder: 'Programa de indicação' }), texto(ind, 'valor', 'Valor grande', { placeholder: '$50' })),
+          texto(ind, 'regra', 'Regra', { area: true, linhas: 2, placeholder: 'por cliente indicado que fechar um serviço acima de $500' }),
+        ] }),
+        bloco('Explicação', { filhos: [
+          texto(ind, 'titulo', 'Título', { placeholder: 'Indicou, fechou, você ganha' }),
+          texto(ind, 'texto', 'Texto', { area: true, linhas: 3, dica: 'Enter separa parágrafos.' }),
+          linhas(ind, 'passos', 'Passos', { linhas: 4 }),
+          texto(ind, 'nota', 'Observação', { dica: 'Opcional. Linha menor no fim.' }),
+        ] }),
       ];
     },
   },

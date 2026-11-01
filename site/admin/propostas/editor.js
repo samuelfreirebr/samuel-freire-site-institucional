@@ -8,7 +8,7 @@
    com o modelo.
    ============================================================ */
 
-import { ctx, h, clonar, chave, ligarParte, texto } from './ui.js';
+import { ctx, h, clonar, chave, ligarParte, estaLigada, texto } from './ui.js';
 import { PASSOS, ligarPassos } from './passos.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -16,7 +16,8 @@ const $ = (s, r = document) => r.querySelector(s);
 // O que pertence ao modelo (o que toda proposta nova já traz).
 // Cliente, endereço, datas e situação são de cada proposta.
 const CAMPOS_MODELO = ['titulo', 'subtitulo', 'validade', 'escopo', 'inclui', 'processo', 'investimento', 'pagamento',
-  'condicoes', 'sobre', 'ecossistema', 'assinatura', 'encerramento', 'contato', 'faq', 'visivel', 'ordem', 'mensagemEnvio'];
+  'condicoes', 'sobre', 'ecossistema', 'assinatura', 'encerramento', 'contato', 'faq', 'visivel', 'ordem', 'mensagemEnvio',
+  'planos', 'roi', 'indicacao', 'escopoRotulo'];
 
 // Em que ponto o cliente está. A proposta é o registro do cliente:
 // contrato, briefing e produção penduram nela nas próximas etapas.
@@ -46,7 +47,7 @@ const suja = () => est.modo !== 'lista' && JSON.stringify(est.proposta) !== est.
 /* Seções que podem trocar de lugar na página (as mesmas do
    renderizador). As etapas do editor seguem essa ordem, para o que
    você vê à esquerda ser a sequência da página. */
-const ORDEM_PADRAO = ['escopo', 'inclui', 'processo', 'investimento', 'condicoes', 'sobre', 'ecossistema', 'encerramento', 'faq'];
+const ORDEM_PADRAO = ['escopo', 'inclui', 'processo', 'planos', 'roi', 'investimento', 'indicacao', 'condicoes', 'sobre', 'ecossistema', 'encerramento', 'faq'];
 const ordemDe = (p) => [...new Set([...(Array.isArray(p?.ordem) ? p.ordem.filter((x) => ORDEM_PADRAO.includes(x)) : []), ...ORDEM_PADRAO])];
 const passos = () => {
   const base = PASSOS.filter((p) => est.modo !== 'modelo' || !p.soProposta);
@@ -427,7 +428,7 @@ function pintarNav() {
   nav.append(h('p', { class: 'ed-nav__rot' }, est.modo === 'modelo' ? 'Seções do modelo' : 'Etapas'));
   const ol = h('ol', { class: 'ed-nav__lista' });
   passos().forEach((ps, i) => {
-    const oculta = ps.parte && p.visivel?.[ps.parte] === false;
+    const oculta = ps.parte && !estaLigada(p, ps.parte);
     const falta = faltaEm(ps, p);
     const feito = est.visitados.has(i) && !falta;
     let estado = '';
@@ -471,14 +472,14 @@ function pintarPasso() {
   if (ps.parte) {
     acoesCab.append(chave({
       rotulo: 'Mostrar na proposta', grande: true,
-      ler: () => p.visivel?.[ps.parte] !== false,
+      ler: () => estaLigada(p, ps.parte),
       escrever: (v) => {
         ligarParte(p, ps.parte, v);
         corpo.classList.toggle('ed-desligado', !v);
         pintarNav();
       },
     }));
-    corpo.classList.toggle('ed-desligado', p.visivel?.[ps.parte] === false);
+    corpo.classList.toggle('ed-desligado', !estaLigada(p, ps.parte));
   }
   if (ps.chaves && est.modo === 'proposta') {
     acoesCab.append(h('button', { type: 'button', class: 'mini', onclick: () => restaurar(ps), title: 'Volta os textos desta etapa para os do modelo' }, 'Restaurar texto padrão'));
@@ -525,7 +526,7 @@ function montarRevisao() {
   const lista = passos().slice(0, -1);
   const itens = lista.map((ps) => {
     const i = passos().indexOf(ps);
-    const oculta = ps.parte && p.visivel?.[ps.parte] === false;
+    const oculta = ps.parte && !estaLigada(p, ps.parte);
     const falta = faltaEm(ps, p);
     return h('li', {},
       h('button', { type: 'button', class: 'ed-rev__item', 'data-tipo': falta ? 'falta' : oculta ? 'oculta' : 'ok', onclick: () => irPara(i) },

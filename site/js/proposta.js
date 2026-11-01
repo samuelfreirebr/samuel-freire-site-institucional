@@ -77,4 +77,44 @@
     var primeira = faq.querySelector('details');
     if (primeira && !faq.querySelector('details[open]')) primeira.open = true;
   }, true);
+
+  /* Calculadora de retorno: o servidor já escreveu a conta do cenário
+     inicial; aqui ela é refeita quando o cliente clica num cenário ou
+     mexe nas réguas. Mexer na régua desmarca o cenário. */
+  document.querySelectorAll('[data-roi]').forEach(function (raiz) {
+    var inv = Number(raiz.getAttribute('data-investimento')) || 0;
+    var moeda = raiz.getAttribute('data-moeda') || '$';
+    var fmt = new Intl.NumberFormat(moeda === 'R$' ? 'pt-BR' : 'en-US', { maximumFractionDigits: 0 });
+    var dinheiro = function (n) { return moeda + (moeda.length > 1 ? ' ' : '') + fmt.format(n); };
+    var entrada = function (k) { return raiz.querySelector('[data-entrada="' + k + '"]'); };
+    var saida = function (k, v) { var el = raiz.querySelector('[data-saida="' + k + '"]'); if (el) el.textContent = v; };
+
+    function contar() {
+      var t = Number(entrada('ticket').value) || 0;
+      var q = Number(entrada('quantidade').value) || 0;
+      var total = t * q;
+      saida('ticket', dinheiro(t));
+      saida('quantidade', String(q));
+      saida('total', dinheiro(total));
+      if (inv > 0 && t > 0) {
+        var paga = Math.max(1, Math.ceil(inv / t));
+        saida('paga', paga + (paga === 1 ? ' serviço' : ' serviços'));
+        saida('vezes', Math.floor(total / inv) + 'x');
+      }
+    }
+
+    raiz.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-cenario]');
+      if (!b) return;
+      entrada('ticket').value = b.getAttribute('data-ticket');
+      entrada('quantidade').value = b.getAttribute('data-quantidade');
+      raiz.querySelectorAll('[data-cenario]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      contar();
+    });
+    raiz.addEventListener('input', function (e) {
+      if (!e.target.matches('[data-entrada]')) return;
+      raiz.querySelectorAll('[data-cenario]').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+      contar();
+    });
+  });
 })();
