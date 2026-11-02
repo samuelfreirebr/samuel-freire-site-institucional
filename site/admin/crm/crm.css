@@ -351,10 +351,47 @@ dialog.busca[open] { inset: 12vh 0 auto; margin: 0 auto; width: min(92vw, 620px)
 .busca__dica { padding: var(--sp-2xs) var(--sp-sm); color: var(--muted); font-size: var(--t-eyebrow); }
 
 input[type="date"] { width: 100%; padding: .7em .85em; font: inherit; line-height: 1.5; color: var(--ink); border: var(--hair) solid var(--line-2); border-radius: var(--radius-img); background: var(--bg); }
-.jt-check { margin-bottom: var(--sp-md); }
-.jt-rotulo { display: block; font-size: var(--t-small); font-weight: var(--w-semi); margin-bottom: var(--sp-2xs); }
-#jt-itens { display: grid; gap: 2px; margin-bottom: var(--sp-2xs); }
-#jt-itens label { display: flex; align-items: center; gap: .55em; margin: 0; font-size: var(--t-small); cursor: pointer; }
+/* Janela da tarefa: título grande, propriedades em linhas com ícone,
+   depois seções (Detalhes, Checklist, Claude), cada uma com cabeçalho. */
+#jan-tarefa { width: min(92vw, var(--jt-largura)); }
+:root { --jt-largura: 760px; --jt-nome: 1.6rem; --jt-coluna-nome: 128px; }
+.jt { display: grid; gap: var(--sp-md); }
+.jt label { margin: 0; }
+.jt-nome { min-height: 0; padding: 0; border: 0; resize: none; overflow: hidden; background: none; font-size: var(--jt-nome); font-weight: var(--w-bold); line-height: 1.25; letter-spacing: -.02em; }
+.jt-nome:focus-visible { outline: none; box-shadow: 0 2px 0 var(--brand); }
+.jt-props { display: grid; gap: 2px var(--sp-md); padding: var(--sp-sm) 0; border-block: var(--hair) solid var(--line); }
+@media (min-width: 700px) { .jt-props { grid-template-columns: 1fr 1fr; } }
+.jt-props__cheia { grid-column: 1 / -1; }
+.jt-props__cheia[hidden] { display: none; }
+.jt-prop { display: grid !important; grid-template-columns: var(--jt-coluna-nome) minmax(0, 1fr); align-items: center; gap: var(--sp-2xs); min-height: 2.6rem; }
+.jt-prop > .jt-prop__nome { display: flex; align-items: center; gap: .55em; margin: 0; color: var(--muted); font-size: var(--t-small); font-weight: var(--w-medium); }
+.jt-prop__nome .ico { width: 1rem; height: 1rem; flex: none; }
+.jt-prop select, .jt-prop input { width: auto; max-width: 100%; justify-self: start; padding: .35em .75em; border: var(--hair) solid transparent; border-radius: 6px; background-color: transparent; font-size: var(--t-small); font-weight: var(--w-semi); cursor: pointer; }
+.jt-prop select:hover, .jt-prop input:hover { background-color: var(--bg-2); }
+/* Situação vira etiqueta colorida; prioridade, bolinha na frente. */
+.jt-prop select[name="estado"] { padding-inline: .9em; border-radius: var(--radius-pill); background-color: var(--bg-2); text-transform: uppercase; letter-spacing: .06em; font-size: var(--t-eyebrow); }
+.jt-prop select[data-valor="andamento"] { background-color: var(--brand); color: var(--brand-ink); }
+.jt-prop select[data-valor="aguardando"] { background-color: var(--ink-2); color: var(--bg); }
+.jt-prop select[data-valor="feita"] { background-color: var(--ink); color: var(--bg); }
+.jt-prop select[name="prioridade"] { padding-left: 1.6em; background-image: radial-gradient(circle, var(--jt-prio, var(--meta)) 3.5px, transparent 4px); background-repeat: no-repeat; background-position: .55em 50%; background-size: 10px 10px; }
+.jt-prop select[data-valor="urgente"] { --jt-prio: var(--brand); color: var(--brand); }
+.jt-prop select[data-valor="alta"] { --jt-prio: var(--ink); }
+.jt-prop select[data-valor="baixa"] { --jt-prio: var(--line-2); color: var(--muted); }
+.jt-secao { display: grid; gap: var(--sp-2xs); }
+.jt-secao + .jt-secao { padding-top: var(--sp-md); border-top: var(--hair) solid var(--line); }
+.jt-secao__h { display: flex; align-items: center; gap: .55em; margin: 0; font-size: var(--t-eyebrow); font-weight: var(--w-bold); letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+.jt-secao__h .ico { width: 1rem; height: 1rem; color: var(--brand); }
+.jt-secao__h small { margin-left: auto; color: var(--muted); letter-spacing: 0; text-transform: none; font-weight: var(--w-semi); }
+.jt-secao textarea { border-color: transparent; background: var(--bg-2); line-height: 1.6; }
+.jt-secao textarea:focus { background: var(--bg); border-color: var(--line-2); }
+.jt-secao > small { color: var(--muted); font-size: var(--t-eyebrow); }
+.jt-secao--claude select { justify-self: start; width: auto; }
+.jt-barra { height: 4px; border-radius: var(--radius-pill); background: var(--bg-2); overflow: hidden; }
+.jt-barra[hidden] { display: none; }
+.jt-barra i { display: block; height: 100%; background: var(--brand); transition: width var(--d-fast); }
+#jt-itens { display: grid; gap: 2px; }
+#jt-itens label { display: flex; align-items: center; gap: .55em; margin: 0; padding: .35em .5em; border-radius: 6px; font-size: var(--t-small); cursor: pointer; }
+#jt-itens label:hover { background: var(--bg-2); }
 #jt-itens input { accent-color: var(--ink); width: 1rem; height: 1rem; }
 #jt-itens input:checked + span { color: var(--muted); text-decoration: line-through; }
 .jt-nota-claude { padding: var(--sp-sm); border-left: var(--hair-2) solid var(--brand); background: var(--brand-wash); font-size: var(--t-small); white-space: pre-line; }

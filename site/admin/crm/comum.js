@@ -2,6 +2,8 @@
    datas, a lista de tarefas, o editor de tarefa, a busca rápida
    (Ctrl/Cmd+K) e o pedido pronto para o Claude Code. */
 
+import { ico } from '../icones.js';
+
 /* ---------- Central de ajustes ---------- */
 export const DIAS_LEAD_PARADO = 7;     // lead sem movimento há este tanto de dias vira "parado"
 export const DIAS_PROXIMAS = 14;       // janela das "próximas entregas"
@@ -292,33 +294,43 @@ function janelaTarefa() {
   d = document.createElement('dialog');
   d.id = 'jan-tarefa';
   d.setAttribute('aria-labelledby', 'jt-titulo');
+  const op = (nomes) => Object.entries(nomes).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  const prop = (icone, nome, campo) => `<label class="jt-prop"><span class="jt-prop__nome">${ico(icone).outerHTML}${nome}</span>${campo}</label>`;
   d.innerHTML = `
     <header class="modal__topo"><b id="jt-titulo">Tarefa</b>
       <button class="mini mini--ativo" type="submit" form="jt-form">Salvar</button>
       <button class="mini" type="button" data-fechar>Fechar</button></header>
     <div class="modal__corpo">
-      <form id="jt-form">
-        <label><span>O que fazer</span><input type="text" name="titulo" required maxlength="300"></label>
-        <label id="jt-cliente-campo"><span>Cliente</span><select name="cliente"></select></label>
-        <div class="linha linha--3">
-          <label><span>Prazo</span><input type="date" name="prazo"></label>
-          <label><span>Prioridade</span><select name="prioridade">${Object.entries(NOMES.prioridade).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
-          <label><span>Situação</span><select name="estado">${Object.entries(NOMES.estado).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+      <form id="jt-form" class="jt">
+        <textarea class="jt-nome" name="titulo" rows="1" required maxlength="300" placeholder="O que fazer" aria-label="O que fazer"></textarea>
+        <div class="jt-props">
+          <div id="jt-cliente-campo" class="jt-props__cheia">${prop('clientes', 'Cliente', '<select name="cliente"></select>')}</div>
+          ${prop('situacao', 'Situação', `<select name="estado" class="jt-valor">${op(NOMES.estado)}</select>`)}
+          ${prop('calendario', 'Prazo', '<input type="date" name="prazo" class="jt-valor">')}
+          ${prop('bandeira', 'Prioridade', `<select name="prioridade" class="jt-valor">${op(NOMES.prioridade)}</select>`)}
+          ${prop('modelo', 'Tipo', '<select name="tipo" class="jt-valor"><option value="tarefa">Tarefa</option><option value="entrega">Entrega para o cliente</option></select>')}
         </div>
-        <label><span>Tipo</span><select name="tipo"><option value="tarefa">Tarefa</option><option value="entrega">Entrega para o cliente</option></select></label>
-        <label><span>Detalhes</span><textarea name="descricao" rows="3" maxlength="4000" placeholder="O que precisa saber para fazer"></textarea></label>
-        <div class="jt-check">
-          <span class="jt-rotulo">Checklist</span>
+        <section class="jt-secao">
+          <h3 class="jt-secao__h">${ico('nota').outerHTML}Detalhes</h3>
+          <textarea name="descricao" rows="4" maxlength="4000" placeholder="O que precisa saber para fazer" aria-label="Detalhes"></textarea>
+        </section>
+        <section class="jt-secao">
+          <h3 class="jt-secao__h">${ico('tarefas').outerHTML}Checklist <small id="jt-conta"></small></h3>
+          <div class="jt-barra" hidden><i id="jt-barra"></i></div>
           <ul id="jt-itens"></ul>
           <div class="fc-add"><input type="text" id="jt-novo-item" placeholder="Novo item" maxlength="300" aria-label="Novo item do checklist"><button class="mini" type="button" id="jt-add-item">Adicionar item</button></div>
-        </div>
-        <label><span>Claude</span><select name="claude"><option value="">Fora da fila</option>${Object.entries(NOMES.claude).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
-          <small>"Na fila" quer dizer: quando você pedir "pega a fila do CRM", o Claude começa por esta.</small></label>
-        <p class="jt-nota-claude" id="jt-nota-claude" hidden></p>
+        </section>
+        <section class="jt-secao jt-secao--claude">
+          <h3 class="jt-secao__h">${ico('ia').outerHTML}Claude</h3>
+          <select name="claude" aria-label="Claude"><option value="">Fora da fila</option>${op(NOMES.claude)}</select>
+          <small>"Na fila" quer dizer: quando você pedir "pega a fila do CRM", o Claude começa por esta.</small>
+          <p class="jt-nota-claude" id="jt-nota-claude" hidden></p>
+        </section>
       </form>
     </div>`;
   document.body.append(d);
   $('[data-fechar]', d).onclick = () => d.close();
+  addEventListener('resize', () => { if (d.open) $('.jt-nome', d).dispatchEvent(new Event('input')); });
   return d;
 }
 
@@ -342,11 +354,29 @@ export function abrirTarefa({ cliente = null, tarefa = null, clientes = [], aoSa
   nota.hidden = !t.notaClaude;
   nota.textContent = t.notaClaude ? `Nota do Claude: ${t.notaClaude}` : '';
 
+  // O título cresce com o texto; Enter salva em vez de quebrar linha.
+  const nome = f.elements.titulo;
+  const crescer = () => { nome.style.height = 'auto'; nome.style.height = nome.scrollHeight + 'px'; };
+  nome.oninput = crescer;
+  nome.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); f.requestSubmit(); } };
+
+  // Situação e prioridade ganham a cor do valor escolhido.
+  const pintar = () => { for (const k of ['estado', 'prioridade']) f.elements[k].dataset.valor = f.elements[k].value; };
+  pintar();
+  f.elements.estado.onchange = f.elements.prioridade.onchange = pintar;
+
+  const contar = () => {
+    const feitos = t.checklist.filter((i) => i.feito).length, total = t.checklist.length;
+    $('#jt-conta', d).textContent = total ? `${feitos} de ${total}` : '';
+    $('.jt-barra', d).hidden = !total;
+    $('#jt-barra', d).style.width = total ? `${(feitos / total) * 100}%` : '0';
+  };
   const desenharItens = () => {
     $('#jt-itens', d).innerHTML = t.checklist.map((i, n) => `<li><label><input type="checkbox" data-n="${n}"${i.feito ? ' checked' : ''}> <span>${esc(i.texto)}</span></label></li>`).join('');
+    contar();
   };
   desenharItens();
-  $('#jt-itens', d).onchange = (e) => { const n = e.target.dataset.n; if (n !== undefined) t.checklist[n].feito = e.target.checked; };
+  $('#jt-itens', d).onchange = (e) => { const n = e.target.dataset.n; if (n !== undefined) { t.checklist[n].feito = e.target.checked; contar(); } };
   const addItem = () => {
     const v = $('#jt-novo-item', d).value.trim();
     if (!v) return;
@@ -368,7 +398,8 @@ export function abrirTarefa({ cliente = null, tarefa = null, clientes = [], aoSa
     } catch (err) { avisar(err.message, 'erro'); }
   };
   d.showModal();
-  f.elements.titulo.focus();
+  requestAnimationFrame(crescer);
+  nome.focus();
 }
 
 /* ---------- Claude Code ---------- */

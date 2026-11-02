@@ -40,6 +40,9 @@ const DESENHOS = {
   sino: 'M4 11V7a4 4 0 0 1 8 0v4l1.5 1.5h-11z M6.5 13.5a1.5 1.5 0 0 0 3 0',
   recolher: 'M2.5 2.5h11v11h-11z M6 2.5v11 M10.5 6 8.5 8l2 2',
   externo: 'M9 3h4v4 M13 3 7 9 M11 9.5V13H3V5h3.5',
+  // Janela da tarefa (crm/comum.js)
+  bandeira: 'M3.5 14V2.5 M3.5 3h8.5l-2 3 2 3H3.5',
+  situacao: 'M8 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
 };
 
 export function ico(nome) {
