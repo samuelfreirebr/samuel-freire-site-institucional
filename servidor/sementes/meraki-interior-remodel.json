@@ -1,0 +1,234 @@
+{
+  "id": "meraki-interior-remodel",
+  "cliente": "Meraki Interior Remodel",
+  "preparadaPara": "Georgea",
+  "data": "3 de novembro de 2026",
+  "validade": "5 dias",
+  "idioma": "pt-BR",
+  "publicada": true,
+  "titulo": "Proposta única e individual",
+  "subtitulo": "Detalhamento completo do escopo, das opções de investimento e das condições do projeto.",
+  "escopoRotulo": "Escopo do projeto",
+  "escopo": [
+    {
+      "titulo": "Design do site",
+      "descricao": "Layout de todas as páginas, desenhado para computador e para celular, seguindo a sua visão: minimalista, delicado e organizado, com 70% estático e 30% de animação. Página inicial, piso, banheiro, cozinha, sobre a empresa, galeria de projetos, blog e contato.",
+      "marca": "Design",
+      "icone": "pena"
+    },
+    {
+      "titulo": "Desenvolvimento",
+      "descricao": "Website personalizado, responsivo para telas, formulário de consulta, blog com painel simples para você publicar e publicação no domínio já existente, numa estrutura mais simples que a atual.",
+      "marca": "Desenvolvimento",
+      "icone": "codigo"
+    },
+    {
+      "titulo": "Textos do site",
+      "descricao": "Copy de todas as páginas escrita por mim a partir do briefing e das ideias que você já tem, em inglês, pensada para chamar quem procura o seu serviço no Google.",
+      "marca": "Copy",
+      "icone": "documento"
+    },
+    {
+      "titulo": "SEO",
+      "descricao": "Ranqueamento no Google, com foco em piso: título e descrição de cada página, arquivo robots.txt, sitemap.xml, marcação de empresa local (schema), textos alternativos nas imagens, endereços organizados, cadastro no Google Search Console e otimização de velocidade.",
+      "marca": "Google",
+      "icone": "lupa"
+    }
+  ],
+  "planos": {
+    "rotulo": "Investimento",
+    "titulo": "Escolha a opção ideal para você",
+    "texto": "Todas as etapas são necessárias, escolha a que funciona melhor para você.",
+    "moeda": "R$",
+    "botao": "Quero esta opção",
+    "legendaParcelas": "50% no início do projeto, 50% no final do projeto.",
+    "rodape": "Pode começar por uma opção e subir depois. Você paga só a diferença.",
+    "itens": [
+      {
+        "nome": "Estrutura inicial",
+        "para": "Estrutura inicial básica.",
+        "valor": 5194,
+        "parcelas": 2,
+        "itens": [
+          "Site recriado do zero, com visual novo",
+          "Versão de celular ajustada tela por tela",
+          "Páginas de piso, banheiro e cozinha",
+          "Blog com painel simples para publicar",
+          "2 rodadas de ajustes"
+        ]
+      },
+      {
+        "nome": "Projeto ideal",
+        "selo": "Recomendada",
+        "para": "Escopo completo conversado no WhatsApp.",
+        "valor": 5974,
+        "parcelas": 2,
+        "destaque": true,
+        "itens": [
+          "Tudo da opção 01",
+          "Textos de todas as páginas escritos por mim, em inglês, pensados para o Google",
+          "[Recomendado] SEO completo com foco em piso: títulos e descrições de cada página, arquivo robots.txt, sitemap.xml, marcação de empresa local (schema), textos alternativos nas imagens, endereços organizados e cadastro no Google Search Console",
+          "[Recomendado] Kit para criar o Instagram e o Facebook com o mesmo design do site: foto de perfil, capa e banner do Facebook, capas dos destaques e bio nova",
+          "Migração dos posts que já estão publicados no blog",
+          "Painel de visitantes do site, com gravação de tela das visitas para ver onde as pessoas clicam",
+          "Rastreadores instalados: Google Tag Manager, Google Analytics e contagem de pedidos de consulta",
+          "Otimização de velocidade",
+          "3 rodadas de ajustes"
+        ]
+      },
+      {
+        "nome": "Projeto completo",
+        "para": "Para quem quer o Google trazendo clientes em toda a região atendida.",
+        "valor": 9974,
+        "parcelas": 2,
+        "itens": [
+          "Tudo da opção 02",
+          "Páginas para as cidades que você atende, para o Google entender onde você trabalha",
+          "Blog no website com publicações semanais por 2 meses",
+          "Desenvolvimento do cartão de indicação para entregar no fim de cada obra",
+          "Folder comercial para apresentar o trabalho na visita ao cliente",
+          "5 rodadas de ajustes",
+          "60 dias de suporte depois de entregue"
+        ]
+      }
+    ]
+  },
+  "roi": {
+    "rotulo": "Calculadora de retorno",
+    "titulo": "Quanto o site pode trazer de volta",
+    "texto": "Clique num cenário ou mexa nas réguas com os seus números. Não precisa ser exato.",
+    "rotuloTicket": "Quanto você cobra, em média, por um projeto",
+    "rotuloQuantidade": "Quantos clientes a mais por ano chegam pelo site e pelo Google",
+    "cenarios": [
+      {
+        "nome": "Cenário ruim",
+        "ticket": 30000,
+        "quantidade": 2
+      },
+      {
+        "nome": "Cenário médio",
+        "ticket": 60000,
+        "quantidade": 4,
+        "padrao": true
+      },
+      {
+        "nome": "Cenário bom",
+        "ticket": 120000,
+        "quantidade": 6
+      }
+    ],
+    "rotuloResultado": "Em um ano",
+    "apoioResultado": "a mais em projetos fechados",
+    "nota": "É uma simulação para ter uma ideia, não uma promessa. O resultado depende da região e do atendimento."
+  },
+  "processo": {
+    "rotulo": "Daqui para frente",
+    "titulo": "Próximos passos",
+    "etapas": [
+      {
+        "titulo": "Você escolhe",
+        "texto": "Me diz qual opção faz mais sentido agora.",
+        "icone": "check"
+      },
+      {
+        "titulo": "Briefing e onboarding",
+        "texto": "Envio um briefing completo para você informar tudo: serviços, fotos, referências, as ideias de texto que você já tem e o acesso ao domínio e ao código.",
+        "icone": "documento"
+      },
+      {
+        "titulo": "Direção visual",
+        "texto": "Apresento cores, fontes, estilo das fotos e a cara do site. Só sigo depois do seu aprovado.",
+        "icone": "pena"
+      },
+      {
+        "titulo": "Desenvolvimento",
+        "texto": "Parto para o desenvolvimento das soluções listadas na opção escolhida. Você acompanha num link de teste.",
+        "icone": "codigo"
+      },
+      {
+        "titulo": "Ajustes",
+        "texto": "Você aprova cada rodada de ajustes, dentro do número de rodadas da opção escolhida.",
+        "icone": "ferramenta"
+      },
+      {
+        "titulo": "Entrega e suporte",
+        "texto": "Site publicado no seu domínio, com entrega completa e suporte contínuo.",
+        "icone": "caixa"
+      }
+    ]
+  },
+  "condicoes": [
+    {
+      "titulo": "Prazo médio: 30 dias úteis",
+      "texto": "Contados a partir do briefing completo, com fotos e acessos.\nComeçando em novembro, o site fica pronto antes de 1º de janeiro."
+    },
+    {
+      "titulo": "Rodadas de ajustes",
+      "texto": "Cada rodada é uma lista única com tudo o que você quer mudar naquela etapa, enviada de uma vez.\nMudar algo que já foi aprovado, refazer uma etapa ou pedir página nova fica fora das rodadas e é orçado à parte."
+    },
+    {
+      "titulo": "Aprovação e tempo de resposta",
+      "texto": "Etapa aprovada por escrito é etapa fechada.\nSe uma etapa ficar mais de 5 dias úteis sem resposta, o projeto pausa e volta para a fila quando você responder."
+    },
+    {
+      "titulo": "Comunicação",
+      "texto": "Atualização do andamento toda terça e sexta, e resposta em até 1 dia útil.\nSe algo for atrasar, não for viável ou não funcionar para o objetivo do site, eu aviso na hora."
+    },
+    {
+      "titulo": "Pagamento",
+      "texto": "Nas três opções, em 2 vezes: metade no início e metade na entrega."
+    }
+  ],
+  "encerramento": "Vamos colocar o novo site da Meraki no ar?",
+  "contato": {
+    "texto": "Escolha a opção e me chame por aqui. Se ficou alguma dúvida, as respostas estão logo abaixo.",
+    "rotulo": "Falar no WhatsApp",
+    "mensagem": "Oi, Samuel! Vi a proposta e quero fechar."
+  },
+  "faq": {
+    "rotulo": "Perguntas frequentes",
+    "titulo": "O que você pode estar pensando",
+    "itens": [
+      {
+        "pergunta": "Você usa inteligência artificial?",
+        "resposta": "Uso como ferramenta, para ganhar velocidade em partes técnicas e testar variações. A direção, o design, os textos e o acabamento de cada página são meus, a partir das suas referências."
+      },
+      {
+        "pergunta": "Por que refazer em vez de arrumar o site atual?",
+        "resposta": "O site atual depende de um banco de dados ao qual você não tem acesso, e isso deixa tudo mais complicado do que precisa. Refeito do zero, ele fica mais simples, mais rápido e totalmente na sua mão."
+      },
+      {
+        "pergunta": "O blog continua?",
+        "resposta": "Continua, com um painel simples para você publicar sozinha. Na opção 02, os posts que já estão no ar são migrados para o site novo."
+      },
+      {
+        "pergunta": "Dá para estar no ar até 1º de janeiro?",
+        "resposta": "Dá. Com o briefing completo ainda em novembro, o site fica pronto antes disso, já testado e funcionando."
+      },
+      {
+        "pergunta": "Posso começar pela opção 01 e mudar depois?",
+        "resposta": "Pode. Quando quiser subir, você paga só a diferença."
+      }
+    ]
+  },
+  "ordem": [
+    "escopo",
+    "planos",
+    "roi",
+    "processo",
+    "condicoes",
+    "sobre",
+    "encerramento",
+    "faq"
+  ],
+  "visivel": {
+    "planos": true,
+    "roi": true,
+    "indicacao": false,
+    "inclui": false,
+    "investimento": false,
+    "pagamento": false,
+    "conta": false,
+    "ecossistema": false
+  }
+}
