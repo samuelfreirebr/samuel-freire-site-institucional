@@ -203,7 +203,10 @@ export const PASSOS = [
             ],
           }),
         ] }),
-        bloco('Rodapé', { filhos: [texto(pl, 'rodape', 'Frase abaixo das opções', { dica: 'Opcional. Ex.: pode começar por uma e subir depois.' })] }),
+        bloco('Rodapé', { filhos: [
+          texto(pl, 'legendaParcelas', 'Legenda do parcelado', { dica: 'Opcional. Aparece embaixo do total nas opções parceladas. Ex.: 50% no início do projeto, 50% no final.' }),
+          texto(pl, 'rodape', 'Frase abaixo das opções', { dica: 'Opcional. Ex.: pode começar por uma e subir depois.' }),
+        ] }),
       ];
     },
   },

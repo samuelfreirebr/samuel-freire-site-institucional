@@ -1,0 +1,227 @@
+{
+  "id": "south-legacy-construction",
+  "cliente": "South Legacy Construction",
+  "preparadaPara": "South Legacy Construction",
+  "data": "2 de novembro de 2026",
+  "validade": "5 dias",
+  "idioma": "pt-BR",
+  "publicada": true,
+  "titulo": "Proposta única e individual",
+  "subtitulo": "Detalhamento completo do escopo, das opções de investimento e das condições do projeto.",
+  "escopoRotulo": "Escopo do projeto",
+  "escopo": [
+    {
+      "titulo": "Design do site",
+      "descricao": "Layout de todas as páginas, desenhado para computador e para celular: página inicial, página de cada serviço (incluindo as 3 categorias novas), sobre a empresa, galeria de projetos e contato.",
+      "marca": "Design",
+      "icone": "pena"
+    },
+    {
+      "titulo": "Desenvolvimento",
+      "descricao": "Website personalizado, responsivo para telas, formulário de orçamento, avaliações do Google integradas e publicação no domínio já existente.",
+      "marca": "Desenvolvimento",
+      "icone": "codigo"
+    },
+    {
+      "titulo": "SEO",
+      "descricao": "Ranqueamento no Google: título e descrição de cada página, arquivo robots.txt, sitemap.xml, marcação de empresa local (schema), textos alternativos nas imagens, endereços organizados, cadastro no Google Search Console e otimização de velocidade.",
+      "marca": "Google",
+      "icone": "lupa"
+    }
+  ],
+  "planos": {
+    "rotulo": "Investimento",
+    "titulo": "Escolha a opção ideal para vocês",
+    "texto": "Todas as etapas são necessárias, escolha a que melhor para vocês.",
+    "moeda": "$",
+    "botao": "Quero esta opção",
+    "rodape": "Pode começar por uma opção e subir depois. Vocês pagam só a diferença.",
+    "itens": [
+      {
+        "nome": "Estrutura inicial",
+        "para": "Estrutura inicial básica.",
+        "valor": 348,
+        "parcelas": 2,
+        "itens": [
+          "Site recriado do zero, com visual novo",
+          "Versão de celular ajustada tela por tela",
+          "3 categorias de novos serviços",
+          "2 rodadas de ajustes"
+        ]
+      },
+      {
+        "nome": "Projeto ideal",
+        "selo": "Recomendada",
+        "para": "Escopo completo conversado no WhatsApp.",
+        "valor": 394,
+        "parcelas": 2,
+        "destaque": true,
+        "itens": [
+          "Tudo da opção 01",
+          "Uma página separada para cada serviço, para aparecer na busca de cada um",
+          "Manual de marca com as versões completas da logo",
+          "[Recomendado] SEO completo do site: títulos e descrições de cada página, arquivo robots.txt, sitemap.xml, marcação de empresa local (schema), textos alternativos nas imagens, endereços organizados e cadastro no Google Search Console",
+          "[Recomendado] Kit para criar o Instagram e o Facebook: foto de perfil, capa e banner do Facebook, capas dos destaques, logo adaptada e bio nova",
+          "Painel de visitantes do site, com gravação de tela das visitas para ver onde as pessoas clicam",
+          "Rastreadores instalados: Google Tag Manager, Google Analytics e contagem de cliques no botão de ligar",
+          "Otimização de velocidade",
+          "3 rodadas de ajustes"
+        ]
+      },
+      {
+        "nome": "Projeto completo",
+        "para": "Para quem quer o Google trabalhando a favor em toda a região atendida.",
+        "valor": 698,
+        "parcelas": 2,
+        "itens": [
+          "Tudo da opção 02",
+          "Páginas para as cidades que vocês atendem, para o Google entender onde vocês trabalham",
+          "Blog no website com publicações semanais por 2 meses",
+          "Desenvolvimento do cartão de indicação para entregar no fim de cada obra",
+          "5 rodadas de ajustes",
+          "60 dias de suporte depois de entregue"
+        ]
+      }
+    ],
+    "legendaParcelas": "50% no início do projeto, 50% no final do projeto."
+  },
+  "roi": {
+    "rotulo": "Calculadora de retorno",
+    "titulo": "Quanto o site pode trazer de volta",
+    "texto": "Clique num cenário ou mexa nas réguas com os seus números. Não precisa ser exato.",
+    "rotuloTicket": "Quanto vocês cobram, em média, por um serviço",
+    "rotuloQuantidade": "Quantos clientes a mais por ano chegam pelo site e pelo Google",
+    "cenarios": [
+      {
+        "nome": "Cenário ruim",
+        "ticket": 2000,
+        "quantidade": 2
+      },
+      {
+        "nome": "Cenário médio",
+        "ticket": 5000,
+        "quantidade": 4,
+        "padrao": true
+      },
+      {
+        "nome": "Cenário bom",
+        "ticket": 8000,
+        "quantidade": 8
+      }
+    ],
+    "rotuloResultado": "Em um ano",
+    "apoioResultado": "a mais em serviços fechados",
+    "nota": "É uma simulação para ter uma ideia, não uma promessa. O resultado depende da região e do atendimento."
+  },
+  "indicacao": {
+    "rotulo": "Programa de indicação",
+    "valor": "$50",
+    "regra": "para cada cliente indicado por vocês que fechar um serviço acima de $500 com a gente.",
+    "titulo": "Indicou, fechou, vocês ganham",
+    "texto": "Vocês conhecem muita gente da construção na região. Se alguém precisar de site, Google ou material da empresa, passa o meu contato.",
+    "passos": [
+      "Vocês passam o meu WhatsApp para a pessoa, ou me mandam o contato dela",
+      "Ela fecha um serviço acima de $500",
+      "Quando ela pagar, eu mando os $50"
+    ],
+    "nota": "Sem limite de indicações. Vale enquanto o site estiver com a gente."
+  },
+  "processo": {
+    "rotulo": "Daqui para frente",
+    "titulo": "Próximos passos",
+    "etapas": [
+      {
+        "titulo": "Vocês escolhem",
+        "texto": "Me dizem qual opção faz mais sentido agora.",
+        "icone": "check"
+      },
+      {
+        "titulo": "Briefing e onboarding",
+        "texto": "Enviamos um briefing completo para vocês informarem tudo: serviços, as 3 categorias novas, fotos, textos e referências.",
+        "icone": "documento"
+      },
+      {
+        "titulo": "Desenvolvimento",
+        "texto": "Partimos para o desenvolvimento das soluções listadas no plano escolhido.",
+        "icone": "codigo"
+      },
+      {
+        "titulo": "Ajustes",
+        "texto": "Vocês aprovam cada rodada de ajustes, dentro do número de rodadas da opção escolhida.",
+        "icone": "ferramenta"
+      },
+      {
+        "titulo": "Entrega e suporte",
+        "texto": "Site publicado no domínio de vocês, com entrega completa e suporte contínuo.",
+        "icone": "caixa"
+      }
+    ]
+  },
+  "condicoes": [
+    {
+      "titulo": "Prazo médio: 12 dias úteis",
+      "texto": "Contados a partir de quando eu tiver as fotos e as informações das categorias novas."
+    },
+    {
+      "titulo": "Rodadas de ajustes",
+      "texto": "Cada rodada é uma lista única com tudo o que vocês querem mudar, enviada de uma vez.\nMudar algo que já foi aprovado ou pedir página nova fica fora das rodadas e é orçado à parte."
+    },
+    {
+      "titulo": "Pagamento",
+      "texto": "Nas três opções, em 2 vezes: metade no início e metade na entrega."
+    }
+  ],
+  "encerramento": "Vamos colocar o novo site da South Legacy no ar?",
+  "contato": {
+    "texto": "Escolha a opção e me chame por aqui. Se ficou alguma dúvida, as respostas estão logo abaixo.",
+    "rotulo": "Falar no WhatsApp",
+    "mensagem": "Oi, Samuel! Vi a proposta e quero fechar."
+  },
+  "faq": {
+    "rotulo": "Perguntas frequentes",
+    "titulo": "O que vocês podem estar pensando",
+    "itens": [
+      {
+        "pergunta": "Se o cliente liga pelo Google, por que mexer no site?",
+        "resposta": "Porque antes de ligar, boa parte das pessoas clica no site que aparece no perfil do Google para ver fotos e serviços. Quando o número do site e o do Google são o mesmo, essa ligação parece ter vindo só do Google. Hoje não há medição nenhuma no site, então não dá para saber quantas dessas ligações passaram por ele. Nas opções 02 e 03 isso passa a ser contado."
+      },
+      {
+        "pergunta": "Por que não arrumar o WordPress de hoje?",
+        "resposta": "Remendar o WordPress costuma sair caro e deixar o site lento. Refeito do zero, ele fica mais rápido, mais leve no celular e mais fácil de manter."
+      },
+      {
+        "pergunta": "Posso começar pela opção 01 e mudar depois?",
+        "resposta": "Pode. Quando quiserem subir, vocês pagam só a diferença."
+      },
+      {
+        "pergunta": "O que é a gravação de tela das visitas?",
+        "resposta": "Uma ferramenta grava, de forma anônima, como as pessoas navegam no site: onde clicam, até onde rolam e onde desistem. Ajuda a entender o que melhorar."
+      },
+      {
+        "pergunta": "Como recebo os $50 da indicação?",
+        "resposta": "Quando o cliente que vocês indicaram pagar um serviço acima de $500, eu mando os $50 pelo meio que a gente combinar."
+      }
+    ]
+  },
+  "ordem": [
+    "escopo",
+    "planos",
+    "roi",
+    "indicacao",
+    "processo",
+    "condicoes",
+    "sobre",
+    "encerramento",
+    "faq"
+  ],
+  "visivel": {
+    "planos": true,
+    "roi": true,
+    "indicacao": true,
+    "inclui": false,
+    "investimento": false,
+    "pagamento": false,
+    "conta": false,
+    "ecossistema": false
+  }
+}

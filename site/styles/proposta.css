@@ -152,8 +152,13 @@ body.proposta { overflow: visible; }
 }
 @media (max-width: 720px) {
   .prop-item { grid-template-columns: clamp(2.25rem, 9vw, 3rem) auto minmax(0, 1fr); }
-  .prop-item__marca { grid-column: 3; padding-top: 0; margin-top: var(--sp-xs); }
+  .prop-item { align-items: center; row-gap: 0; }
   .prop-item__ico { width: 2.25rem; height: 2.25rem; }
+  /* no celular: número, ícone e título numa linha; o texto embaixo ocupa a largura toda */
+  .prop-item__corpo { display: contents; }
+  .prop-item__num { padding-top: 0; }
+  .prop-item__desc, .prop-item__marca { grid-column: 1 / -1; max-width: none; }
+  .prop-item__marca { padding-top: 0; margin-top: var(--sp-sm); }
 }
 
 /* ---------- O que cada entregável inclui ------------------------------
@@ -785,6 +790,11 @@ body.proposta { overflow: visible; }
 .progresso-ativo .prop-etapa--fim:not(.ativa) .prop-etapa__nome,
 .progresso-ativo .prop-etapa--fim:not(.ativa) .prop-etapa__texto { color: var(--ink); }
 .prop-processo__pe { margin-top: clamp(.75rem, 2.4vh, 3.5rem); color: var(--muted); }
+/* 4 ou 5 etapas ficam numa linha só, sem buraco na grade */
+@media (min-width: 901px) {
+  .prop-etapas[data-n="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .prop-etapas[data-n="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
 @media (max-width: 900px) {
   /* no celular, lista corrida e sem prender: a grade não cabe numa tela */
   .prop-processo.progresso-ativo { min-height: 0; }
@@ -909,6 +919,12 @@ body.proposta { overflow: visible; }
   font-weight: var(--w-bold);
   letter-spacing: .04em;
 }
+.prop-plano__tag {
+  display: inline-block;
+  margin-right: .5em;
+  padding: .2em .6em;
+  vertical-align: .1em;
+}
 .prop-plano__nome { margin-top: var(--sp-md); }
 .on-dark .prop-plano__nome { color: #FFFFFF; }
 .prop-plano__para { margin-top: var(--sp-xs); font-size: var(--t-small); line-height: 1.5; }
@@ -922,8 +938,17 @@ body.proposta { overflow: visible; }
   color: var(--ink);
 }
 .on-dark .prop-plano__valor { color: #FFFFFF; }
+.prop-plano__x {
+  font-style: normal;
+  font-weight: var(--w-light);
+  font-size: .5em;
+  letter-spacing: 0;
+  margin-right: .1em;
+}
 .prop-plano__apoio { margin-top: var(--sp-2xs); }
 .on-dark .prop-plano__apoio { color: var(--muted-invert); }
+.prop-plano__legenda { margin-top: var(--sp-2xs); color: var(--muted); font-size: .85em; }
+.on-dark .prop-plano__legenda { color: var(--muted-invert); }
 .prop-plano__itens {
   list-style: none;
   display: grid; gap: var(--sp-xs);

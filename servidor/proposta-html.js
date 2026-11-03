@@ -12,7 +12,7 @@
 import { escapar } from './listas.js';
 import { metaCompartilhar } from './compartilhar.js';
 
-const V = 'p11';   // versão do proposta.css, para o cache
+const V = 'p16';   // versão do proposta.css, para o cache
 
 const linhas = (t) => String(t || '').split('\n').filter((l) => l.trim());
 
@@ -223,7 +223,10 @@ function secPlanos(p) {
         ${itens.map((o, i) => {
           const valor = Number(o.valor) || 0;
           const n = Math.max(1, Math.round(Number(o.parcelas) || 1));
-          const apoio = o.apoio || (n > 1 ? `ou ${n}x de ${dinheiro(Math.round((valor / n) * 100) / 100)}` : 'pagamento único');
+          // Parcelado: a parcela é o número grande e o total vai embaixo.
+          const parcela = Math.round((valor / n) * 100) / 100;
+          const valorHtml = n > 1 ? `<em class="prop-plano__x">${n}x</em> ${escapar(dinheiro(parcela))}` : escapar(dinheiro(valor));
+          const apoio = o.apoio || (n > 1 ? `total ${dinheiro(valor)}` : 'pagamento único');
           const link = base && comMensagem(base, comCliente(`Oi, Samuel! Quero a opção ${o.nome || i + 1} da proposta.`, p.cliente));
           return `
         <article class="prop-plano${o.destaque ? ' prop-plano--destaque on-dark' : ''} reveal" style="--delay:${(i * 0.06).toFixed(2)}s">
@@ -234,10 +237,16 @@ function secPlanos(p) {
           <h3 class="h3 prop-plano__nome">${escapar(o.nome || '')}</h3>
           ${talvez(o.para, () => `<p class="body prop-plano__para">${escapar(o.para)}</p>`)}
           ${talvez(valor, () => `
-          <p class="prop-plano__valor">${escapar(dinheiro(valor))}</p>
-          <p class="small prop-plano__apoio">${escapar(apoio)}</p>`)}
+          <p class="prop-plano__valor">${valorHtml}</p>
+          <p class="small prop-plano__apoio">${escapar(apoio)}</p>
+          ${talvez(n > 1 && pl.legendaParcelas, () => `<p class="small prop-plano__legenda">${escapar(pl.legendaParcelas)}</p>`)}`)}
           ${talvez((o.itens || []).length, () => `
-          <ul class="prop-plano__itens">${o.itens.map((t) => `<li>${icone('check', 'ico prop-plano__tick')}<span>${escapar(t)}</span></li>`).join('')}</ul>`)}
+          <ul class="prop-plano__itens">${o.itens.map((t) => {
+            // "[Recomendado] texto" vira uma etiqueta antes do texto do item.
+            const m = String(t).match(/^\[([^\]]+)\]\s*(.*)$/s);
+            const tag = m ? `<span class="prop-plano__selo prop-plano__tag">${escapar(m[1])}</span>` : '';
+            return `<li>${icone('check', 'ico prop-plano__tick')}<span>${tag}${escapar(m ? m[2] : t)}</span></li>`;
+          }).join('')}</ul>`)}
           ${talvez(link, () => `<a class="btn ${o.destaque ? 'btn--brand' : 'btn--ghost'} prop-plano__btn" href="${escapar(link)}" target="_blank" rel="noopener">${escapar(o.botao || pl.botao || 'Quero esta opção')}${SETA}</a>`)}
         </article>`;
         }).join('')}
@@ -470,7 +479,7 @@ function secProcesso(proc) {
           <h2 class="h2 prop-processo__titulo">${escapar(proc.titulo || 'Nosso processo')}</h2>
           <span class="prop-processo__barra" aria-hidden="true"><span></span></span>
         </header>
-        <ol class="prop-etapas">
+        <ol class="prop-etapas" data-n="${etapas.length}">
           ${etapas.map((e, i) => `
           <li class="prop-etapa${i === etapas.length - 1 ? ' prop-etapa--fim' : ''}" data-etapa="${i}">
             <span class="prop-etapa__ico" aria-hidden="true">${icone(iconePara(e, ['lupa', 'alvo', 'roteiro', 'codigo', 'check', 'caixa'][i] || 'check'))}</span>
