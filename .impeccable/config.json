@@ -1,0 +1,35 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "monotonous-spacing",
+        "value": "*",
+        "files": [
+          "site/admin/crm/index.html"
+        ],
+        "createdAt": "2026-10-29T13:21:51.724Z",
+        "reason": "Claude: o espaçamento segue os tokens de painel.css usados em todas as telas do admin; já varia entre seções (sp-lg) e itens (4px/sp-sm)"
+      },
+      {
+        "rule": "monotonous-spacing",
+        "value": "*",
+        "files": [
+          "site/admin/crm/cliente/index.html"
+        ],
+        "createdAt": "2026-10-29T13:49:52.102Z",
+        "reason": "Claude: segue os tokens de espaço de painel.css usados em todo o admin; já varia entre seções (sp-lg), cartões (sp-sm) e linhas (sp-2xs)"
+      },
+      {
+        "rule": "monotonous-spacing",
+        "value": "*",
+        "files": [
+          "site/admin/index.html"
+        ],
+        "createdAt": "2026-10-29T14:23:44.029Z",
+        "reason": "Claude: usa os mesmos tokens de espaço do painel e do CRM; varia entre blocos (sp-lg), cartões (sp-sm) e linhas (sp-2xs)"
+      }
+    ]
+  }
+}

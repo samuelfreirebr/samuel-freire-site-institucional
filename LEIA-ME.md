@@ -374,7 +374,7 @@ editar pelo painel e dar deploy de novo não desfaz a edição.
 ## Prospecção
 
 Em `links.samuelfreire.com.br/google-prospection`. É a ferramenta de
-prospecção do MIRA (`ARQUITETURA-MIRA.md`) refeita para caber neste
+prospecção do MIRA (`../MIRA/ARQUITETURA-MIRA.md`) refeita para caber neste
 servidor: sem Supabase, sem créditos, sem cadastro. Quem entra é quem
 tem a senha do painel — sem sessão, a página volta para o login.
 
