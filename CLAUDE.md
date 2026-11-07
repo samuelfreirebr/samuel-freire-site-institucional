@@ -58,3 +58,12 @@ Este bloco soma regras gerais. O `REGRAS.md` (importado acima) **prevalece** em 
 - Ao terminar: o que foi alterado, quais arquivos, decisões importantes e o que precisa de atenção. Sem colar arquivos inteiros.
 - Regra de ouro: **menor contexto + modelo adequado + menor complexidade + máxima correção.**
 - Este arquivo complementa a documentação do projeto. Regra específica do projeto prevalece sobre regra genérica; em dúvida real, perguntar.
+
+## Onde ficam as coisas
+
+- **Projeto no Mac:** `~/Documents/PROJETOS/samuel-freire-site-institucional` (fora do Google Drive; o Drive sincronizando o `.git` corrompe o repositório).
+- **GitHub:** https://github.com/samuelfreirebr/samuel-freire-site-institucional
+- **Privados (fora do GitHub):** `Meu Drive/ARQUIVOS-PRIVADOS/SITE-INSTITUCIONAL`, pelo atalho `_PRIVADOS/` nesta pasta.
+- **Senhas:** `.env` / `.env.local` ficam só aqui e no cofre de senhas. Nunca no Drive nem no GitHub.
+- A pasta antiga do Drive foi arquivada em `Meu Drive/90-ARQUIVO/SITE-INSTITUCIONAL-ANTIGO-2026-11-07`.
+
