@@ -26,6 +26,9 @@
      /api/prospeccao/...  API da prospecção · exige sessão (ver prospeccao.js)
      /img/...             imagens: repositório primeiro, volume depois
      /estado              diagnóstico, sem revelar valor nenhum
+     /m.js                script de métricas que vai nos sites dos clientes (aberto)
+     /m                   recebe as métricas desses sites (aberto, só site cadastrado)
+     /admin/metricas/     relatório de cada site · exige sessão
    ============================================================ */
 
 import http from 'node:http';
@@ -53,6 +56,7 @@ import * as cofre from './cofre.js';
 import * as crm from './crm.js';
 import * as clickup from './clickup.js';
 import * as novidades from './novidades.js';
+import * as metricas from './metricas.js';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 // A pasta site/ ao lado desta. No container, copiada para /app/site.
@@ -309,6 +313,22 @@ async function api(req, res, url) {
 
   /* --- novidades: visitas do site e o que os clientes fizeram --- */
   if (rota === 'novidades' && req.method === 'GET') return json(res, await novidades.resumo());
+
+  /* --- métricas dos sites dos clientes --- */
+  if (rota === 'metricas') {
+    if (req.method === 'GET') return json(res, { sites: await metricas.listarSites() });
+    if (req.method === 'POST') {
+      const dado = await lerJson(req, res, 8192);
+      if (dado === undefined) return;
+      try { return json(res, { site: await metricas.salvarSite(dado) }); }
+      catch (e) { return json(res, { erro: e.message }, 400); }
+    }
+    return json(res, { erro: 'Método não aceito.' }, 405);
+  }
+  if (rota.startsWith('metricas/') && req.method === 'GET') {
+    const r = await metricas.resumo(rota.slice('metricas/'.length), url.searchParams.get('dias'));
+    return r ? json(res, r) : json(res, { erro: 'Site não encontrado.' }, 404);
+  }
 
   /* --- ClickUp: tarefas abertas das áreas, só leitura --- */
   if (rota === 'clickup' && req.method === 'GET') {
@@ -720,6 +740,22 @@ const servidor = http.createServer(async (req, res) => {
 
     if (caminho === '/estado') return estado(res);
 
+    /* --- Métricas dos sites dos clientes: abertas, porque quem chama
+       é o site do cliente. O /m só grava evento de site cadastrado,
+       vindo de um domínio dele (ver metricas.js). --- */
+    if (caminho === '/m.js') {
+      return enviarCorpo(res, 200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'public, max-age=3600', 'access-control-allow-origin': '*' }, metricas.SCRIPT);
+    }
+    if (caminho === '/m') {
+      const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'cache-control': 'no-store' };
+      if (req.method === 'POST') {
+        const corpo = await lerCorpo(req, 2048).catch(() => null);
+        if (corpo) await metricas.registrar(req, corpo.toString('utf8')).catch(() => false);
+      }
+      res.writeHead(204, cors);
+      return res.end();
+    }
+
     /* --- API --- */
     if (caminho.startsWith('/api/')) {
       const rota = caminho.replace(/^\/api\/?/, '');
@@ -746,7 +782,7 @@ const servidor = http.createServer(async (req, res) => {
     if (caminho === '/admin' || caminho.startsWith('/admin/')) {
       /* Pastas precisam da barra final: sem ela o navegador resolve
          './editor.js' como /editor.js e a página abre morta. */
-      if (/^\/admin(\/site|\/propostas|\/faturas|\/cofre|\/crm)?$/.test(caminho)) {
+      if (/^\/admin(\/site|\/propostas|\/faturas|\/cofre|\/crm|\/metricas)?$/.test(caminho)) {
         res.writeHead(308, { location: caminho + '/' + url.search, 'cache-control': 'no-store' });
         return res.end();
       }
