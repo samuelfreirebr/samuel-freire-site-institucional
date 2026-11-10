@@ -48,7 +48,7 @@
 .mt-graf__base { stroke: var(--line-2); stroke-width: 1; }
 .mt-graf__v { fill: var(--line-2); }
 .mt-graf__c { fill: var(--brand); }
-.mt-graf__c { transform-box: fill-box; transform-origin: center; transform: scaleX(.5); }
+.mt-graf .mt-graf__c { transform-box: fill-box; transform-origin: center; transform: scaleX(.5); }
 .mt-graf__dia { fill: var(--muted); font-size: 12px; font-family: var(--font); }
 .mt-legenda { display: flex; align-items: center; gap: .5em; flex-wrap: wrap; font-size: var(--t-small); color: var(--muted); }
 .mt-ponto { width: 10px; height: 10px; border-radius: 3px; background: var(--line-2); display: inline-block; }
@@ -75,6 +75,25 @@
 
 .mt-pe { display: flex; justify-content: space-between; gap: var(--sp-sm); flex-wrap: wrap; padding-top: var(--sp-sm);
   border-top: var(--hair) solid var(--line); font-size: var(--t-small); color: var(--muted); }
+
+/* ---------- visão geral ---------- */
+.mt-tabela { display: grid; border-top: var(--hair) solid var(--line); }
+.mt-linha {
+  display: grid; grid-template-columns: minmax(180px, 2fr) 1fr 1fr 1fr 140px; align-items: center; gap: var(--sp-sm);
+  padding: var(--sp-xs) var(--sp-2xs); border-bottom: var(--hair) solid var(--line); text-align: left;
+  font: inherit; font-size: var(--t-small); color: var(--ink); background: none; width: 100%; cursor: pointer;
+}
+button.mt-linha:hover { background: var(--bg-2); }
+.mt-linha span { display: flex; align-items: baseline; gap: .5em; min-width: 0; }
+.mt-linha span:first-child { flex-direction: column; gap: 2px; }
+.mt-linha small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.mt-linha--cab { cursor: default; color: var(--muted); font-weight: var(--w-semi); }
+.mt-linha__c { font-weight: var(--w-bold); color: var(--brand); }
+.mt-mini { width: 120px; height: 32px; display: block; }
+@media (max-width: 760px) {
+  .mt-linha { grid-template-columns: 1fr 1fr 1fr; }
+  .mt-linha > :nth-child(4), .mt-linha > :nth-child(5) { display: none; }
+}
 
 /* ---------- janela de sites ---------- */
 .mt-jan { border: 0; border-radius: var(--radius-img); padding: 0; width: min(640px, calc(100vw - 32px)); margin: auto; }

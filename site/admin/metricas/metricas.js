@@ -30,7 +30,7 @@ const TXT = {
   },
 };
 
-let sites = [], dias = 15, lingua = 'pt', atual = null;
+let sites = [], dias = 15, lingua = 'pt', atual = null, geral = null;
 const t = (k) => TXT[lingua][k] ?? k;
 const num = (n) => Number(n || 0).toLocaleString(lingua === 'en' ? 'en-US' : 'pt-BR');
 const dataCurta = (iso) => new Date(iso + 'T12:00').toLocaleDateString(lingua === 'en' ? 'en-US' : 'pt-BR', { day: '2-digit', month: 'short' });
@@ -83,9 +83,53 @@ function barras(itens, rotulo = (x) => x.nome) {
     <span class="mt-barras__trilho"><span style="width:${(i.n / max) * 100}%"></span></span><b>${num(i.n)}</b></li>`).join('')}</ul>`;
 }
 
+/* Barrinhas de visitas por dia, para a linha de cada site. */
+function mini(serie) {
+  const max = Math.max(1, ...serie.map((d) => d.visitas)), w = 120 / serie.length;
+  return `<svg class="mt-mini" viewBox="0 0 120 32" aria-hidden="true">${serie.map((d, i) =>
+    `<rect x="${i * w + w * .15}" y="${32 - (d.visitas / max) * 30}" width="${w * .7}" height="${(d.visitas / max) * 30}" class="${d.contatos ? 'mt-graf__c' : 'mt-graf__v'}"/>`).join('')}</svg>`;
+}
+
+/* Visão geral: todos os sites lado a lado, quem gerou mais contato primeiro. */
+function renderGeral() {
+  const el = $('#relatorio');
+  if (!sites.length) { el.innerHTML = `<p class="mt-vazio">Nenhum site cadastrado. Clique em <b>Sites</b> para cadastrar o primeiro.</p>`; return; }
+  const lista = [...(geral || [])].sort((a, b) => b.atual.contatos - a.atual.contatos || b.atual.visitas - a.atual.visitas);
+  const soma = (k, p = 'atual') => lista.reduce((n, x) => n + (x[p][k] || 0), 0);
+  el.innerHTML = `
+    <header class="mt-cab">
+      <div>
+        <p class="mt-eyebrow">Visão geral</p>
+        <h2 class="mt-titulo">Métricas dos clientes</h2>
+        <p class="mt-sub">${lista.length} site${lista.length === 1 ? '' : 's'} medido${lista.length === 1 ? '' : 's'} · últimos ${dias} dias</p>
+      </div>
+      <p class="mt-sub mt-sub--dir">vs. período anterior</p>
+    </header>
+    <section class="mt-cards">
+      ${cartao('Sites medidos', num(lista.length))}
+      ${cartao('Visitas', num(soma('visitas')), soma('visitas'), soma('visitas', 'anterior'))}
+      ${cartao('Contatos gerados', num(soma('contatos')), soma('contatos'), soma('contatos', 'anterior'), true)}
+      ${cartao('Pedidos de orçamento', num(soma('leads')), soma('leads'), soma('leads', 'anterior'))}
+    </section>
+    <section class="mt-bloco">
+      <h3>Sites dos clientes</h3>
+      <div class="mt-tabela">
+        <div class="mt-linha mt-linha--cab"><span>Site</span><span>Visitas</span><span>Contatos</span><span>Orçamentos</span><span>Últimos ${dias} dias</span></div>
+        ${lista.map((x) => `<button type="button" class="mt-linha" data-abrir="${esc(x.site.id)}">
+          <span><b>${esc(x.site.nome)}</b><small>${esc(x.site.dominios[0])}</small></span>
+          <span>${num(x.atual.visitas)} ${variacao(x.atual.visitas, x.anterior.visitas)}</span>
+          <span class="mt-linha__c">${num(x.atual.contatos)} ${variacao(x.atual.contatos, x.anterior.contatos)}</span>
+          <span>${num(x.atual.leads)}</span>
+          <span>${mini(x.atual.dias)}</span>
+        </button>`).join('')}
+      </div>
+      <p class="mt-legenda">Contatos = cliques em ligar, WhatsApp, e-mail, SMS e pedidos de orçamento. Clique num site para ver o relatório completo.</p>
+    </section>`;
+}
+
 function render() {
   const r = atual, el = $('#relatorio');
-  if (!r) { el.innerHTML = `<p class="mt-vazio">Nenhum site cadastrado. Clique em <b>Sites</b> para cadastrar o primeiro.</p>`; return; }
+  if (!r) return renderGeral();
   const a = r.atual, b = r.anterior;
   const ini = a.dias[0].dia, fim = a.dias.at(-1).dia;
   const funil = [
@@ -134,15 +178,18 @@ function render() {
 
 async function carregar() {
   const id = $('#site').value;
-  if (!id) { atual = null; return render(); }
   $('#sincronizar').disabled = true;
-  try { atual = await api(`metricas/${encodeURIComponent(id)}?dias=${dias}`); render(); }
+  try {
+    if (id) atual = await api(`metricas/${encodeURIComponent(id)}?dias=${dias}`);
+    else { atual = null; geral = (await api(`metricas?dias=${dias}`)).geral; }
+    render();
+  }
   catch (e) { if (e.message) aviso(e.message, 'erro'); }
   finally { $('#sincronizar').disabled = false; }
 }
 
 function montarSites(escolher) {
-  $('#site').innerHTML = sites.map((s) => `<option value="${esc(s.id)}">${esc(s.nome)}</option>`).join('');
+  $('#site').innerHTML = '<option value="">Todos os sites</option>' + sites.map((s) => `<option value="${esc(s.id)}">${esc(s.nome)}</option>`).join('');
   if (escolher) $('#site').value = escolher;
   $('#lista-sites').innerHTML = sites.length
     ? sites.map((s) => `<li><b>${esc(s.nome)}</b> <span>${esc(s.id)} · ${esc(s.dominios.join(', '))}</span> <button type="button" class="mini" data-codigo="${esc(s.id)}">Código</button></li>`).join('')
@@ -162,6 +209,7 @@ async function iniciar() {
 }
 
 $('#site').addEventListener('change', carregar);
+$('#relatorio').addEventListener('click', (e) => { const b = e.target.closest('[data-abrir]'); if (b) { $('#site').value = b.dataset.abrir; carregar(); } });
 $('#sincronizar').addEventListener('click', async () => { await carregar(); aviso('Dados atualizados.'); });
 $('#pdf').addEventListener('click', () => window.print());
 for (const [grupo, chave, fn] of [['#periodo', 'dias', (v) => { dias = Number(v); carregar(); }], ['#idioma', 'lingua', (v) => { lingua = v; render(); }]]) {

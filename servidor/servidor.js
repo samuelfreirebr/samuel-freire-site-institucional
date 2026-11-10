@@ -316,7 +316,10 @@ async function api(req, res, url) {
 
   /* --- métricas dos sites dos clientes --- */
   if (rota === 'metricas') {
-    if (req.method === 'GET') return json(res, { sites: await metricas.listarSites() });
+    if (req.method === 'GET') {
+      if (url.searchParams.has('dias')) return json(res, { geral: await metricas.visaoGeral(url.searchParams.get('dias')) });
+      return json(res, { sites: await metricas.listarSites() });
+    }
     if (req.method === 'POST') {
       const dado = await lerJson(req, res, 8192);
       if (dado === undefined) return;

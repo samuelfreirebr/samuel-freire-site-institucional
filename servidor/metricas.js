@@ -157,6 +157,16 @@ function periodo(s, ini, n) {
   };
 }
 
+/* Todos os sites lado a lado, para a visão geral do painel. */
+export async function visaoGeral(n = 15) {
+  const lista = await listarSites();
+  return Promise.all(lista.map(async (s) => {
+    const r = await resumo(s.id, n);
+    const { dias, paginas, origens, ...atual } = r.atual;
+    return { site: s, atual: { ...atual, dias }, anterior: { visitas: r.anterior.visitas, contatos: r.anterior.contatos, leads: r.anterior.leads } };
+  }));
+}
+
 /* Período pedido e o anterior, do mesmo tamanho, para comparar. */
 export async function resumo(id, n = 15) {
   const site = (await listarSites()).find((s) => s.id === id);
