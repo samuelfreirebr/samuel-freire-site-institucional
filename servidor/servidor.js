@@ -328,6 +328,10 @@ async function api(req, res, url) {
     }
     return json(res, { erro: 'Método não aceito.' }, 405);
   }
+  if (rota.startsWith('metricas/') && req.method === 'DELETE') {
+    try { await metricas.apagarSite(rota.slice('metricas/'.length)); return json(res, { ok: true }); }
+    catch (e) { return json(res, { erro: e.message }, 404); }
+  }
   if (rota.startsWith('metricas/') && req.method === 'GET') {
     const r = await metricas.resumo(rota.slice('metricas/'.length), url.searchParams.get('dias'));
     return r ? json(res, r) : json(res, { erro: 'Site não encontrado.' }, 404);

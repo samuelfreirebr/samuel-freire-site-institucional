@@ -56,6 +56,19 @@ export async function salvarSite(d) {
   return site;
 }
 
+/* Tira o site da lista. Os números não somem: o arquivo vira
+   <id>.apagado-<data>.json na mesma pasta, para recuperar se precisar. */
+export async function apagarSite(id) {
+  const lista = await listarSites();
+  if (!lista.some((s) => s.id === id)) throw new Error('Site não encontrado.');
+  sites = lista.filter((s) => s.id !== id);
+  await fs.writeFile(ARQ_SITES + '.tmp', JSON.stringify(sites, null, 1), 'utf8');
+  await fs.rename(ARQ_SITES + '.tmp', ARQ_SITES);
+  clearTimeout(timers.get(id)); cache.delete(id);
+  const arq = path.join(PASTA, id + '.json');
+  await fs.rename(arq, path.join(PASTA, `${id}.apagado-${Date.now()}.json`)).catch(() => {});
+}
+
 /* ---------- dados por site ---------- */
 
 const cache = new Map();     // id -> { dias: { 'AAAA-MM-DD': {...} } }

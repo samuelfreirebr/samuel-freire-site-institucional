@@ -192,7 +192,7 @@ function montarSites(escolher) {
   $('#site').innerHTML = '<option value="">Todos os sites</option>' + sites.map((s) => `<option value="${esc(s.id)}">${esc(s.nome)}</option>`).join('');
   if (escolher) $('#site').value = escolher;
   $('#lista-sites').innerHTML = sites.length
-    ? sites.map((s) => `<li><b>${esc(s.nome)}</b> <span>${esc(s.id)} · ${esc(s.dominios.join(', '))}</span> <button type="button" class="mini" data-codigo="${esc(s.id)}">Código</button></li>`).join('')
+    ? sites.map((s) => `<li><b>${esc(s.nome)}</b> <span>${esc(s.id)} · ${esc(s.dominios.join(', '))}</span> <button type="button" class="mini" data-codigo="${esc(s.id)}">Código</button> <button type="button" class="mini mini--perigo" data-apagar="${esc(s.id)}">Apagar</button></li>`).join('')
     : '<li class="mt-sub">Nenhum site ainda.</li>';
 }
 
@@ -221,7 +221,19 @@ for (const [grupo, chave, fn] of [['#periodo', 'dias', (v) => { dias = Number(v)
 }
 $('#abrir-sites').addEventListener('click', () => $('#jan').showModal());
 $('#jan-fechar').addEventListener('click', () => $('#jan').close());
-$('#lista-sites').addEventListener('click', (e) => { const b = e.target.closest('[data-codigo]'); if (b) mostrarCodigo(b.dataset.codigo); });
+$('#lista-sites').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-codigo]'); if (b) return mostrarCodigo(b.dataset.codigo);
+  const ap = e.target.closest('[data-apagar]'); if (!ap) return;
+  const s = sites.find((x) => x.id === ap.dataset.apagar);
+  if (!confirm(`Apagar "${s.nome}" das métricas? Ele some da lista e para de contar. Os números ficam guardados no servidor.`)) return;
+  try {
+    await api('metricas/' + encodeURIComponent(s.id), { method: 'DELETE' });
+    sites = sites.filter((x) => x.id !== s.id);
+    if ($('#site').value === s.id) $('#site').value = '';
+    montarSites($('#site').value || undefined); $('#codigo').hidden = true; carregar();
+    aviso('Site apagado.');
+  } catch (err) { if (err.message) aviso(err.message, 'erro'); }
+});
 $('#copiar').addEventListener('click', async () => { await navigator.clipboard.writeText($('#codigo-texto').textContent); aviso('Código copiado.'); });
 $('#form-site').addEventListener('submit', async (e) => {
   e.preventDefault();
