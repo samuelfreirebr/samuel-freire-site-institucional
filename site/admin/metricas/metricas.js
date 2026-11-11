@@ -152,6 +152,7 @@ function render() {
       <p class="mt-sub mt-sub--dir">${esc(t('comp'))}</p>
     </header>
     ${barraTestes(r.site)}
+    ${blocoMensagem(r.mensagem)}
     ${a.visitas ? '' : `<p class="mt-vazio">${esc(t('vazio'))}</p>`}
     <section class="mt-cards">
       ${cartao(t('visitas'), num(a.visitas), a.visitas, b.visitas)}
@@ -196,6 +197,22 @@ function barraTestes(site) {
       <button type="button" class="mini mini--ativo" data-acao="novo-teste">+ Iniciar novo teste</button>
       <button type="button" class="mini mini--perigo" data-acao="apagar-site">Apagar site</button>
     </div>
+  </div>`;
+}
+
+/* Mensagem do relatório quinzenal (dia 15 e fim do mês), pronta para
+   colar no WhatsApp junto com o PDF. Fica fora do PDF. */
+function blocoMensagem(m) {
+  return `<div class="mt-msg">
+    <div class="mt-msg__topo">
+      <b>Mensagem para o cliente</b>
+      <span class="mt-sub">${m ? 'gerada em ' + dataBr(m.dia) : 'gerada no dia 15 e no último dia do mês'}</span>
+      <span class="mt-msg__acoes">
+        ${m ? '<button type="button" class="mini mini--ativo" data-acao="copiar-msg">Copiar mensagem</button>' : ''}
+        <button type="button" class="mini" data-acao="gerar-msgs">Gerar mensagens agora</button>
+      </span>
+    </div>
+    ${m ? `<p class="mt-msg__texto">${esc(m.mensagem)}</p>${m.analise ? `<p class="mt-sub"><b>Para você:</b> ${esc(m.analise)}</p>` : ''}` : ''}
   </div>`;
 }
 
@@ -251,6 +268,14 @@ $('#relatorio').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-abrir]'); if (b) { $('#site').value = b.dataset.abrir; teste = ''; return carregar(); }
   const tb = e.target.closest('[data-teste]'); if (tb) { teste = tb.dataset.teste; return carregar(); }
   const ac = e.target.closest('[data-acao]'); if (!ac) return;
+  if (ac.dataset.acao === 'copiar-msg') { await navigator.clipboard.writeText(atual.mensagem.mensagem); return aviso('Mensagem copiada.'); }
+  if (ac.dataset.acao === 'gerar-msgs') {
+    if (!confirm('Gerar agora as mensagens de todos os sites com os últimos 15 dias? Também cria a tarefa de envio no CRM.')) return;
+    ac.disabled = true; ac.textContent = 'Gerando…';
+    try { await api('metricas-ciclo', { method: 'POST' }); await carregar(); aviso('Mensagens geradas e tarefa criada no CRM.'); }
+    catch (err) { ac.disabled = false; if (err.message) aviso(err.message, 'erro'); }
+    return;
+  }
   const site = sites.find((x) => x.id === $('#site').value); if (!site) return;
   if (ac.dataset.acao === 'apagar-site') return apagarSite(site);
   const nome = prompt('Nome do novo teste (ele conta a partir de hoje):', `Teste ${(site.testes || []).length + 1}`);

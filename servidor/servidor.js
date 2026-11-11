@@ -57,6 +57,7 @@ import * as crm from './crm.js';
 import * as clickup from './clickup.js';
 import * as novidades from './novidades.js';
 import * as metricas from './metricas.js';
+import * as relatorios from './relatorios.js';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 // A pasta site/ ao lado desta. No container, copiada para /app/site.
@@ -339,9 +340,15 @@ async function api(req, res, url) {
     try { return json(res, { site: mt[2] ? await metricas.mudarTeste(mt[1], mt[2], dado.ativo === true) : await metricas.novoTeste(mt[1], dado.nome) }); }
     catch (e) { return json(res, { erro: e.message }, 400); }
   }
+  // Gera agora as mensagens do ciclo quinzenal (normalmente roda sozinho no dia 15 e no fim do mês).
+  if (rota === 'metricas-ciclo' && req.method === 'POST') {
+    try { return json(res, await relatorios.rodarCiclo({ forcar: true })); }
+    catch (e) { return json(res, { erro: e.message }, 500); }
+  }
   if (rota.startsWith('metricas/') && req.method === 'GET') {
-    const r = await metricas.resumo(rota.slice('metricas/'.length), url.searchParams.get('dias'), { inicio: url.searchParams.get('inicio'), fim: url.searchParams.get('fim') });
-    return r ? json(res, r) : json(res, { erro: 'Site não encontrado.' }, 404);
+    const id = rota.slice('metricas/'.length);
+    const r = await metricas.resumo(id, url.searchParams.get('dias'), { inicio: url.searchParams.get('inicio'), fim: url.searchParams.get('fim') });
+    return r ? json(res, { ...r, mensagem: await relatorios.mensagemDe(id) }) : json(res, { erro: 'Site não encontrado.' }, 404);
   }
 
   /* --- ClickUp: tarefas abertas das áreas, só leitura --- */
@@ -1004,6 +1011,7 @@ const plantadas = await dados.semear().catch(() => []);
 if (plantadas.length) console.log('propostas instaladas:', plantadas.join(', '));
 
 servidor.listen(PORTA, () => {
+  relatorios.ligar();
   console.log(`site em http://localhost:${PORTA}`);
   console.log(`arquivos:  ${SITE}`);
   console.log(`dados:     ${dados.RAIZ_DADOS}`);

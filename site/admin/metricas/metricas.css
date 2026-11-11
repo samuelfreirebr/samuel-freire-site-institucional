@@ -96,6 +96,12 @@
 .mt-chave input:checked + span::after { translate: 14px 0; }
 .mt-chave input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
 
+/* mensagem do relatório quinzenal */
+.mt-msg { display: grid; gap: var(--sp-xs); padding: var(--sp-sm); border: var(--hair) solid var(--line-2); border-radius: var(--radius-img); }
+.mt-msg__topo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-xs); }
+.mt-msg__acoes { margin-left: auto; display: flex; gap: var(--sp-2xs); flex-wrap: wrap; }
+.mt-msg__texto { white-space: pre-wrap; font-size: var(--t-small); background: var(--bg-2); border-radius: 8px; padding: var(--sp-sm); }
+
 /* ---------- visão geral ---------- */
 .mt-tabela { display: grid; border-top: var(--hair) solid var(--line); }
 .mt-linha {
@@ -140,7 +146,7 @@ button.mt-linha:hover { background: var(--bg-2); }
 @media print {
   @page { size: A4; margin: 12mm; }
   body { background: #fff; }
-  .casca, .topo, .mt-barra, .aviso, .mt-jan, .mt-testes, [class*="casca__"] { display: none !important; }
+  .casca, .topo, .mt-barra, .aviso, .mt-jan, .mt-testes, .mt-msg, [class*="casca__"] { display: none !important; }
   body, main, .mt-raiz { padding: 0 !important; margin: 0 !important; max-width: none; }
   .mt-rel { border: 0; padding: 0; gap: 14px; }
   .mt-card--destaque, .mt-graf__c, .mt-anel, .mt-barras__trilho span, .mt-eyebrow::before, .mt-ponto { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
