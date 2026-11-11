@@ -76,6 +76,26 @@
 .mt-pe { display: flex; justify-content: space-between; gap: var(--sp-sm); flex-wrap: wrap; padding-top: var(--sp-sm);
   border-top: var(--hair) solid var(--line); font-size: var(--t-small); color: var(--muted); }
 
+/* ---------- testes do site ---------- */
+.mt-testes { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-xs); align-items: center;
+  padding: var(--sp-xs); background: var(--bg-2); border-radius: var(--radius-img); }
+.mt-testes__lista, .mt-testes__acoes { display: flex; flex-wrap: wrap; gap: var(--sp-2xs); align-items: center; }
+.mt-teste { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); border-radius: var(--radius-pill); padding-right: 8px; box-shadow: inset 0 0 0 var(--hair) var(--line-2); }
+.mt-teste__nome { font: inherit; font-size: var(--t-eyebrow); font-weight: var(--w-semi); color: var(--ink); padding: .5em .9em; border-radius: var(--radius-pill); background: none; cursor: pointer; }
+.mt-testes__lista > .mt-teste__nome { background: var(--bg); box-shadow: inset 0 0 0 var(--hair) var(--line-2); }
+.mt-teste__nome small { color: var(--muted); font-weight: var(--w-book); }
+.mt-teste__nome.on, .mt-teste.on { background: var(--ink); box-shadow: none; }
+.mt-teste.on .mt-teste__nome, .mt-teste__nome.on, .mt-teste.on .mt-teste__nome small { color: #fff; }
+.mt-teste.desligado .mt-teste__nome { color: var(--muted); }
+/* chave liga e desliga */
+.mt-chave { position: relative; display: inline-block !important; align-self: center; margin: 0 !important; width: 32px; height: 18px; flex: none; cursor: pointer; }
+.mt-chave input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.mt-chave span { position: absolute; top: 0; left: 0; width: 32px; height: 18px; display: block; border-radius: 99px; background: var(--line-2); transition: background var(--d-fast); }
+.mt-chave span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: translate var(--d-fast); }
+.mt-chave input:checked + span { background: var(--brand); }
+.mt-chave input:checked + span::after { translate: 14px 0; }
+.mt-chave input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+
 /* ---------- visão geral ---------- */
 .mt-tabela { display: grid; border-top: var(--hair) solid var(--line); }
 .mt-linha {
@@ -120,7 +140,7 @@ button.mt-linha:hover { background: var(--bg-2); }
 @media print {
   @page { size: A4; margin: 12mm; }
   body { background: #fff; }
-  .casca, .topo, .mt-barra, .aviso, .mt-jan, [class*="casca__"] { display: none !important; }
+  .casca, .topo, .mt-barra, .aviso, .mt-jan, .mt-testes, [class*="casca__"] { display: none !important; }
   body, main, .mt-raiz { padding: 0 !important; margin: 0 !important; max-width: none; }
   .mt-rel { border: 0; padding: 0; gap: 14px; }
   .mt-card--destaque, .mt-graf__c, .mt-anel, .mt-barras__trilho span, .mt-eyebrow::before, .mt-ponto { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

@@ -30,7 +30,7 @@ const TXT = {
   },
 };
 
-let sites = [], dias = 15, lingua = 'pt', atual = null, geral = null;
+let sites = [], dias = 15, lingua = 'pt', atual = null, geral = null, teste = '';
 const t = (k) => TXT[lingua][k] ?? k;
 const num = (n) => Number(n || 0).toLocaleString(lingua === 'en' ? 'en-US' : 'pt-BR');
 const dataCurta = (iso) => new Date(iso + 'T12:00').toLocaleDateString(lingua === 'en' ? 'en-US' : 'pt-BR', { day: '2-digit', month: 'short' });
@@ -147,10 +147,11 @@ function render() {
       <div>
         <p class="mt-eyebrow">${esc(t('eyebrow'))}</p>
         <h2 class="mt-titulo">${esc(r.site.nome)}</h2>
-        <p class="mt-sub">${esc(r.site.dominios[0])} · ${esc(t('periodo'))}: ${dataCurta(ini)} ${esc(t('ate'))} ${dataCurta(fim)}</p>
+        <p class="mt-sub">${esc(r.site.dominios[0])}${testeAtual(r.site) ? ' · ' + esc(testeAtual(r.site).nome) : ''} · ${esc(t('periodo'))}: ${dataCurta(ini)} ${esc(t('ate'))} ${dataCurta(fim)}</p>
       </div>
       <p class="mt-sub mt-sub--dir">${esc(t('comp'))}</p>
     </header>
+    ${barraTestes(r.site)}
     ${a.visitas ? '' : `<p class="mt-vazio">${esc(t('vazio'))}</p>`}
     <section class="mt-cards">
       ${cartao(t('visitas'), num(a.visitas), a.visitas, b.visitas)}
@@ -176,11 +177,35 @@ function render() {
     <footer class="mt-pe"><span>${esc(t('rodape'))} · samuelfreire.com.br</span><span>${esc(t('gerado'))} ${new Date(r.geradoEm).toLocaleString(lingua === 'en' ? 'en-US' : 'pt-BR', { dateStyle: 'medium', timeStyle: 'short' })}</span></footer>`;
 }
 
+const dataBr = (iso) => iso.split('-').reverse().slice(0, 2).join('/');
+const testeAtual = (site) => (site.testes || []).find((x) => x.id === teste);
+
+/* Testes do site: cada um conta a partir do dia em que foi iniciado.
+   Fica fora do PDF; o nome do teste vai no cabeçalho do relatório. */
+function barraTestes(site) {
+  const lista = [...(site.testes || [])].reverse();
+  return `<div class="mt-testes">
+    <div class="mt-testes__lista">
+      <button type="button" class="mt-teste__nome${teste ? '' : ' on'}" data-teste="">Últimos ${dias} dias</button>
+      ${lista.map((x) => `<span class="mt-teste${x.id === teste ? ' on' : ''}${x.fim ? ' desligado' : ''}">
+        <button type="button" class="mt-teste__nome" data-teste="${esc(x.id)}">${esc(x.nome)} <small>desde ${dataBr(x.inicio)}${x.fim ? ' até ' + dataBr(x.fim) : ''}</small></button>
+        <label class="mt-chave" title="${x.fim ? 'Desligado: clique para voltar a contar' : 'Ativo: clique para desligar'}"><input type="checkbox" data-ativo="${esc(x.id)}" ${x.fim ? '' : 'checked'}><span></span></label>
+      </span>`).join('')}
+    </div>
+    <div class="mt-testes__acoes">
+      <button type="button" class="mini mini--ativo" data-acao="novo-teste">+ Iniciar novo teste</button>
+      <button type="button" class="mini mini--perigo" data-acao="apagar-site">Apagar site</button>
+    </div>
+  </div>`;
+}
+
 async function carregar() {
   const id = $('#site').value;
   $('#sincronizar').disabled = true;
   try {
-    if (id) atual = await api(`metricas/${encodeURIComponent(id)}?dias=${dias}`);
+    const st = id && sites.find((x) => x.id === id), tt = st && testeAtual(st);
+    if (!tt) teste = '';
+    if (id) atual = await api(`metricas/${encodeURIComponent(id)}?` + (tt ? `inicio=${tt.inicio}&fim=${tt.fim}` : `dias=${dias}`));
     else { atual = null; geral = (await api(`metricas?dias=${dias}`)).geral; }
     render();
   }
@@ -208,11 +233,46 @@ async function iniciar() {
   carregar();
 }
 
-$('#site').addEventListener('change', carregar);
-$('#relatorio').addEventListener('click', (e) => { const b = e.target.closest('[data-abrir]'); if (b) { $('#site').value = b.dataset.abrir; carregar(); } });
+$('#site').addEventListener('change', () => { teste = ''; carregar(); });
+
+const atualizarSite = (site) => { sites = sites.map((x) => (x.id === site.id ? site : x)); };
+async function apagarSite(s) {
+  if (!confirm(`Apagar "${s.nome}" das métricas? Ele some da lista e para de contar. Os números ficam guardados no servidor.`)) return;
+  try {
+    await api('metricas/' + encodeURIComponent(s.id), { method: 'DELETE' });
+    sites = sites.filter((x) => x.id !== s.id);
+    if ($('#site').value === s.id) { $('#site').value = ''; teste = ''; }
+    montarSites($('#site').value || undefined); $('#codigo').hidden = true; carregar();
+    aviso('Site apagado.');
+  } catch (err) { if (err.message) aviso(err.message, 'erro'); }
+}
+
+$('#relatorio').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-abrir]'); if (b) { $('#site').value = b.dataset.abrir; teste = ''; return carregar(); }
+  const tb = e.target.closest('[data-teste]'); if (tb) { teste = tb.dataset.teste; return carregar(); }
+  const ac = e.target.closest('[data-acao]'); if (!ac) return;
+  const site = sites.find((x) => x.id === $('#site').value); if (!site) return;
+  if (ac.dataset.acao === 'apagar-site') return apagarSite(site);
+  const nome = prompt('Nome do novo teste (ele conta a partir de hoje):', `Teste ${(site.testes || []).length + 1}`);
+  if (nome === null) return;
+  try {
+    const r = await api(`metricas/${encodeURIComponent(site.id)}/testes`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nome }) });
+    atualizarSite(r.site); teste = r.site.testes.at(-1).id; carregar();
+    aviso('Novo teste iniciado. Ele conta a partir de hoje.');
+  } catch (err) { if (err.message) aviso(err.message, 'erro'); }
+});
+$('#relatorio').addEventListener('change', async (e) => {
+  const c = e.target.closest('[data-ativo]'); if (!c) return;
+  const id = $('#site').value;
+  try {
+    const r = await api(`metricas/${encodeURIComponent(id)}/testes/${c.dataset.ativo}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ativo: c.checked }) });
+    atualizarSite(r.site); carregar();
+    aviso(c.checked ? 'Teste ligado de novo.' : 'Teste desligado: os números dele ficam guardados.');
+  } catch (err) { c.checked = !c.checked; if (err.message) aviso(err.message, 'erro'); }
+});
 $('#sincronizar').addEventListener('click', async () => { await carregar(); aviso('Dados atualizados.'); });
 $('#pdf').addEventListener('click', () => window.print());
-for (const [grupo, chave, fn] of [['#periodo', 'dias', (v) => { dias = Number(v); carregar(); }], ['#idioma', 'lingua', (v) => { lingua = v; render(); }]]) {
+for (const [grupo, chave, fn] of [['#periodo', 'dias', (v) => { dias = Number(v); teste = ''; carregar(); }], ['#idioma', 'lingua', (v) => { lingua = v; render(); }]]) {
   $(grupo).addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     $(grupo).querySelectorAll('button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
@@ -223,16 +283,7 @@ $('#abrir-sites').addEventListener('click', () => $('#jan').showModal());
 $('#jan-fechar').addEventListener('click', () => $('#jan').close());
 $('#lista-sites').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-codigo]'); if (b) return mostrarCodigo(b.dataset.codigo);
-  const ap = e.target.closest('[data-apagar]'); if (!ap) return;
-  const s = sites.find((x) => x.id === ap.dataset.apagar);
-  if (!confirm(`Apagar "${s.nome}" das métricas? Ele some da lista e para de contar. Os números ficam guardados no servidor.`)) return;
-  try {
-    await api('metricas/' + encodeURIComponent(s.id), { method: 'DELETE' });
-    sites = sites.filter((x) => x.id !== s.id);
-    if ($('#site').value === s.id) $('#site').value = '';
-    montarSites($('#site').value || undefined); $('#codigo').hidden = true; carregar();
-    aviso('Site apagado.');
-  } catch (err) { if (err.message) aviso(err.message, 'erro'); }
+  const ap = e.target.closest('[data-apagar]'); if (ap) apagarSite(sites.find((x) => x.id === ap.dataset.apagar));
 });
 $('#copiar').addEventListener('click', async () => { await navigator.clipboard.writeText($('#codigo-texto').textContent); aviso('Código copiado.'); });
 $('#form-site').addEventListener('submit', async (e) => {

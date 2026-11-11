@@ -47,12 +47,38 @@ export async function salvarSite(d) {
     .map((x) => String(x).toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim())
     .filter((x) => /^[a-z0-9.-]+(:\d+)?$/.test(x)))].slice(0, 10);
   if (!dominios.length) throw new Error('Informe pelo menos um domínio do site.');
-  const lista = await listarSites();
-  const site = { id, nome, dominios, criadoEm: lista.find((s) => s.id === id)?.criadoEm || new Date().toISOString() };
+  const lista = await listarSites(), antes = lista.find((s) => s.id === id);
+  const site = { id, nome, dominios, testes: antes?.testes || [], criadoEm: antes?.criadoEm || new Date().toISOString() };
   sites = [...lista.filter((s) => s.id !== id), site];
+  await gravarLista();
+  return site;
+}
+
+async function gravarLista() {
   await fs.mkdir(PASTA, { recursive: true });
   await fs.writeFile(ARQ_SITES + '.tmp', JSON.stringify(sites, null, 1), 'utf8');
   await fs.rename(ARQ_SITES + '.tmp', ARQ_SITES);
+}
+
+/* Testes: uma janela de datas sobre os mesmos números do site. Começa
+   no dia em que foi iniciado e segue contando enquanto estiver ativo;
+   desligar fecha no dia, ligar de novo reabre. Nada é apagado. */
+export async function novoTeste(id, nome) {
+  const site = (await listarSites()).find((s) => s.id === id);
+  if (!site) throw new Error('Site não encontrado.');
+  site.testes ||= [];
+  const teste = { id: Date.now().toString(36), nome: corte(nome, 60) || `Teste ${site.testes.length + 1}`, inicio: hojeBr(), fim: '' };
+  site.testes.push(teste);
+  await gravarLista();
+  return site;
+}
+
+export async function mudarTeste(id, tid, ativo) {
+  const site = (await listarSites()).find((s) => s.id === id);
+  const t = site?.testes?.find((x) => x.id === tid);
+  if (!t) throw new Error('Teste não encontrado.');
+  t.fim = ativo ? '' : hojeBr();
+  await gravarLista();
   return site;
 }
 
@@ -62,8 +88,7 @@ export async function apagarSite(id) {
   const lista = await listarSites();
   if (!lista.some((s) => s.id === id)) throw new Error('Site não encontrado.');
   sites = lista.filter((s) => s.id !== id);
-  await fs.writeFile(ARQ_SITES + '.tmp', JSON.stringify(sites, null, 1), 'utf8');
-  await fs.rename(ARQ_SITES + '.tmp', ARQ_SITES);
+  await gravarLista();
   clearTimeout(timers.get(id)); cache.delete(id);
   const arq = path.join(PASTA, id + '.json');
   await fs.rename(arq, path.join(PASTA, `${id}.apagado-${Date.now()}.json`)).catch(() => {});
@@ -181,12 +206,24 @@ export async function visaoGeral(n = 15) {
 }
 
 /* Período pedido e o anterior, do mesmo tamanho, para comparar. */
-export async function resumo(id, n = 15) {
+const dataOk = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d || '');
+const diasEntre = (a, b) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 864e5);
+
+/* Período pedido e o anterior, do mesmo tamanho, para comparar. Com
+   `inicio` (e `fim`, se o teste foi desligado) vale a janela de datas. */
+export async function resumo(id, n = 15, faixa = {}) {
   const site = (await listarSites()).find((s) => s.id === id);
   if (!site) return null;
-  n = Math.min(Math.max(Number(n) || 15, 1), 365);
+  const hoje = hojeBr();
+  let desloc = 0;
+  if (dataOk(faixa.inicio)) {
+    const fim = dataOk(faixa.fim) && faixa.fim < hoje ? faixa.fim : hoje;
+    n = Math.max(1, diasEntre(faixa.inicio, fim) + 1);
+    desloc = Math.max(0, diasEntre(fim, hoje));
+  }
+  n = Math.min(Math.max(Number(n) || 15, 1), 400);
   const s = await carregar(id);
-  return { site, dias: n, atual: periodo(s, 0, n), anterior: periodo(s, n, n), geradoEm: new Date().toISOString() };
+  return { site, dias: n, atual: periodo(s, desloc, n), anterior: periodo(s, desloc + n, n), geradoEm: new Date().toISOString() };
 }
 
 /* ---------- o script que vai nos sites ----------

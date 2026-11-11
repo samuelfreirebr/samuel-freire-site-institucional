@@ -332,8 +332,15 @@ async function api(req, res, url) {
     try { await metricas.apagarSite(rota.slice('metricas/'.length)); return json(res, { ok: true }); }
     catch (e) { return json(res, { erro: e.message }, 404); }
   }
+  const mt = rota.match(/^metricas\/([a-z0-9-]+)\/testes(?:\/([a-z0-9]+))?$/);
+  if (mt && req.method === 'POST') {
+    const dado = await lerJson(req, res, 4096);
+    if (dado === undefined) return;
+    try { return json(res, { site: mt[2] ? await metricas.mudarTeste(mt[1], mt[2], dado.ativo === true) : await metricas.novoTeste(mt[1], dado.nome) }); }
+    catch (e) { return json(res, { erro: e.message }, 400); }
+  }
   if (rota.startsWith('metricas/') && req.method === 'GET') {
-    const r = await metricas.resumo(rota.slice('metricas/'.length), url.searchParams.get('dias'));
+    const r = await metricas.resumo(rota.slice('metricas/'.length), url.searchParams.get('dias'), { inicio: url.searchParams.get('inicio'), fim: url.searchParams.get('fim') });
     return r ? json(res, r) : json(res, { erro: 'Site não encontrado.' }, 404);
   }
 
