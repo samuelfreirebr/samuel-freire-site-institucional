@@ -9,11 +9,8 @@
 
 /* cliente: nome igual ao do CRM. so: id do Samuel quando a área tem
    muita gente e só interessam as tarefas dele. fica: filtro extra.
-   Casa SW (pedido do Samuel em 29/10/2026): tudo que não está concluído,
-   com prazo de novembro em diante; Reels nunca entra. */
+   Casa SW saiu do painel em 12/11/2026: é gerenciada só no ClickUp. */
 const AREAS = [
-  { cliente: 'SW Surgical World', chave: 'CLICKUP_TOKEN_EDA', time: '90171444669', so: null,
-    fica: (t) => t.prazo >= '2026-11-01' && !/^\s*reels?\b/i.test(t.titulo) },
   { cliente: 'Etria', chave: 'CLICKUP_TOKEN_ETRIA', time: '90133035284', so: '112137541' },
 ];
 

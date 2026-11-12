@@ -386,6 +386,14 @@ async function apagarEnvio(e) {
   } catch (x) { avisar(x.message, 'erro'); }
 }
 
+// Nome de quem respondeu: a pergunta de nome/empresa; se não houver, a primeira resposta de texto.
+function nomeDoEnvio(x) {
+  const r = x.respostas || {};
+  const qs = f.blocos.flatMap((b) => b.perguntas || []).filter((q) => typeof r[q.id] === 'string' && r[q.id].trim() && r[q.id] !== PULO);
+  const q = qs.find((q) => q.id === 'razaoSocial' || /empresa|nome|company|business/i.test(q.pergunta || '')) || qs[0];
+  return q ? r[q.id].trim().slice(0, 60) : 'Sem nome';
+}
+
 function respostasEl() {
   const envios = enviosDoForm();
   if (!envios.length) {
@@ -409,7 +417,7 @@ function respostasEl() {
     envios.length > 1 || tom !== 'ok'
       ? h('div', { class: 'br-envios', role: 'tablist', 'aria-label': 'Respostas recebidas' },
         ...envios.map((x, i) => { const [r, t] = estadoDe(x); return h('button', { type: 'button', class: 'br-envio', 'aria-pressed': x.id === e.id ? 'true' : 'false', onclick: () => { envioSel = x.id; pintar(); } },
-          h('b', {}, x.respostas?.razaoSocial || 'Sem nome'), h('small', {}, quando(x.concluidoEm || x.atualizadoEm)), h('span', { class: 'br-envio__st br-envio__st--' + t }, r)); }))
+          h('b', {}, nomeDoEnvio(x)), h('small', {}, quando(x.concluidoEm || x.atualizadoEm)), h('span', { class: 'br-envio__st br-envio__st--' + t }, r)); }))
       : null,
     h('header', { class: 'br-resp-cab' },
       h('div', {},

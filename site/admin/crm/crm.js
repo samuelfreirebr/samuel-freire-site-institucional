@@ -149,10 +149,6 @@ function desenharTarefas() {
   let lista = [...todasTarefas(clientes), ...clickup].filter((t) => (feitas && t.estado === 'feita') || base.filtro(t))
     .filter((t) => !cli || (cli === 'interno' ? t.cliente.interno : t.cliente.id === cli));
   lista = ordenarTarefas(lista);
-  // A Casa SW manda dezenas de peças por mês: ficam num bloco só, por médico.
-  const daSw = (t) => t.clickup && /surgical|casa sw/i.test(t.cliente.nome);
-  const sw = lista.filter(daSw);
-  lista = lista.filter((t) => !daSw(t));
 
   const por = $('#agrupar').value;
   const grupos = new Map();
@@ -167,18 +163,10 @@ function desenharTarefas() {
       <summary><span class="tf-grupo__nome${k === 'atrasada' ? ' atraso' : ''}">${esc(nomeGrupo(k))}</span><span class="tf-grupo__n">${grupos.get(k).length}</span></summary>
       <ul class="tf-lista">${grupos.get(k).map((t) => linhaTarefa(t, { mostrarCliente: por !== 'cliente' })).join('')}</ul>
     </details>`).join('');
-  if (sw.length) {
-    const porLista = Map.groupBy(sw.sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999')), (t) => t.clickup.lista || 'Sem lista');
-    $('#grupos').innerHTML += `<details class="tf-grupo tf-grupo--sw" data-grupo="casa-sw"${fechados.includes('casa-sw') ? '' : ' open'}>
-      <summary><span class="tf-grupo__nome">Casa SW (ClickUp)</span><span class="tf-grupo__n">${sw.length}</span></summary>
-      ${[...porLista].sort((a, b) => a[0].localeCompare(b[0])).map(([nome, ts]) => `<p class="tf-subgrupo">${esc(nome)} <span>${ts.length}</span></p>
-      <ul class="tf-lista">${ts.map((t) => linhaTarefa(t, { mostrarCliente: false })).join('')}</ul>`).join('')}
-    </details>`;
-  }
   if (!$('#grupos').innerHTML) $('#grupos').innerHTML = `<div class="crm-card-box crm-vazio-grande"><b>Nada aqui.</b><p>Nenhuma tarefa nesta visão. Use "Nova tarefa" no topo.</p></div>`;
   // Quadro: uma coluna por situação. Tarefa do painel arrasta; a do ClickUp abre no ClickUp.
   const cor = { afazer: 'lead', andamento: 'andamento', aguardando: 'proposta', feita: 'recorrente' };
-  const todasDaVisao = [...lista, ...sw];
+  const todasDaVisao = lista;
   $('#tf-quadro').innerHTML = Object.entries(NOMES.estado).map(([k, nome]) => {
     const col = todasDaVisao.filter((t) => t.estado === k).sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999'));
     return `<section class="crm-col" data-etapa="${cor[k]}" data-coluna="${k}">
