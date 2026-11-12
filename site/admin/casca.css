@@ -136,17 +136,9 @@ input[type=text], input[type=number], input[type=password], input[type=url], inp
 .notif .vazio { padding: var(--sp-xs) var(--sp-2xs); color: var(--muted); font-size: var(--t-small); }
 .notif__grupo h3 { display: flex; gap: .5em; padding: 0 .5rem; margin-bottom: 2px; font-size: var(--t-eyebrow); font-weight: var(--w-bold); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .notif__grupo h3.atraso { color: var(--brand); }
-.notif ul, .notif-aviso ul { display: grid; list-style: none; margin: 0; padding: 0; }
-.notif li a, .notif-aviso li a { display: grid; gap: 2px; padding: .5rem; border-radius: 12px; color: var(--ink); }
+.notif ul { display: grid; list-style: none; margin: 0; padding: 0; }
+.notif li a { display: grid; gap: 2px; padding: .5rem; border-radius: 12px; color: var(--ink); }
 .notif li a:hover { background: var(--bg-2); }
-.notif li b, .notif-aviso li b { font-size: var(--t-small); font-weight: var(--w-semi); overflow-wrap: anywhere; }
-.notif li small, .notif-aviso li small { color: var(--muted); font-size: var(--t-eyebrow); }
+.notif li b { font-size: var(--t-small); font-weight: var(--w-semi); overflow-wrap: anywhere; }
+.notif li small { color: var(--muted); font-size: var(--t-eyebrow); }
 .notif li.novo b::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: .45em; border-radius: 50%; background: var(--brand); vertical-align: .1em; }
-.notif-aviso { position: fixed; z-index: 60; top: 12px; left: 50%; translate: -50% 0; display: grid; gap: 4px; width: min(calc(100vw - 32px), 22rem); padding: var(--sp-sm); border-radius: 18px; background: var(--ink); color: var(--brand-ink, #fff); box-shadow: 0 18px 50px rgba(20, 21, 23, .25); animation: notif-entra var(--d-base, .3s) var(--ease-out, ease-out); transition: opacity .5s, translate .5s; }
-.notif-aviso > b { padding: 0 .5rem; font-size: var(--t-eyebrow); color: var(--brand); text-transform: uppercase; letter-spacing: .06em; }
-.notif-aviso li a { color: inherit; padding: .35rem .5rem; }
-.notif-aviso li small { color: rgba(255, 255, 255, .6); }
-.notif-aviso .mini { justify-self: end; }
-.notif-aviso.some { opacity: 0; translate: -50% -12px; }
-@keyframes notif-entra { from { opacity: 0; translate: -50% -12px; } }
-@media (prefers-reduced-motion: reduce) { .notif-aviso { animation: none; transition: none; } }

@@ -160,22 +160,8 @@ function ligarNotificacoes() {
     return novos;
   };
 
-  // Ao entrar: se tem novidade que ainda não apareceu, um aviso pequeno no topo.
-  buscar('/api/novidades').then((d) => {
-    const novos = contar(d);
-    let avisado = '';
-    try { avisado = sessionStorage.getItem('notif-avisado') || ''; } catch (e) {}
-    if (!novos.length || novos[0].quando <= avisado) return;
-    try { sessionStorage.setItem('notif-avisado', novos[0].quando); } catch (e) {}
-    const aviso = document.createElement('div');
-    aviso.className = 'notif-aviso';
-    aviso.setAttribute('role', 'status');
-    aviso.innerHTML = `<b>${novos.length === 1 ? '1 novidade' : `${novos.length} novidades`}</b><ul>${novos.slice(0, 3).map((e) => linhaEvento(e, '')).join('')}</ul><button type="button" class="mini">Ver todas</button>`;
-    aviso.querySelector('button').onclick = () => { aviso.remove(); caixa.showPopover(); };
-    document.body.append(aviso);
-    setTimeout(() => aviso.classList.add('some'), 7000);
-    setTimeout(() => aviso.remove(), 7600);
-  });
+  // Ao entrar só acende a bolinha do sino; a janela abre apenas no clique.
+  buscar('/api/novidades').then(contar);
 
   // A janelinha abre logo abaixo do sino, mesmo quando a barra do topo quebra em duas linhas.
   caixa.addEventListener('beforetoggle', (ev) => { if (ev.newState === 'open') caixa.style.top = sino.getBoundingClientRect().bottom + 8 + 'px'; });
