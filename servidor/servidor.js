@@ -288,6 +288,21 @@ async function apiCrm(req, res, rota, origem) {
     const d = await crm.lerComIa({ texto: form.campos.texto || '', arquivos: form.lista || [] });
     return json(res, d, d.erro ? (d.semChave ? 503 : 502) : 200);
   }
+  // Atualizar lead pela conversa: mesmo envio do cadastro pela IA, outra resposta.
+  if (rota === 'crm/ia-atualizar' && req.method === 'POST') {
+    let corpo;
+    try { corpo = await lerCorpo(req, 32 * 1024 * 1024); }
+    catch (e) { return json(res, { erro: 'Os arquivos passam de 30 MB. Mande menos de uma vez.' }, 413); }
+    const form = lerMultipart(corpo, req.headers['content-type']);
+    if (!form) return json(res, { erro: 'Envio inválido.' }, 400);
+    const d = await crm.atualizarComIa({ texto: form.campos.texto || '', arquivos: form.lista || [] });
+    return json(res, d, d.erro ? (d.semChave ? 503 : 502) : 200);
+  }
+  const msg = rota.match(/^crm\/([a-f0-9]{12})\/mensagem$/);
+  if (msg && req.method === 'POST') {
+    const d = await crm.mensagemFollowup(msg[1]);
+    return json(res, d, d.erro ? (d.semChave ? 503 : 502) : 200);
+  }
   const apagar = rota.match(/^crm\/([a-f0-9]{12})$/);
   if (apagar && req.method === 'DELETE') {
     return (await crm.apagar(apagar[1])) ? json(res, { ok: true }) : json(res, { erro: 'Cliente não encontrado.' }, 404);

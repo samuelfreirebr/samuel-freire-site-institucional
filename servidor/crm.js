@@ -17,7 +17,7 @@ import { promises as fs } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { RAIZ_DADOS } from './dados.js';
-import { pedirJsonIa, temChaveIa, prepararAnexos, semTravessao } from './proposta-ia.js';
+import { pedirJsonIa, temChaveIa, prepararAnexos, semTravessao, lerZip } from './proposta-ia.js';
 
 const ARQ = path.join(RAIZ_DADOS, 'crm.json');
 
@@ -247,4 +247,142 @@ export async function lerComIa({ texto, arquivos }) {
       tarefas: (Array.isArray(ia.tarefas) ? ia.tarefas : []).slice(0, 10).map((x) => ({ titulo: limpo(x.titulo, 300), prazo: data(x.prazo) })).filter((x) => x.titulo),
     },
   };
+}
+
+/* ---------- Atualizar lead pela conversa ----------
+   O Samuel solta a conversa exportada do WhatsApp (.txt ou .zip),
+   um print, ou dita o que aconteceu. A IA acha o lead na lista e
+   propõe etapa, próximo passo, data do follow-up, a nota da linha do
+   tempo e o Mapa de Preço. Nada é gravado aqui: a tela mostra para
+   ele conferir e salvar. */
+
+const LIMITE_CONVERSA = 40000;
+const hojeSp = (d = new Date()) => d.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });   // AAAA-MM-DD no horário do Samuel   // caracteres do fim da conversa (o mais recente é o que importa)
+
+/* Conversa exportada do WhatsApp: do ZIP só entra o texto (fotos,
+   áudios e figurinhas ficam de fora), e do texto só o fim.
+   ponytail: mídia do ZIP é ignorada; mandar o print solto se importar. */
+export function soConversa(arquivos) {
+  const fim = (bytes) => bytes.toString('utf8').slice(-LIMITE_CONVERSA);
+  return (arquivos || []).flatMap((a) => {
+    const nome = String(a.nome || '');
+    if (/\.zip$/i.test(nome)) {
+      return lerZip(a.bytes).filter((e) => /\.txt$/i.test(e.nome))
+        .map((e) => ({ nome: e.nome.split('/').pop(), tipo: 'text/plain', bytes: Buffer.from(fim(e.bytes)) }));
+    }
+    if (/\.txt$/i.test(nome)) return [{ ...a, bytes: Buffer.from(fim(a.bytes)) }];
+    return [a];
+  });
+}
+
+const ESQUEMA_ATUALIZAR = {
+  type: 'object', additionalProperties: false,
+  required: ['id', 'nome', 'contato', 'etapa', 'servico', 'origemLead', 'proximoContato', 'proximoPasso', 'resumo', 'mapaPreco', 'motivoPerda'],
+  properties: {
+    id: { type: 'string' }, nome: { type: 'string' }, contato: { type: 'string' },
+    etapa: { type: 'string', enum: ETAPAS.map((e) => e.id) },
+    servico: { type: 'string' }, origemLead: { type: 'string', enum: ['', ...ORIGENS] },
+    proximoContato: { type: 'string' }, proximoPasso: { type: 'string' },
+    resumo: { type: 'string' }, mapaPreco: { type: 'string' }, motivoPerda: { type: 'string' },
+  },
+};
+
+const sistemaAtualizar = (hoje, semana) => `Você mantém o CRM de leads do Samuel Freire, web designer (sites, landing pages, criativos, identidade visual, sistemas) que atende o Brasil e negócios locais nos EUA.
+Recebe uma conversa (WhatsApp exportado, print, e-mail) ou um recado ditado pelo Samuel, e a lista de clientes e leads do CRM. Hoje é ${hoje} (${semana}).
+Devolva a atualização de UM lead:
+- id: o id do lead da lista que é dono da conversa (confira pelo telefone, nome da pessoa ou da empresa). Vazio se for alguém que não está na lista (lead novo).
+- nome: o nome que está na lista; se for novo, o nome da empresa, ou o da pessoa.
+- contato: só se o material trouxer telefone, e-mail ou pessoa que a ficha ainda não tem; formato "pessoa · telefone · e-mail". Senão vazio.
+- etapa: lead (conversa ou interesse), proposta (proposta enviada), followup (proposta enviada e o Samuel está cobrando resposta), assinatura (aceitou, falta assinar ou pagar), fechado (assinou ou pagou), encerrado (disse que não ou sumiu de vez). Nunca volte uma etapa sem motivo claro; na dúvida, mantenha a da lista.
+- servico: o que quer, até 12 palavras; vazio se a ficha já diz e nada mudou.
+- origemLead: só para lead novo (whatsapp, instagram, indicacao, prospeccao, site, outro); senão vazio.
+- proximoContato: AAAA-MM-DD do dia em que o Samuel deve falar de novo. Converta datas relativas a partir de hoje ("amanhã", "segunda", "semana que vem"). Se o lead prometeu algo para um dia, o dia seguinte a esse. Se a última mensagem é do Samuel e está sem resposta, 2 dias úteis depois dela. Se a última mensagem é do lead e pede resposta do Samuel, hoje. Encerrado: vazio.
+- proximoPasso: a próxima ação do Samuel, curta (ex.: "Cobrar as fotos e o logo").
+- resumo: o que aconteceu de novo nesta conversa, em 1 a 3 linhas, com a data das mensagens. É o que vai para a linha do tempo.
+- mapaPreco: só se a conversa trouxer algo comercial. Texto com estas linhas, cada uma preenchida só com o que aparece no material e "⚠️ não apareceu" no resto:
+Tamanho do negócio:
+Potencial de receita (inclui recorrência):
+Modelo de atendimento:
+Estágio do negócio:
+Valor que espera receber:
+Disposição a pagar:
+Nunca invente preço, valor ou número. Sem nada comercial, vazio.
+- motivoPerda: só se encerrado, o porquê em poucas palavras.
+Português do Brasil, sem travessão. Nunca senha nem dado bancário.`;
+
+export async function atualizarComIa({ texto, arquivos }) {
+  if (!temChaveIa()) return { erro: 'A leitura pela IA precisa da OPENROUTER_API_KEY na stack.', semChave: true };
+  const t = String(texto || '').trim();
+  if (!t && !(arquivos || []).length) return { erro: 'Cole a conversa, dite o recado ou escolha um arquivo.' };
+  let anexos;
+  try { anexos = prepararAnexos(soConversa(arquivos)); }
+  catch (e) { return { erro: e.message }; }
+  const lista = (await listar()).filter((c) => !c.interno);
+  const linhaDe = (c) => [c.id, c.nome, c.etapa, c.contato, c.servico, c.proximoPasso, c.proximoContato].map((v) => String(v || '').replace(/[|\n]/g, ' ')).join(' | ');
+  const partes = [
+    { type: 'input_text', text: '--- Clientes e leads do CRM (id | nome | etapa | contato | serviço | próximo passo | falar em) ---\n' + lista.map(linhaDe).join('\n') },
+  ];
+  if (t) partes.push({ type: 'input_text', text: '--- Material colado ou ditado ---\n' + t.slice(-LIMITE_CONVERSA) });
+  partes.push(...anexos.partes);
+  if (partes.length < 2) return { erro: 'Nenhum arquivo pôde ser lido. Use texto, imagem, PDF ou o ZIP exportado do WhatsApp.', lidos: anexos.lidos };
+  const agora = new Date();
+  const hoje = hojeSp(agora);
+  const semana = agora.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'America/Sao_Paulo' });
+  let ia;
+  try { ({ ia } = await pedirJsonIa(partes, { sistema: sistemaAtualizar(hoje, semana), esquema: ESQUEMA_ATUALIZAR, nome: 'atualizacao_do_lead', tokens: 3000 })); }
+  catch (e) { return { erro: 'A IA não respondeu: ' + e.message, lidos: anexos.lidos }; }
+  return { lidos: anexos.lidos, atualizacao: limparAtualizacao(ia, lista) };
+}
+
+// O que a IA devolveu, só nos campos e formatos aceitos. id fora da lista vira lead novo.
+export function limparAtualizacao(ia, lista) {
+  const l = (v, max) => semTravessao(corte(v, max));
+  const dono = lista.find((c) => c.id === ia.id);
+  return {
+    id: dono ? dono.id : '',
+    nome: dono ? dono.nome : l(ia.nome, 160),
+    contato: l(ia.contato, 300),
+    etapa: ETAPAS.some((e) => e.id === ia.etapa) ? ia.etapa : (dono?.etapa || 'lead'),
+    servico: l(ia.servico, 300),
+    origemLead: dono ? '' : umDe(ORIGENS, ia.origemLead, ''),
+    proximoContato: ia.etapa === 'encerrado' ? '' : data(ia.proximoContato),
+    proximoPasso: l(ia.proximoPasso, 500),
+    resumo: semTravessao(corte(ia.resumo, 1000)),
+    mapaPreco: semTravessao(corte(ia.mapaPreco, 2000)),
+    motivoPerda: ia.etapa === 'encerrado' ? l(ia.motivoPerda, 500) : '',
+  };
+}
+
+/* ---------- Mensagem de follow-up ----------
+   Rascunho curto para o Samuel mandar hoje, no tom dele, a partir do
+   que a ficha sabe. Ele lê, ajusta e manda pelo WhatsApp. */
+
+const sistemaMensagem = (hoje) => `Você escreve a mensagem de follow-up que o Samuel Freire (web designer) vai mandar hoje pelo WhatsApp para um lead. Hoje é ${hoje}.
+Regras:
+- Tom de pessoa, informal e educado, como "Fala, Fulano, tudo bem?". No idioma em que a conversa com o lead acontece; sem pista, português do Brasil.
+- De 2 a 4 linhas curtas. Uma pergunta só, fácil de responder.
+- Parte do próximo passo e do que aconteceu por último. Se ele ficou de mandar algo, lembre com leveza; se a proposta foi enviada, pergunte se deu para ver.
+- Sem pressão, sem desconto, sem "só passando para lembrar", sem lista, sem emoji em excesso.
+- Nunca invente preço, prazo, resultado ou fato que não está na ficha.
+- Sem travessão.`;
+
+export async function mensagemFollowup(id) {
+  if (!temChaveIa()) return { erro: 'A mensagem pela IA precisa da OPENROUTER_API_KEY na stack.', semChave: true };
+  const c = (await listar()).find((x) => x.id === id);
+  if (!c) return { erro: 'Cliente não encontrado.' };
+  const ficha = [
+    `Nome: ${c.nome}`, `Contato: ${c.contato || ''}`, `Etapa: ${ETAPAS.find((e) => e.id === c.etapa)?.nome}`,
+    `Quer: ${c.servico || ''}`, `Próximo passo do Samuel: ${c.proximoPasso || ''}`,
+    `Notas: ${String(c.notas || '').slice(-3000)}`,
+    'Últimos acontecimentos:', ...(c.linha || []).slice(-8).map((x) => `${x.data.slice(0, 10)}: ${x.texto}`),
+  ].join('\n');
+  let ia;
+  try {
+    ({ ia } = await pedirJsonIa([{ type: 'input_text', text: ficha }], {
+      sistema: sistemaMensagem(hojeSp()),
+      esquema: { type: 'object', additionalProperties: false, required: ['mensagem'], properties: { mensagem: { type: 'string' } } },
+      nome: 'mensagem_followup', tokens: 800,
+    }));
+  } catch (e) { return { erro: 'A IA não respondeu: ' + e.message }; }
+  return { mensagem: semTravessao(corte(ia.mensagem, 1500)) };
 }

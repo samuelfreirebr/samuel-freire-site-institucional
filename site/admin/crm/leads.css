@@ -1,0 +1,19 @@
+/* Aba Leads: "Falar hoje" com a mensagem de follow-up (leads.js).
+   O resto da aba usa crm.css. */
+
+/* ---------- Central de ajustes ---------- */
+.lh {
+  --lh-respiro: var(--sp-md);       /* distância até os filtros */
+  --lh-msg-largura: 64ch;           /* largura máxima da mensagem */
+  margin-bottom: var(--lh-respiro);
+}
+
+.lh-lista > li { padding: var(--sp-2xs) 0; }
+.lh-linha { display: flex; align-items: center; gap: var(--sp-xs) var(--sp-sm); flex-wrap: wrap; }
+.lh-linha .crm-cli { flex: 1 1 14rem; min-width: 0; }
+.lh-linha .crm-cli small { display: block; color: var(--muted); font-size: var(--t-eyebrow); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lh-acoes { display: flex; align-items: center; gap: var(--sp-xs); flex-wrap: wrap; }
+.lh-mandei { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; color: var(--muted); font-size: var(--t-eyebrow); }
+.lh-msg { display: grid; gap: var(--sp-2xs); max-width: var(--lh-msg-largura); margin: var(--sp-xs) 0 var(--sp-2xs); }
+.lh-msg textarea { width: 100%; }
+.lh-msg__acoes { display: flex; align-items: center; gap: var(--sp-xs); flex-wrap: wrap; color: var(--muted); font-size: var(--t-eyebrow); }

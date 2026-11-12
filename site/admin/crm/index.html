@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="/admin/casca.css?v=20261029i">
 <script type="module" src="/admin/casca.js?v=20261029i"></script>
 <link rel="stylesheet" href="/admin/crm/crm.css?v=20261102a">
+<link rel="stylesheet" href="/admin/crm/leads.css?v=20261112b">
 <link rel="modulepreload" href="/admin/icones.js">
 <link rel="modulepreload" href="/admin/crm/comum.js">
 <link rel="modulepreload" href="/admin/crm/graficos.js">
@@ -167,11 +168,16 @@
         <p class="crm-sub" id="leads-sub">Quem ainda não fechou: quando falar de novo e quem está parado.</p>
       </div>
       <div class="crm-cab__acoes">
+        <button class="mini mini--ativo" type="button" id="atualizar-conversa">Atualizar pela conversa</button>
         <div class="grupo" role="group" aria-label="Formato">
           <button type="button" data-formato="leads:tabela" aria-selected="true">Tabela</button>
           <button type="button" data-formato="leads:funil" aria-selected="false">Funil</button>
         </div>
       </div>
+    </div>
+    <div class="crm-card-box lh">
+      <header class="crm-box__topo"><h3>Falar hoje</h3><span class="crm-box__dica" id="hoje-total"></span></header>
+      <ul class="crm-lista lh-lista" id="hoje-leads"></ul>
     </div>
     <div class="crm-pilulas crm-pilulas--filtro" id="leads-filtros" role="group" aria-label="Filtrar leads"></div>
     <div class="crm-quadro" id="leads-funil" hidden></div>
@@ -295,6 +301,56 @@
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/crm.js?v=20261029i"></script>
+<!-- Atualizar um lead pela conversa (leads.js) -->
+<dialog id="conversa-jan" aria-labelledby="conversa-titulo">
+  <header class="modal__topo">
+    <b id="conversa-titulo">Atualizar pela conversa</b>
+    <button class="mini mini--ativo" type="submit" form="conversa-form" id="conversa-salvar" hidden>Salvar</button>
+    <button class="mini" type="button" data-fechar>Fechar</button>
+  </header>
+  <div class="modal__corpo">
+    <div class="ia-solta" id="conversa-solta">
+      <div class="ia-solta__topo">
+        <span class="ia-solta__ico" aria-hidden="true">✦</span>
+        <div><b>Solte a conversa ou dite o que aconteceu</b><small>No WhatsApp: abra a conversa, Mais, Exportar conversa, Sem mídia, e solte o arquivo aqui. Também vale print ou texto colado. No celular, toque no microfone do teclado e fale, por exemplo: "O João da Prime disse que manda as fotos amanhã".</small></div>
+      </div>
+      <textarea id="conversa-texto" rows="4" placeholder="Cole a conversa ou dite o recado"></textarea>
+      <div class="ia-solta__acoes">
+        <label class="mini ia-solta__arquivo">Escolher arquivos<input type="file" id="conversa-arquivos" multiple hidden></label>
+        <span class="ia-solta__lista" id="conversa-lista"></span>
+        <button class="mini mini--ativo" type="button" id="conversa-ler">Ler com IA</button>
+      </div>
+      <p class="ia-solta__res" id="conversa-res" hidden></p>
+    </div>
+    <form id="conversa-form" hidden>
+      <label><span>Lead</span><select name="quem" id="conversa-quem"></select></label>
+      <div class="linha linha--2" id="conversa-novo" hidden>
+        <label><span>Nome do lead novo</span><input type="text" name="nome" maxlength="160"></label>
+        <label><span>Origem</span><select name="origemLead"></select></label>
+      </div>
+      <div class="linha linha--2">
+        <label><span>Etapa</span><select name="etapa" id="conversa-etapa"></select></label>
+        <label><span>Falar de novo em</span><input type="date" name="proximoContato"></label>
+      </div>
+      <div class="crm-atalhos" id="conversa-atalhos">
+        <span>Atalhos:</span>
+        <button class="mini" type="button" data-dias="0">Hoje</button>
+        <button class="mini" type="button" data-dias="1">Amanhã</button>
+        <button class="mini" type="button" data-dias="2">Em 2 dias</button>
+        <button class="mini" type="button" data-dias="7">Em 1 semana</button>
+      </div>
+      <label id="conversa-perda" hidden><span>Por que não fechou</span><input type="text" name="motivoPerda" maxlength="500"></label>
+      <label><span>Próximo passo</span><input type="text" name="proximoPasso" maxlength="500" placeholder="Ex.: cobrar as fotos e o logo"></label>
+      <label><span>O que aconteceu</span><textarea name="resumo" rows="3" maxlength="1000"></textarea><small>Vai para a linha do tempo da ficha.</small></label>
+      <div class="linha linha--2">
+        <label><span>Contato</span><input type="text" name="contato" maxlength="300" placeholder="Telefone, e-mail"><small id="conversa-contato-dica"></small></label>
+        <label><span>O que quer</span><input type="text" name="servico" maxlength="300"><small>Vazio: fica o que a ficha já tem.</small></label>
+      </div>
+      <label id="conversa-mapa" hidden><span>Mapa de Preço do Lead</span><textarea name="mapaPreco" rows="7" maxlength="2000"></textarea><small>Vai para as notas da ficha. O que tem ⚠️ não apareceu na conversa: pergunte na próxima.</small></label>
+    </form>
+  </div>
+</dialog>
+
+<script type="module" src="/admin/crm/crm.js?v=20261112a"></script>
 </body>
 </html>

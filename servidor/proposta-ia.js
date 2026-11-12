@@ -35,7 +35,7 @@ export const escolherModelo = async () => process.env.OPENROUTER_MODELO_TEXTO ||
    Lê o diretório central e infla cada entrada. Sem dependência,
    como o resto do servidor. Entrada cifrada ou com método diferente
    de "guardado" e "deflate" é pulada. */
-function lerZip(buf) {
+export function lerZip(buf) {
   const saida = [];
   let fim = -1;
   for (let i = buf.length - 22; i >= Math.max(0, buf.length - 66000); i--) {

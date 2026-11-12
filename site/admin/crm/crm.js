@@ -12,6 +12,7 @@ import {
 } from './comum.js';
 import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js';
 import { ico } from '../icones.js';
+import { ligarLeads, desenharHoje } from './leads.js?v=20261112b';
 
 let clientes = [], etapas = [], origens = [];
 let clickup = [];   // tarefas do ClickUp, só leitura (chegam depois do CRM)
@@ -325,8 +326,10 @@ function desenharLeads() {
       <td class="crm-tabela__acoes">${LEADS.includes(c.etapa) ? '<button class="mini" type="button" data-acao="contato">Registrar contato</button>' : ''}</td>
     </tr>`;
   }).join('') || `<tr><td colspan="7" class="vazio">${abertos ? 'Ninguém neste filtro.' : 'Nenhum lead em aberto. Use "Novo cliente ou lead".'}</td></tr>`;
+  desenharHoje();
   $('#leads-funil').innerHTML = colunasEtapa(etapas.filter((e) => LEADS.includes(e.id)), todos.filter((c) => LEADS.includes(c.etapa)));
 }
+ligarLeads({ clientes: () => clientes, etapas: () => etapas, guardar: (salvo) => guardar(salvo) });
 $('#leads-filtros').addEventListener('click', (e) => {
   const b = e.target.closest('[data-filtro]');
   if (b) { filtroLead = b.dataset.filtro; desenharLeads(); }
