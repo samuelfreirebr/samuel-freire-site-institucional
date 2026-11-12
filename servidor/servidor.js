@@ -266,7 +266,8 @@ function chaveDoClaude(req, res) {
 }
 
 /* CRM: GET lista, POST cria ou atualiza (só os campos enviados),
-   POST crm/<id>/linha anota na linha do tempo, DELETE crm/<id> apaga
+   POST crm/<id>/linha anota na linha do tempo, POST crm/<id>/tarefa
+   grava uma tarefa só (só os campos enviados), DELETE crm/<id> apaga
    (só com sessão: a chave do Claude é barrada antes). */
 async function apiCrm(req, res, rota, origem) {
   if (rota === 'crm') {
@@ -306,6 +307,13 @@ async function apiCrm(req, res, rota, origem) {
   const apagar = rota.match(/^crm\/([a-f0-9]{12})$/);
   if (apagar && req.method === 'DELETE') {
     return (await crm.apagar(apagar[1])) ? json(res, { ok: true }) : json(res, { erro: 'Cliente não encontrado.' }, 404);
+  }
+  const t = rota.match(/^crm\/([a-f0-9]{12})\/tarefa$/);
+  if (t && req.method === 'POST') {
+    const dado = await lerJson(req, res, 65536);
+    if (dado === undefined) return;
+    try { return json(res, await crm.salvarTarefa(t[1], dado, origem)); }
+    catch (e) { return json(res, { erro: e.message }, 400); }
   }
   const m = rota.match(/^crm\/([a-f0-9]{12})\/linha$/);
   if (m && req.method === 'POST') {

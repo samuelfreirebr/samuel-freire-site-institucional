@@ -12,11 +12,11 @@
 <link rel="stylesheet" href="/admin/painel.css?v=20261029i">
 <link rel="stylesheet" href="/admin/casca.css?v=20261029i">
 <script type="module" src="/admin/casca.js?v=20261029i"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=20261102a">
+<link rel="stylesheet" href="/admin/crm/crm.css?v=20261112t">
 <link rel="stylesheet" href="/admin/crm/leads.css?v=20261112b">
 <link rel="modulepreload" href="/admin/icones.js">
-<link rel="modulepreload" href="/admin/crm/comum.js">
-<link rel="modulepreload" href="/admin/crm/graficos.js">
+<link rel="modulepreload" href="/admin/crm/comum.js?v=20261112t">
+<link rel="modulepreload" href="/admin/crm/graficos.js?v=20261112t">
 </head>
 <body>
 
@@ -112,30 +112,31 @@
     <div class="crm-cab">
       <div>
         <h2 class="crm-titulo" id="t-tarefas">Tarefas</h2>
-        <p class="crm-sub">Tudo o que precisa ser feito, de todos os clientes e da empresa.</p>
+        <p class="crm-sub">Tudo o que precisa ser feito, de todos os clientes e da empresa. Clique numa tarefa para ver e editar; tudo salva sozinho.</p>
       </div>
-      <div class="crm-cab__acoes">
-        <label class="crm-campo"><span>Agrupar por</span>
-          <select id="agrupar">
-            <option value="prazo">Prazo</option>
-            <option value="cliente">Cliente</option>
-            <option value="prioridade">Prioridade</option>
-            <option value="estado">Situação</option>
-          </select>
-        </label>
-        <label class="crm-campo"><span>Cliente</span><select id="filtro-cliente"><option value="">Todos</option></select></label>
-        <label class="crm-check"><input type="checkbox" id="mostrar-feitas"> Mostrar feitas</label>
-      </div>
-    </div>
-
-    <div class="crm-visoes">
-      <div class="crm-pilulas" id="visoes" role="group" aria-label="Visões"></div>
       <div class="grupo" role="group" aria-label="Formato">
         <button type="button" data-formato="tarefas:lista" aria-selected="true">Lista</button>
         <button type="button" data-formato="tarefas:quadro" aria-selected="false">Quadro</button>
       </div>
-      <button class="mini" type="button" id="sincronizar" title="Busca de novo as tarefas do ClickUp e do painel">Sincronizar</button>
-        <button class="mini" type="button" id="salvar-visao" title="Guarda o filtro atual como uma visão sua">Salvar esta visão</button>
+    </div>
+
+    <div class="tf-dias" id="tf-dia" role="group" aria-label="Meu dia: clique para filtrar"></div>
+
+    <div class="tf-barra">
+      <input type="search" id="tf-busca" class="crm-busca" placeholder="Buscar tarefa, cliente ou etiqueta" aria-label="Buscar tarefa">
+      <label class="crm-campo"><span>Responsável</span><select id="filtro-resp"></select></label>
+      <label class="crm-campo"><span>Cliente</span><select id="filtro-cliente"><option value="">Todos</option></select></label>
+      <label class="crm-campo"><span>Etiqueta</span><select id="filtro-etq"><option value="">Todas</option></select></label>
+      <label class="crm-campo"><span>Agrupar por</span>
+        <select id="agrupar">
+          <option value="prazo">Prazo</option>
+          <option value="estado">Situação</option>
+          <option value="responsavel">Responsável</option>
+          <option value="cliente">Cliente</option>
+          <option value="prioridade">Prioridade</option>
+        </select>
+      </label>
+      <label class="crm-check"><input type="checkbox" id="mostrar-feitas"> Mostrar feitas</label>
     </div>
 
     <div id="grupos"></div>
@@ -351,6 +352,6 @@
   </div>
 </dialog>
 
-<script type="module" src="/admin/crm/crm.js?v=20261112a"></script>
+<script type="module" src="/admin/crm/crm.js?v=20261112t"></script>
 </body>
 </html>

@@ -12,11 +12,11 @@
 <link rel="stylesheet" href="/admin/painel.css?v=20261029i">
 <link rel="stylesheet" href="/admin/casca.css?v=20261029i">
 <script type="module" src="/admin/casca.js?v=20261029i"></script>
-<link rel="stylesheet" href="/admin/crm/crm.css?v=20261102a">
+<link rel="stylesheet" href="/admin/crm/crm.css?v=20261112t">
 <link rel="stylesheet" href="/admin/inicio.css?v=20261029i">
 <link rel="modulepreload" href="/admin/icones.js">
-<link rel="modulepreload" href="/admin/crm/comum.js">
-<link rel="modulepreload" href="/admin/crm/graficos.js">
+<link rel="modulepreload" href="/admin/crm/comum.js?v=20261112t">
+<link rel="modulepreload" href="/admin/crm/graficos.js?v=20261112t">
 </head>
 <body>
 
@@ -96,11 +96,11 @@
 
 <script type="module">
 import { ico } from '/admin/icones.js';
-import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from '/admin/crm/graficos.js';
+import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from '/admin/crm/graficos.js?v=20261112t';
 import {
   $, esc, carregarCrm, normalizar, documentos, visiveis, todasTarefas, grupoPrazo, ordenarTarefas, linhaTarefa, ligarLista,
   leadPedeAtencao, situacaoLead, prazoTexto, diasSemMovimento, quando, ligarBusca,
-} from '/admin/crm/comum.js';
+} from '/admin/crm/comum.js?v=20261112t';
 
 /* Cofre: colar no campo já guarda. O texto vai pelo sessionStorage, não
    pelo endereço, porque um prompt longo não cabe numa URL. Sem JS, o
@@ -132,7 +132,8 @@ function desenhar(docs) {
   const leads = visiveis(clientes).filter(leadPedeAtencao);
   const noAr = docs.propostas.filter((p) => p.publicada).length;
   const semResposta = docs.formularios.filter((f) => !f.respondidoEm).length;
-  const fila = tarefas.filter((t) => t.claude === 'fila' || t.claude === 'trabalhando').length;
+  const fila = tarefas.filter((t) => ['fila', 'trabalhando', 'precisa'].includes(t.claude)).length;
+  const precisa = tarefas.filter((t) => t.claude === 'precisa').length;
 
   const partes = [];
   if (hoje.length) partes.push(`${hoje.length} tarefa${hoje.length > 1 ? 's' : ''} para hoje`);
@@ -152,7 +153,7 @@ function desenhar(docs) {
     kpi('Follow-ups', leads.length, leads.length ? 'Leads para falar ou parados' : 'Leads em dia', '/admin/crm/#leads', 'leads', leads.length ? ' crm-kpi--alerta' : ''),
     kpi('Propostas no ar', noAr, `${docs.propostas.length} no total`, '/admin/propostas/', 'proposta'),
     kpi('Briefings sem resposta', semResposta, `${docs.formularios.length} formulário(s)`, '/admin/formularios/', 'formulario'),
-    kpi('Fila do Claude', fila, fila ? 'Peça: "pega a fila do CRM"' : 'Nada na fila', '/admin/crm/#tarefas', 'ia'),
+    kpi('Com o Claude', fila, precisa ? `${precisa} precisa${precisa > 1 ? 'm' : ''} de você` : fila ? 'Ele pega sozinho a cada 10 min' : 'Nada com o Claude', '/admin/crm/#tarefas', 'ia'),
   ].join('');
 
   $('#hoje').innerHTML = ordenarTarefas([...atrasadas, ...hoje, ...tarefas.filter((t) => t.prioridade === 'urgente' && !['hoje', 'atrasada'].includes(grupoPrazo(t)))])

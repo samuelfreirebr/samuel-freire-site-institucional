@@ -6,7 +6,7 @@ import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, documentos, mesmoCliente, NOMES, LEADS,
   dataCurta, quando, prazoTexto, iniciais, selo, whatsapp, abertas, atrasadas, proximaTarefa,
   diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, tarefasClickup, ligarLista, abrirTarefa, ligarBusca, copiar,
-} from '../comum.js';
+} from '../comum.js?v=20261112t';
 
 const [id, abaInicial] = decodeURIComponent(location.hash.slice(1)).split('&');
 let c = null, todos = [], etapas = [], origens = [], docs = { propostas: [], formularios: [] };

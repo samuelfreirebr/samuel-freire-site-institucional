@@ -9,8 +9,9 @@ import {
   hojeIso, dataCurta, diasAte, quando, prazoTexto, somarDias, iniciais, visiveis, abertas, atrasadas,
   proximaEntrega, proximaTarefa, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
   grupoPrazo, todasTarefas, tarefasClickup, ordenarTarefas, salvarTarefa, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
-} from './comum.js';
-import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js';
+  prazoSelo, chipEtiqueta, cabecalhoTarefas, todasEtiquetas, EQUIPE, MINUTOS_FILA_CLAUDE,
+} from './comum.js?v=20261112t';
+import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js?v=20261112t';
 import { ico } from '../icones.js';
 import { ligarLeads, desenharHoje } from './leads.js?v=20261112b';
 
@@ -51,7 +52,8 @@ function desenharGeral() {
   const hoje = tarefas.filter((t) => grupoPrazo(t) === 'hoje');
   const vencidas = tarefas.filter((t) => grupoPrazo(t) === 'atrasada');
   const urgentes = tarefas.filter((t) => t.prioridade === 'urgente');
-  const fila = tarefas.filter((t) => t.claude === 'fila' || t.claude === 'trabalhando');
+  const fila = tarefas.filter((t) => ['fila', 'trabalhando', 'precisa'].includes(t.claude));
+  const precisa = fila.filter((t) => t.claude === 'precisa').length;
   const leadsAtencao = visiveis(clientes).filter(leadPedeAtencao);
   const emAndamento = visiveis(clientes).filter((c) => c.etapa === 'andamento' || c.etapa === 'recorrente');
 
@@ -75,7 +77,7 @@ function desenharGeral() {
     kpi('Atrasadas', vencidas.length, vencidas.length ? 'Passaram do prazo' : 'Tudo no prazo', '#tarefas', 'calendario', vencidas.length ? ' crm-kpi--alerta' : ''),
     kpi('Follow-ups', leadsAtencao.length, leadsAtencao.length ? 'Leads para falar ou parados' : 'Leads em dia', '#leads', 'leads', leadsAtencao.length ? ' crm-kpi--alerta' : ''),
     kpi('Clientes ativos', emAndamento.length, `${visiveis(clientes).filter((c) => c.etapa === 'fechado').length} fechados sem começar`, '#clientes', 'painel'),
-    kpi('Fila do Claude', fila.length, fila.length ? 'Peça: "pega a fila do CRM"' : 'Nada na fila', '#tarefas', 'enviar'),
+    kpi('Com o Claude', fila.length, precisa ? `${precisa} precisa${precisa > 1 ? 'm' : ''} de você` : fila.length ? `Ele pega a cada ${MINUTOS_FILA_CLAUDE} min` : 'Nada com o Claude', '#tarefas', 'enviar', precisa ? ' crm-kpi--alerta' : ''),
   ].join('');
 
   $('#hoje-lista').innerHTML = ordenarTarefas([...vencidas, ...hoje, ...urgentes.filter((t) => !['hoje', 'atrasada'].includes(grupoPrazo(t)))])
@@ -117,59 +119,67 @@ function desenharGeral() {
 
 /* ---------- Tarefas ---------- */
 
-// Visões prontas, no estilo das visões salvas do Twenty. As do Samuel ficam neste navegador.
-const VISOES = {
-  abertas: { nome: 'Abertas', filtro: (t) => t.estado !== 'feita' },
-  urgentes: { nome: 'Urgentes', filtro: (t) => t.estado !== 'feita' && (t.prioridade === 'urgente' || t.prioridade === 'alta') },
-  hoje: { nome: 'Hoje e atrasadas', filtro: (t) => ['hoje', 'atrasada'].includes(grupoPrazo(t)) },
-  entregas: { nome: 'Entregas', filtro: (t) => t.estado !== 'feita' && t.tipo === 'entrega' },
-  claude: { nome: 'Fila do Claude', filtro: (t) => Boolean(t.claude) && t.claude !== 'feita' },
-  empresa: { nome: 'Da empresa', filtro: (t) => t.estado !== 'feita' && t.cliente.interno },
-  clickup: { nome: 'Do ClickUp', filtro: (t) => t.estado !== 'feita' && Boolean(t.clickup) },
+/* "Meu dia": cartões que contam e também filtram. Clicar de novo tira o
+   filtro. Os números já respeitam os filtros da barra (ex.: só as minhas). */
+const COM_CLAUDE = ['fila', 'trabalhando', 'precisa'];
+const FOCOS = {
+  atrasada: { nome: 'Atrasadas', filtro: (t) => grupoPrazo(t) === 'atrasada' },
+  hoje: { nome: 'Hoje', filtro: (t) => grupoPrazo(t) === 'hoje' },
+  semana: { nome: 'Próximos 7 dias', filtro: (t) => grupoPrazo(t) === 'semana' },
+  aguardando: { nome: 'Aguardando alguém', filtro: (t) => t.estado === 'aguardando' },
+  claude: { nome: 'Com o Claude', filtro: (t) => t.estado !== 'feita' && COM_CLAUDE.includes(t.claude) },
+  semprazo: { nome: 'Sem prazo', filtro: (t) => grupoPrazo(t) === 'semprazo' },
 };
-let minhasVisoes = lembrado('visoes', []);
+let foco = '';
 
-function desenharVisoes() {
-  $('#visoes').innerHTML = [
-    ...Object.entries(VISOES).map(([k, v]) => `<button type="button" data-visao="${k}" aria-pressed="${visao === k}">${v.nome}</button>`),
-    ...minhasVisoes.map((v, i) => `<button type="button" data-visao="minha-${i}" aria-pressed="${visao === 'minha-' + i}">${esc(v.nome)}<span data-tirar="${i}" title="Tirar esta visão" aria-label="Tirar a visão ${esc(v.nome)}">×</span></button>`),
-  ].join('');
-}
+const AGRUPAR = {
+  prazo: { chave: (t) => grupoPrazo(t), nome: (k) => NOMES.grupo[k], ordem: Object.keys(NOMES.grupo) },
+  estado: { chave: (t) => t.estado, nome: (k) => NOMES.estado[k], ordem: Object.keys(NOMES.estado) },
+  responsavel: { chave: (t) => t.responsavel || '', nome: (k) => k || 'Sem responsável' },
+  cliente: { chave: (t) => (t.cliente.interno ? 'Empresa' : t.cliente.nome), nome: (k) => k },
+  prioridade: { chave: (t) => t.prioridade, nome: (k) => NOMES.prioridade[k], ordem: Object.keys(NOMES.prioridade) },
+};
+
+// Troca as opções de um seletor sem perder o que estava escolhido.
+function opcoesDe(sel, html, v = sel.value) { sel.innerHTML = html; sel.value = [...sel.options].some((o) => o.value === v) ? v : ''; }
 
 function desenharTarefas() {
-  desenharVisoes();
-  const sel = $('#filtro-cliente'), valor = sel.value;
-  sel.innerHTML = '<option value="">Todos</option><option value="interno">Só da empresa</option>'
-    + visiveis(clientes).sort((a, b) => a.nome.localeCompare(b.nome)).map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
-  sel.value = valor;
+  const todas = [...todasTarefas(clientes), ...clickup];
+  opcoesDe($('#filtro-resp'), '<option value="">Todos</option>' + [...new Set([...EQUIPE, ...todas.map((t) => t.responsavel)].filter(Boolean))].map((n) => `<option>${esc(n)}</option>`).join('') + '<option value="-">Sem responsável</option>', $('#filtro-resp').options.length ? undefined : lembrado('filtro-resp', ''));
+  opcoesDe($('#filtro-cliente'), '<option value="">Todos</option><option value="interno">Só da empresa</option>'
+    + visiveis(clientes).sort((a, b) => a.nome.localeCompare(b.nome)).map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join(''));
+  opcoesDe($('#filtro-etq'), '<option value="">Todas</option>' + todasEtiquetas(clientes).map((x) => `<option>${esc(x)}</option>`).join(''));
 
-  const minha = visao.startsWith('minha-') ? minhasVisoes[+visao.slice(6)] : null;
-  const base = minha ? VISOES[minha.base] || VISOES.abertas : VISOES[visao] || VISOES.abertas;
-  const feitas = $('#mostrar-feitas').checked;
-  const cli = sel.value;
-  let lista = [...todasTarefas(clientes), ...clickup].filter((t) => (feitas && t.estado === 'feita') || base.filtro(t))
-    .filter((t) => !cli || (cli === 'interno' ? t.cliente.interno : t.cliente.id === cli));
-  lista = ordenarTarefas(lista);
+  const resp = $('#filtro-resp').value, cli = $('#filtro-cliente').value, etq = $('#filtro-etq').value;
+  const q = $('#tf-busca').value.trim().toLowerCase(), feitas = $('#mostrar-feitas').checked;
+  const passa = (t) => (!resp || (resp === '-' ? !t.responsavel : t.responsavel === resp))
+    && (!cli || (cli === 'interno' ? t.cliente.interno : t.cliente.id === cli))
+    && (!etq || t.etiquetas.includes(etq))
+    && (!q || `${t.titulo} ${t.cliente.nome} ${t.etiquetas.join(' ')} ${t.descricao || ''}`.toLowerCase().includes(q));
+  const daBarra = todas.filter(passa);
 
-  const por = $('#agrupar').value;
-  const grupos = new Map();
-  const chave = (t) => por === 'prazo' ? grupoPrazo(t) : por === 'cliente' ? (t.cliente.interno ? 'Empresa' : t.cliente.nome) : por === 'prioridade' ? t.prioridade : t.estado;
-  const nomeGrupo = (k) => por === 'prazo' ? NOMES.grupo[k] : por === 'prioridade' ? NOMES.prioridade[k] : por === 'estado' ? NOMES.estado[k] : k;
-  const ordem = por === 'prazo' ? Object.keys(NOMES.grupo) : por === 'prioridade' ? Object.keys(NOMES.prioridade) : por === 'estado' ? Object.keys(NOMES.estado) : null;
-  for (const t of lista) { const k = chave(t); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(t); }
-  const chaves = ordem ? ordem.filter((k) => grupos.has(k)) : [...grupos.keys()].sort((a, b) => a.localeCompare(b));
+  $('#tf-dia').innerHTML = Object.entries(FOCOS).map(([k, f]) => {
+    const n = daBarra.filter(f.filtro).length;
+    return `<button type="button" class="tf-dia" data-foco="${k}" aria-pressed="${foco === k}"${n ? '' : ' data-zero'}>
+      <b class="tf-dia__n">${n}</b><span class="tf-dia__nome">${f.nome}</span></button>`;
+  }).join('');
+
+  const lista = ordenarTarefas(daBarra.filter((t) => (foco ? FOCOS[foco].filtro(t) : feitas || t.estado !== 'feita')));
+  const a = AGRUPAR[$('#agrupar').value] || AGRUPAR.prazo;
+  const grupos = Map.groupBy(lista, a.chave);
+  const chaves = a.ordem ? a.ordem.filter((k) => grupos.has(k)) : [...grupos.keys()].sort((x, y) => (x === '') - (y === '') || x.localeCompare(y));
   const fechados = lembrado('fechados', []);
+  const id = (k) => esc(`${$('#agrupar').value}:${k}`);
+  $('#grupos').innerHTML = chaves.map((k) => `<details class="tf-grupo" data-grupo="${id(k)}" data-chave="${esc(k)}"${fechados.includes(`${$('#agrupar').value}:${k}`) ? '' : ' open'}>
+      <summary><span class="tf-grupo__nome">${esc(a.nome(k))}</span><span class="tf-grupo__n">${grupos.get(k).length}</span></summary>
+      <ul class="tf-lista">${cabecalhoTarefas()}${grupos.get(k).map((t) => linhaTarefa(t, { mostrarCliente: $('#agrupar').value !== 'cliente' })).join('')}</ul>
+    </details>`).join('')
+    || `<div class="crm-card-box crm-vazio-grande"><b>${foco ? `Nada em "${FOCOS[foco].nome}".` : 'Nenhuma tarefa aqui.'}</b><p>${foco || resp || cli || etq || q ? 'Tire um filtro para ver mais.' : 'Use "Nova tarefa" no topo.'}</p></div>`;
 
-  $('#grupos').innerHTML = chaves.map((k) => `<details class="tf-grupo" data-grupo="${esc(por + ':' + k)}"${fechados.includes(por + ':' + k) ? '' : ' open'}>
-      <summary><span class="tf-grupo__nome${k === 'atrasada' ? ' atraso' : ''}">${esc(nomeGrupo(k))}</span><span class="tf-grupo__n">${grupos.get(k).length}</span></summary>
-      <ul class="tf-lista">${grupos.get(k).map((t) => linhaTarefa(t, { mostrarCliente: por !== 'cliente' })).join('')}</ul>
-    </details>`).join('');
-  if (!$('#grupos').innerHTML) $('#grupos').innerHTML = `<div class="crm-card-box crm-vazio-grande"><b>Nada aqui.</b><p>Nenhuma tarefa nesta visão. Use "Nova tarefa" no topo.</p></div>`;
   // Quadro: uma coluna por situação. Tarefa do painel arrasta; a do ClickUp abre no ClickUp.
   const cor = { afazer: 'lead', andamento: 'andamento', aguardando: 'proposta', feita: 'recorrente' };
-  const todasDaVisao = lista;
   $('#tf-quadro').innerHTML = Object.entries(NOMES.estado).map(([k, nome]) => {
-    const col = todasDaVisao.filter((t) => t.estado === k).sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999'));
+    const col = lista.filter((t) => t.estado === k);
     return `<section class="crm-col" data-etapa="${cor[k]}" data-coluna="${k}">
       <header class="crm-col__topo"><span class="crm-col__ponto"></span>${nome}<span class="crm-col__n">${col.length}</span></header>
       <div class="crm-col__lista">${col.map(cartaoTarefa).join('') || `<p class="crm-col__vazia">${k === 'feita' && !feitas ? 'Arraste aqui para concluir.' : 'Arraste uma tarefa para cá.'}</p>`}</div>
@@ -179,15 +189,17 @@ function desenharTarefas() {
 
 function cartaoTarefa(t) {
   const quem = t.cliente.interno ? 'Empresa' : t.cliente.nome;
-  const atraso = t.estado !== 'feita' && t.prazo && t.prazo < hojeIso();
+  const p = prazoSelo(t);
   const nome = t.clickup
     ? `<a class="crm-card__nome" href="${esc(t.clickup.url)}" target="_blank" rel="noopener">${esc(t.titulo)}</a>`
     : `<button class="crm-card__nome" type="button" data-abrir-tarefa="${t.id}" data-cliente="${t.cliente.id}">${esc(t.titulo)}</button>`;
-  return `<article class="crm-card" draggable="${t.clickup ? 'false' : 'true'}" data-id="${t.id}" data-etapa="${t.cliente.etapa || ''}">
+  return `<article class="crm-card" draggable="${t.clickup ? 'false' : 'true'}" data-id="${t.id}" data-prioridade="${t.prioridade}">
     ${nome}
+    ${t.etiquetas.length ? `<span class="crm-card__tags">${t.etiquetas.map(chipEtiqueta).join('')}</span>` : ''}
     <span class="crm-card__serv">${esc(quem)}${t.clickup ? ` · ${esc(t.clickup.lista)}` : ''}</span>
     <footer class="crm-card__pe">
-      ${t.prazo ? `<span${atraso ? ' class="crm-atraso"' : ''}>${ico('calendario').outerHTML}${prazoTexto(t.prazo)}</span>` : '<span>Sem prazo</span>'}
+      <span class="tf__selo" data-tom="${p.tom}">${p.txt}</span>
+      ${t.responsavel ? `<span class="crm-avatar crm-avatar--mini" title="${esc(t.responsavel)}">${esc(iniciais(t.responsavel))}</span>` : ''}
       <span class="crm-card__dias">${t.clickup ? 'ClickUp' : NOMES.prioridade[t.prioridade]}</span>
     </footer>
   </article>`;
@@ -200,43 +212,16 @@ $('#tf-quadro').addEventListener('click', (e) => {
   if (t) abrirTarefa({ cliente: c, tarefa: t, clientes, aoSalvar: guardar });
 });
 
-$('#visoes').addEventListener('click', (e) => {
-  const tirar = e.target.closest('[data-tirar]');
-  if (tirar) {
-    e.stopPropagation();
-    minhasVisoes.splice(+tirar.dataset.tirar, 1);
-    lembrar('visoes', minhasVisoes);
-    visao = 'abertas';
-    return desenharTarefas();
-  }
-  const b = e.target.closest('[data-visao]');
+$('#tf-dia').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-foco]');
   if (!b) return;
-  visao = b.dataset.visao;
-  const minha = visao.startsWith('minha-') ? minhasVisoes[+visao.slice(6)] : null;
-  if (minha) { $('#agrupar').value = minha.agrupar; $('#filtro-cliente').value = minha.cliente; $('#mostrar-feitas').checked = minha.feitas; }
+  foco = foco === b.dataset.foco ? '' : b.dataset.foco;
   desenharTarefas();
 });
-$('#sincronizar').addEventListener('click', async (e) => {
-  const b = e.currentTarget;
-  b.disabled = true; b.textContent = 'Sincronizando…';
-  try {
-    await carregar();
-    clickup = await tarefasClickup(clientes, true);
-    desenharGeral(); desenharTarefas();
-    avisar('Tarefas atualizadas, com o ClickUp.');
-  } catch (err) { avisar(err.message, 'erro'); }
-  finally { b.disabled = false; b.textContent = 'Sincronizar'; }
-});
-
-$('#salvar-visao').addEventListener('click', () => {
-  const nome = (prompt('Nome da visão (ex.: Semana da SW):') || '').trim().slice(0, 40);
-  if (!nome) return;
-  minhasVisoes.push({ nome, base: visao.startsWith('minha-') ? 'abertas' : visao, agrupar: $('#agrupar').value, cliente: $('#filtro-cliente').value, feitas: $('#mostrar-feitas').checked });
-  lembrar('visoes', minhasVisoes);
-  visao = 'minha-' + (minhasVisoes.length - 1);
-  desenharTarefas();
-});
-for (const id of ['#agrupar', '#filtro-cliente', '#mostrar-feitas']) $(id).addEventListener('change', () => { lembrar('agrupar', $('#agrupar').value); desenharTarefas(); });
+for (const id of ['#agrupar', '#filtro-resp', '#filtro-cliente', '#filtro-etq', '#mostrar-feitas']) {
+  $(id).addEventListener('change', () => { lembrar('agrupar', $('#agrupar').value); lembrar('filtro-resp', $('#filtro-resp').value); desenharTarefas(); });
+}
+$('#tf-busca').addEventListener('input', () => desenharTarefas());
 $('#grupos').addEventListener('toggle', (e) => {
   const g = e.target.closest('.tf-grupo');
   if (!g) return;

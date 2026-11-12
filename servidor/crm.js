@@ -37,7 +37,7 @@ export const ESTADOS_ATIVIDADE = ['afazer', 'andamento', 'aguardando', 'feita'];
 export const PRIORIDADES = ['urgente', 'alta', 'normal', 'baixa'];
 export const ORIGENS = ['whatsapp', 'instagram', 'indicacao', 'prospeccao', 'site', 'outro'];
 export const ESTADOS_PROJETO = ['proximo', 'andamento', 'pausado', 'entregue'];
-export const ESTADOS_CLAUDE = ['', 'fila', 'trabalhando', 'feita'];
+export const ESTADOS_CLAUDE = ['', 'fila', 'trabalhando', 'precisa', 'feita'];
 const MAX_LINHA = 500;   // por cliente: anos de histórico
 
 let fila = Promise.resolve();
@@ -77,11 +77,14 @@ function limparAtividades(lista) {
       projeto: corte(a.projeto, 20),
       checklist: (Array.isArray(a.checklist) ? a.checklist : []).slice(0, 50)
         .map((i) => ({ texto: corte(i.texto, 300), feito: Boolean(i.feito) })).filter((i) => i.texto),
+      etiquetas: [...new Set((Array.isArray(a.etiquetas) ? a.etiquetas : []).map((x) => corte(x, 30)).filter(Boolean))].slice(0, 8),
+      responsavel: corte(a.responsavel, 60),
       claude: umDe(ESTADOS_CLAUDE, a.claude, ''),
       notaClaude: corte(a.notaClaude, 4000),
       origem: a.origem === 'claude' ? 'claude' : 'painel',
       criadaEm: a.criadaEm || agora,
       concluidaEm: estado === 'feita' ? (a.concluidaEm || agora) : '',
+      atualizadaEm: a.atualizadaEm || agora,
     };
   }).filter((a) => a.titulo);
 }
@@ -125,34 +128,50 @@ function limpar(d) {
    campos enviados. Assim o Claude manda {id, etapa} e o resto fica.
    Mudança de etapa e tarefa concluída entram sozinhas na linha do
    tempo; a data em que entrou na etapa conta os "dias na etapa". */
-export function salvar(dado, origem = 'painel') {
+export const salvar = (dado, origem = 'painel') => naFila(() => salvarAgora(dado, origem));
+
+async function salvarAgora(dado, origem) {
+  const lista = await listar();
+  const agora = new Date().toISOString();
+  let i = dado.id ? lista.findIndex((x) => x.id === dado.id) : -1;
+  if (dado.id && i < 0) throw new Error('Cliente não encontrado.');
+  if (i < 0 && dado.nome) i = lista.findIndex((x) => x.nome.toLowerCase() === corte(dado.nome, 160).toLowerCase());
+  const antigo = i >= 0 ? lista[i] : null;
+  const item = limpar({ ...antigo, ...dado });
+  if (item.etapa === 'recorrente') item.tipo = 'recorrente';   // etapa de cliente fixo: a etiqueta vem junto
+  const linha = antigo?.linha ? [...antigo.linha] : [];
+  const anota = (texto) => linha.push({ id: novoId(), data: agora, texto, origem, tipo: 'evento' });
+  let etapaDesde = antigo?.etapaDesde || antigo?.criadoEm || agora;
+  if (!antigo) anota(item.interno ? 'Tarefas da empresa criadas no CRM.' : 'Cliente criado no CRM.');
+  else if (antigo.etapa !== item.etapa) {
+    anota(`Etapa: ${ETAPAS.find((e) => e.id === item.etapa).nome}.`);
+    etapaDesde = agora;
+  }
+  const antes = new Map((antigo?.atividades || []).map((a) => [a.id, a]));
+  for (const a of item.atividades) {
+    const velha = antes.get(a.id);
+    if (a.estado === 'feita' && velha && velha.estado !== 'feita') anota(`Concluída: ${a.titulo}.`);
+    if (a.claude === 'fila' && velha?.claude !== 'fila') anota(`Enviada para o Claude: ${a.titulo}.`);
+    if (a.claude === 'precisa' && velha?.claude !== 'precisa') anota(`O Claude precisa de você: ${a.titulo}.`);
+  }
+  const salvo = { ...antigo, ...item, id: antigo?.id || novoId(), etapaDesde, linha: linha.slice(-MAX_LINHA), criadoEm: antigo?.criadoEm || agora, atualizadoEm: agora };
+  if (i >= 0) lista[i] = salvo; else lista.unshift(salvo);
+  await gravar(lista);
+  return salvo;
+}
+
+/* Uma tarefa só: mistura os campos enviados na tarefa que está gravada
+   agora. Duas pessoas mexendo em tarefas diferentes do mesmo cliente
+   não apagam o trabalho uma da outra. Sem id na lista, cria. */
+export function salvarTarefa(clienteId, tarefa, origem = 'painel') {
   return naFila(async () => {
-    const lista = await listar();
-    const agora = new Date().toISOString();
-    let i = dado.id ? lista.findIndex((x) => x.id === dado.id) : -1;
-    if (dado.id && i < 0) throw new Error('Cliente não encontrado.');
-    if (i < 0 && dado.nome) i = lista.findIndex((x) => x.nome.toLowerCase() === corte(dado.nome, 160).toLowerCase());
-    const antigo = i >= 0 ? lista[i] : null;
-    const item = limpar({ ...antigo, ...dado });
-    if (item.etapa === 'recorrente') item.tipo = 'recorrente';   // etapa de cliente fixo: a etiqueta vem junto
-    const linha = antigo?.linha ? [...antigo.linha] : [];
-    const anota = (texto) => linha.push({ id: novoId(), data: agora, texto, origem, tipo: 'evento' });
-    let etapaDesde = antigo?.etapaDesde || antigo?.criadoEm || agora;
-    if (!antigo) anota(item.interno ? 'Tarefas da empresa criadas no CRM.' : 'Cliente criado no CRM.');
-    else if (antigo.etapa !== item.etapa) {
-      anota(`Etapa: ${ETAPAS.find((e) => e.id === item.etapa).nome}.`);
-      etapaDesde = agora;
-    }
-    const antes = new Map((antigo?.atividades || []).map((a) => [a.id, a]));
-    for (const a of item.atividades) {
-      const velha = antes.get(a.id);
-      if (a.estado === 'feita' && velha && velha.estado !== 'feita') anota(`Concluída: ${a.titulo}.`);
-      if (a.claude === 'fila' && velha?.claude !== 'fila') anota(`Enviada para o Claude: ${a.titulo}.`);
-    }
-    const salvo = { ...antigo, ...item, id: antigo?.id || novoId(), etapaDesde, linha: linha.slice(-MAX_LINHA), criadoEm: antigo?.criadoEm || agora, atualizadoEm: agora };
-    if (i >= 0) lista[i] = salvo; else lista.unshift(salvo);
-    await gravar(lista);
-    return salvo;
+    const c = (await listar()).find((x) => x.id === clienteId);
+    if (!c) throw new Error('Cliente não encontrado.');
+    const atividades = [...(c.atividades || [])];
+    const i = tarefa.id ? atividades.findIndex((a) => a.id === tarefa.id) : -1;
+    const nova = { ...(i >= 0 ? atividades[i] : { origem }), ...tarefa, atualizadaEm: new Date().toISOString() };
+    if (i >= 0) atividades[i] = nova; else atividades.push(nova);
+    return salvarAgora({ id: clienteId, atividades }, origem);
   });
 }
 
