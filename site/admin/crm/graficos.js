@@ -3,7 +3,7 @@
    as cores saem dos tokens pelo CSS (crm.css, seção "Gráficos").
    Nada aqui mostra dinheiro: só ritmo de trabalho. */
 
-import { esc, hojeIso, somarDias, todasTarefas, grupoPrazo, visiveis, leadPedeAtencao } from './comum.js?v=20261113b';
+import { esc, hojeIso, somarDias, todasTarefas, grupoPrazo, visiveis, leadPedeAtencao } from './comum.js?v=20261113c';
 
 const DIAS = 14;   // janela dos gráficos de ritmo e de prazos
 

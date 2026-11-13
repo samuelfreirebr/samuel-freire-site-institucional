@@ -1,9 +1,13 @@
-# Fila do Claude (tarefa agendada no Mac)
+# Fila do Claude (vigia no Mac)
 
 O botão "Mandar o Claude fazer" no painel de uma tarefa só marca `claude: "fila"`.
-Quem faz o trabalho é uma tarefa agendada do app do Claude no Mac do Samuel, que
-olha a fila a cada 30 minutos, das 8h às 22h30 (`*/30 8-22 * * *`). Precisa do Mac
-ligado e do app do Claude aberto. O intervalo também aparece no painel: constante
+Quem faz o trabalho é o vigia do Mac (`~/Apps/fila-claude/vigia.py`, LaunchAgent
+`com.samuel.fila-claude`): a cada minuto ele pergunta ao painel, com a TOKEN_CLAUDE
+salva em `~/.config/painel-samuel/token`, se tem tarefa na fila. Sem pedido, sai sem
+IA e sem custo. Com pedido, chama `claude -p` (modo auto) com o texto abaixo, que
+também fica em `~/Apps/fila-claude/prompt.md`. Precisa só do Mac ligado. Pedido que
+não sai da fila depois de uma rodada espera 30 min para nova tentativa. Log em
+`~/Apps/fila-claude/vigia.log`. O intervalo aparece no painel: constante
 `MINUTOS_FILA_CLAUDE` em `site/admin/crm/comum.js`.
 
 Estados do campo `claude` de uma tarefa: `fila` (esperando), `trabalhando`,

@@ -9,7 +9,7 @@ export const DIAS_LEAD_PARADO = 7;     // lead sem movimento há este tanto de d
 export const DIAS_PROXIMAS = 14;       // janela das "próximas entregas"
 const PASTA_PROJETOS = 'Meu Drive/PROJETOS : PORTFÓLIO';   // vai no pedido para o Claude
 export const EQUIPE = ['Samuel'];      // quem pode ser responsável por uma tarefa (acrescente o nome de quem entrar no time)
-export const MINUTOS_FILA_CLAUDE = 30; // de quanto em quanto tempo o Claude do Mac olha a fila
+export const MINUTOS_FILA_CLAUDE = 1; // o vigia do Mac (~/Apps/fila-claude) olha a fila a cada minuto
 const SALVAR_DEPOIS_MS = 600;          // o painel da tarefa grava sozinho este tanto depois da última mudança
 
 export const $ = (s, raiz = document) => raiz.querySelector(s);
@@ -511,8 +511,8 @@ export function abrirTarefa({ cliente = null, tarefa = null, clientes = [], aoSa
   const desenharClaude = () => {
     const estado = t.claude || '';
     const texto = {
-      '': `O Claude do seu Mac olha a fila a cada ${MINUTOS_FILA_CLAUDE} minutos, faz a tarefa e deixa uma nota aqui. Mensagem para cliente ele só deixa pronta, nunca envia.`,
-      fila: `Na fila. O Claude começa em até ${MINUTOS_FILA_CLAUDE} minutos (o Mac precisa estar ligado com o app do Claude aberto).`,
+      '': `O Claude do seu Mac pega o pedido em até ${MINUTOS_FILA_CLAUDE} minuto, faz a tarefa e deixa uma nota aqui. Mensagem para cliente ele só deixa pronta, nunca envia.`,
+      fila: `Na fila. O Claude começa em até ${MINUTOS_FILA_CLAUDE} minuto (o Mac precisa estar ligado).`,
       trabalhando: 'O Claude está fazendo esta tarefa agora.',
       precisa: 'O Claude parou e precisa de você. Veja a nota abaixo, responda nos detalhes e mande de novo.',
       feita: 'O Claude terminou. Confira a nota abaixo.',

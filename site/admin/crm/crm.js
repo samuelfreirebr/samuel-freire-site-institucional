@@ -10,10 +10,10 @@ import {
   proximaEntrega, proximaTarefa, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
   grupoPrazo, todasTarefas, tarefasClickup, ordenarTarefas, salvarTarefa, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
   prazoSelo, chipEtiqueta, cabecalhoTarefas, todasEtiquetas, EQUIPE, MINUTOS_FILA_CLAUDE,
-} from './comum.js?v=20261113b';
-import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js?v=20261113b';
+} from './comum.js?v=20261113c';
+import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js?v=20261113c';
 import { ico } from '../icones.js';
-import { ligarLeads, desenharHoje } from './leads.js?v=20261113b';
+import { ligarLeads, desenharHoje } from './leads.js?v=20261113c';
 
 let clientes = [], etapas = [], origens = [];
 let clickup = [];   // tarefas do ClickUp, só leitura (chegam depois do CRM)
@@ -77,7 +77,7 @@ function desenharGeral() {
     kpi('Atrasadas', vencidas.length, vencidas.length ? 'Passaram do prazo' : 'Tudo no prazo', '#tarefas', 'calendario', vencidas.length ? ' crm-kpi--alerta' : ''),
     kpi('Follow-ups', leadsAtencao.length, leadsAtencao.length ? 'Leads para falar ou parados' : 'Leads em dia', '#leads', 'leads', leadsAtencao.length ? ' crm-kpi--alerta' : ''),
     kpi('Clientes ativos', emAndamento.length, `${visiveis(clientes).filter((c) => c.etapa === 'fechado').length} fechados sem começar`, '#clientes', 'painel'),
-    kpi('Com o Claude', fila.length, precisa ? `${precisa} precisa${precisa > 1 ? 'm' : ''} de você` : fila.length ? `Ele pega a cada ${MINUTOS_FILA_CLAUDE} min` : 'Nada com o Claude', '#tarefas', 'enviar', precisa ? ' crm-kpi--alerta' : ''),
+    kpi('Com o Claude', fila.length, precisa ? `${precisa} precisa${precisa > 1 ? 'm' : ''} de você` : fila.length ? `Ele pega em até ${MINUTOS_FILA_CLAUDE} min` : 'Nada com o Claude', '#tarefas', 'enviar', precisa ? ' crm-kpi--alerta' : ''),
   ].join('');
 
   $('#hoje-lista').innerHTML = ordenarTarefas([...vencidas, ...hoje, ...urgentes.filter((t) => !['hoje', 'atrasada'].includes(grupoPrazo(t)))])

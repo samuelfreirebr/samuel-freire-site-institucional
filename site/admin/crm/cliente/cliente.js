@@ -6,7 +6,7 @@ import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, documentos, mesmoCliente, NOMES, LEADS,
   dataCurta, quando, prazoTexto, iniciais, selo, whatsapp, abertas, atrasadas, proximaTarefa,
   diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, tarefasClickup, ligarLista, abrirTarefa, ligarBusca, copiar, salvarTarefa,
-} from '../comum.js?v=20261113b';
+} from '../comum.js?v=20261113c';
 
 const [id, abaInicial] = decodeURIComponent(location.hash.slice(1)).split('&');
 let c = null, todos = [], etapas = [], origens = [], docs = { propostas: [], formularios: [] };
@@ -260,7 +260,7 @@ function ligar() {
         titulo: 'Examinar e baixar materiais do WhatsApp', prioridade: 'alta', claude: 'fila', etiquetas: ['materiais-whatsapp'],
         descricao: 'Ler toda a conversa do WhatsApp com este cliente, decidir o que serve para o projeto (fotos, logos, prints, documentos, áudios, links, dados do negócio) e baixar tudo em 02-MATERIAIS na pasta do cliente. Passo a passo no texto da fila do Claude.',
       }));
-      avisar('Na fila do Claude. Ele pega em até 30 minutos e deixa o resultado na tarefa.');
+      avisar('Na fila do Claude. Ele começa em até 1 minuto e deixa o resultado na tarefa.');
     } catch (err) { avisar(err.message, 'erro'); }
   });
 
