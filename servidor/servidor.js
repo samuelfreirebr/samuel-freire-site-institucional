@@ -299,11 +299,6 @@ async function apiCrm(req, res, rota, origem) {
     const d = await crm.atualizarComIa({ texto: form.campos.texto || '', arquivos: form.lista || [] });
     return json(res, d, d.erro ? (d.semChave ? 503 : 502) : 200);
   }
-  const msg = rota.match(/^crm\/([a-f0-9]{12})\/mensagem$/);
-  if (msg && req.method === 'POST') {
-    const d = await crm.mensagemFollowup(msg[1]);
-    return json(res, d, d.erro ? (d.semChave ? 503 : 502) : 200);
-  }
   const apagar = rota.match(/^crm\/([a-f0-9]{12})$/);
   if (apagar && req.method === 'DELETE') {
     return (await crm.apagar(apagar[1])) ? json(res, { ok: true }) : json(res, { erro: 'Cliente não encontrado.' }, 404);

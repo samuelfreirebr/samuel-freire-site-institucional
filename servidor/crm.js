@@ -371,37 +371,3 @@ export function limparAtualizacao(ia, lista) {
     motivoPerda: ia.etapa === 'encerrado' ? l(ia.motivoPerda, 500) : '',
   };
 }
-
-/* ---------- Mensagem de follow-up ----------
-   Rascunho curto para o Samuel mandar hoje, no tom dele, a partir do
-   que a ficha sabe. Ele lê, ajusta e manda pelo WhatsApp. */
-
-const sistemaMensagem = (hoje) => `Você escreve a mensagem de follow-up que o Samuel Freire (web designer) vai mandar hoje pelo WhatsApp para um lead. Hoje é ${hoje}.
-Regras:
-- Tom de pessoa, informal e educado, como "Fala, Fulano, tudo bem?". No idioma em que a conversa com o lead acontece; sem pista, português do Brasil.
-- De 2 a 4 linhas curtas. Uma pergunta só, fácil de responder.
-- Parte do próximo passo e do que aconteceu por último. Se ele ficou de mandar algo, lembre com leveza; se a proposta foi enviada, pergunte se deu para ver.
-- Sem pressão, sem desconto, sem "só passando para lembrar", sem lista, sem emoji em excesso.
-- Nunca invente preço, prazo, resultado ou fato que não está na ficha.
-- Sem travessão.`;
-
-export async function mensagemFollowup(id) {
-  if (!temChaveIa()) return { erro: 'A mensagem pela IA precisa da OPENROUTER_API_KEY na stack.', semChave: true };
-  const c = (await listar()).find((x) => x.id === id);
-  if (!c) return { erro: 'Cliente não encontrado.' };
-  const ficha = [
-    `Nome: ${c.nome}`, `Contato: ${c.contato || ''}`, `Etapa: ${ETAPAS.find((e) => e.id === c.etapa)?.nome}`,
-    `Quer: ${c.servico || ''}`, `Próximo passo do Samuel: ${c.proximoPasso || ''}`,
-    `Notas: ${String(c.notas || '').slice(-3000)}`,
-    'Últimos acontecimentos:', ...(c.linha || []).slice(-8).map((x) => `${x.data.slice(0, 10)}: ${x.texto}`),
-  ].join('\n');
-  let ia;
-  try {
-    ({ ia } = await pedirJsonIa([{ type: 'input_text', text: ficha }], {
-      sistema: sistemaMensagem(hojeSp()),
-      esquema: { type: 'object', additionalProperties: false, required: ['mensagem'], properties: { mensagem: { type: 'string' } } },
-      nome: 'mensagem_followup', tokens: 800,
-    }));
-  } catch (e) { return { erro: 'A IA não respondeu: ' + e.message }; }
-  return { mensagem: semTravessao(corte(ia.mensagem, 1500)) };
-}

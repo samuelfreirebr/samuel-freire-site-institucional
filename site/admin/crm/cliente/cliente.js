@@ -5,7 +5,7 @@
 import {
   $, $$, esc, avisar, salvarCliente, anotar, carregarCrm, normalizar, documentos, mesmoCliente, NOMES, LEADS,
   dataCurta, quando, prazoTexto, iniciais, selo, whatsapp, abertas, atrasadas, proximaTarefa,
-  diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, tarefasClickup, ligarLista, abrirTarefa, ligarBusca, copiar,
+  diasNaEtapa, situacaoLead, ordenarTarefas, linhaTarefa, tarefasClickup, ligarLista, abrirTarefa, ligarBusca, copiar, salvarTarefa,
 } from '../comum.js?v=20261112t';
 
 const [id, abaInicial] = decodeURIComponent(location.hash.slice(1)).split('&');
@@ -249,6 +249,19 @@ function ligar() {
     const primeiro = (c.contato || '').split(/[,·-]/)[0].trim();
     copiar(`Oi${primeiro ? ', ' + primeiro : ''}! Para seguir com o projeto, ainda preciso de:\n\n${faltam.map((m) => `• ${m.nome}`).join('\n')}\n\nPode mandar por aqui mesmo ou numa pasta do Drive. Obrigado!`,
       'Mensagem copiada. Cole no WhatsApp do cliente.');
+  });
+
+  // Põe na fila do Claude do Mac: ele lê a conversa do WhatsApp e baixa o que serve para o projeto.
+  $('#examinar-materiais').addEventListener('click', async () => {
+    const aberta = (c.atividades || []).find((a) => a.etiquetas?.includes('materiais-whatsapp') && a.estado !== 'feita' && ['fila', 'trabalhando'].includes(a.claude));
+    if (aberta) return avisar('Esse pedido já está com o Claude.');
+    try {
+      guardar(await salvarTarefa(c, {
+        titulo: 'Examinar e baixar materiais do WhatsApp', prioridade: 'alta', claude: 'fila', etiquetas: ['materiais-whatsapp'],
+        descricao: 'Ler toda a conversa do WhatsApp com este cliente, decidir o que serve para o projeto (fotos, logos, prints, documentos, áudios, links, dados do negócio) e baixar tudo em 02-MATERIAIS na pasta do cliente. Passo a passo no texto da fila do Claude.',
+      }));
+      avisar('Na fila do Claude. Ele pega em até 10 minutos e deixa o resultado na tarefa.');
+    } catch (err) { avisar(err.message, 'erro'); }
   });
 
   $('#briefing').addEventListener('click', (e) => {

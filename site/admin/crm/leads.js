@@ -1,7 +1,6 @@
 /* Leads que se atualizam quase sozinhos.
 
-   1. Falar hoje: quem pede follow-up (data chegou ou parado), com a
-      mensagem escrita pela IA, o botão que abre o WhatsApp com ela e o
+   1. Falar hoje: quem pede follow-up (data chegou ou parado) e o
       "Mandei" que marca o próximo contato.
    2. Atualizar pela conversa: o Samuel solta a conversa exportada do
       WhatsApp, um print, ou dita o que aconteceu. A IA acha o lead e
@@ -12,7 +11,7 @@
 
 import {
   $, esc, avisar, salvarCliente, anotar, NOMES, LEADS, iniciais, visiveis, situacaoLead, leadPedeAtencao,
-  somarDias, dataLonga, hojeIso, whatsapp, copiar,
+  somarDias, dataLonga, hojeIso,
 } from './comum.js?v=20261112t';
 
 /* ---------- Central de ajustes ---------- */
@@ -45,35 +44,17 @@ export function desenharHoje() {
           <span><b>${esc(c.nome)}</b><small>${esc(c.proximoPasso || c.servico || 'Sem próximo passo')}</small></span></a>
         <span class="crm-situacao alerta">${esc(s.texto)}</span>
         <div class="lh-acoes">
-          <button class="mini mini--ativo" type="button" data-acao="escrever">Escrever mensagem</button>
           <span class="lh-mandei">Mandei, falar de novo em ${DIAS_MANDEI.map((d) => `<button class="mini" type="button" data-mandei="${d}">${d} dias</button>`).join('')}</span>
         </div>
       </div>
-      <div class="lh-msg" hidden></div>
     </li>`;
   }).join('') || '<li class="vazio">Ninguém para falar hoje. Os próximos follow-ups estão na tabela abaixo.</li>';
 }
 
-async function escrever(li, c) {
-  const caixa = li.querySelector('.lh-msg'), b = li.querySelector('[data-acao="escrever"]');
-  b.disabled = true; b.textContent = 'Escrevendo…';
-  try {
-    const { mensagem } = await pedirIa(`/api/crm/${c.id}/mensagem`);
-    caixa.hidden = false;
-    caixa.innerHTML = `<textarea rows="4" aria-label="Mensagem para ${esc(c.nome)}">${esc(mensagem)}</textarea>
-      <div class="lh-msg__acoes">
-        ${whatsapp(c) ? '<button class="mini mini--ativo" type="button" data-acao="zap">Abrir no WhatsApp</button>' : '<small>Sem telefone na ficha: copie e mande.</small>'}
-        <button class="mini" type="button" data-acao="copiar">Copiar</button>
-      </div>`;
-  } catch (err) { avisar(err.message, 'erro'); }
-  finally { b.disabled = false; b.textContent = 'Escrever de novo'; }
-}
-
-// Mandei: anota a mensagem na linha do tempo e marca a próxima data. Lead com proposta enviada passa a "Follow-up".
+// Mandei: anota na linha do tempo e marca a próxima data. Lead com proposta enviada passa a "Follow-up".
 async function mandei(li, c, dias) {
-  const msg = li.querySelector('.lh-msg textarea')?.value.trim();
   try {
-    await anotar(c.id, msg ? `Follow-up enviado: "${msg}"` : 'Follow-up enviado.', 'nota');
+    await anotar(c.id, 'Follow-up enviado.', 'nota');
     const salvo = await salvarCliente({ id: c.id, proximoContato: somarDias(dias), ...(c.etapa === 'proposta' ? { etapa: 'followup' } : {}) });
     obter.guardar(salvo);
     avisar(`Anotado. Falar de novo com ${c.nome} em ${dias} dias.`);
@@ -172,10 +153,7 @@ export function ligarLeads(opcoes) {
     const li = e.target.closest('li[data-id]');
     const c = li && achar(li.dataset.id);
     if (!c) return;
-    if (e.target.closest('[data-acao="escrever"]')) escrever(li, c);
-    else if (e.target.closest('[data-acao="zap"]')) window.open(`${whatsapp(c)}?text=${encodeURIComponent(li.querySelector('.lh-msg textarea').value)}`, '_blank', 'noopener');
-    else if (e.target.closest('[data-acao="copiar"]')) copiar(li.querySelector('.lh-msg textarea').value, 'Mensagem copiada.');
-    else if (e.target.closest('[data-mandei]')) mandei(li, c, +e.target.closest('[data-mandei]').dataset.mandei);
+    if (e.target.closest('[data-mandei]')) mandei(li, c, +e.target.closest('[data-mandei]').dataset.mandei);
   });
 
   $('#atualizar-conversa').onclick = abrirConversa;

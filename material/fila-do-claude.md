@@ -32,6 +32,16 @@ OBJETIVO: pegar UMA tarefa da "fila do Claude" no CRM do painel dele e fazê-la 
    - Faça o trabalho de verdade (criar arquivo, texto, peça, código, pesquisa, organizar pastas etc.) e confira o resultado antes de dar por feito (peça visual: olhe a imagem ou a página).
    - LIMITES (nunca faça, mesmo que a tarefa peça): mandar mensagem, e-mail ou áudio para cliente ou lead (deixe o texto pronto num arquivo e na nota); publicar ou postar algo; dar push no git ou fazer deploy; pagar, comprar ou mexer em dinheiro; apagar qualquer coisa; aceitar termos; entrar com senha em site. Se a tarefa depende disso, faça tudo até esse ponto e pare.
 
+   - TAREFA COM ETIQUETA "materiais-whatsapp" (botão "Examinar e baixar materiais do WhatsApp" da ficha):
+     · Ache a conversa do cliente no MCP `whatsapp` (só leitura) pelo telefone do campo contato, pelo nome da pessoa ou da empresa, ou por um grupo com o nome do cliente. Não achou: claude "precisa" perguntando qual é o número.
+     · Leia a conversa inteira. Decida o que serve para o projeto: fotos de trabalhos, logo, prints, documentos, cartão, cores, textos, dados do negócio (endereço, telefone, horários, cidades atendidas, licenças), links (Drive, Instagram, Google, site atual, referências) e áudios com pedido ou informação do projeto. Pule figurinha, meme e conversa social.
+     · Baixe cada mídia útil com download_media, uma por vez, e copie para "<pasta do cliente>/02-MATERIAIS/WHATSAPP/" com nome curto, sem acento, com hífen (ex.: foto-cozinha-01.jpg). Pasta do cliente: em "PROJETOS : PORTFÓLIO/" pelo nome; se não existir, crie "PROJETOS : PORTFÓLIO/<NOME-DO-CLIENTE>/". Nunca sobrescreva arquivo que já existe.
+     · Áudios úteis: transcreva um por vez com `mlx_whisper <arquivo> --model mlx-community/whisper-large-v3-turbo` e guarde o áudio e o texto.
+     · Links de pasta do Drive compartilhados pelo cliente: tente baixar se estiverem abertos; senão, só liste.
+     · Escreva "02-MATERIAIS/WHATSAPP/MATERIAIS.md" com: o que foi baixado (arquivo e o que é), as informações do negócio que apareceram na conversa, os links, as transcrições úteis e o que ainda falta pedir ao cliente.
+     · Mídia que o WhatsApp não deixa mais baixar (antiga): liste em "Não deu para baixar" com a data, para o Samuel pegar no celular.
+     · No CRM, acrescente à lista "materiais" do cliente os itens recebidos (estado "recebido") e os que faltam (estado "falta"), sem apagar os que já estão lá.
+
 4. DEIXAR O RESULTADO NA TAREFA (mesma rota do passo 2, mandando só os campos que mudaram)
    - Terminou: {"id":..., "claude":"feita", "notaClaude":"<o que foi feito, onde ficaram os arquivos (caminho completo) e o que o Samuel precisa conferir ou enviar>", "checklist":[...com o que você fez marcado...]}. Não mude o "estado" da tarefa para "feita": quem conclui é o Samuel, depois de conferir. Pode mudar o estado para "aguardando" se o próximo passo for dele.
    - Travou (falta informação, material, decisão, aprovação ou esbarrou num dos LIMITES): {"id":..., "claude":"precisa", "notaClaude":"<o que já fez e a pergunta exata para ele>"}.

@@ -13,7 +13,7 @@ import {
 } from './comum.js?v=20261112t';
 import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js?v=20261112t';
 import { ico } from '../icones.js';
-import { ligarLeads, desenharHoje } from './leads.js?v=20261112b';
+import { ligarLeads, desenharHoje } from './leads.js?v=20261113a';
 
 let clientes = [], etapas = [], origens = [];
 let clickup = [];   // tarefas do ClickUp, só leitura (chegam depois do CRM)
