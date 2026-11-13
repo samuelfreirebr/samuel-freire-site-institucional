@@ -10,10 +10,10 @@ import {
   proximaEntrega, proximaTarefa, diasNaEtapa, diasSemMovimento, situacaoLead, leadPedeAtencao,
   grupoPrazo, todasTarefas, tarefasClickup, ordenarTarefas, salvarTarefa, linhaTarefa, ligarLista, abrirTarefa, ligarBusca, selo, whatsapp,
   prazoSelo, chipEtiqueta, cabecalhoTarefas, todasEtiquetas, EQUIPE, MINUTOS_FILA_CLAUDE,
-} from './comum.js?v=20261112t';
-import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js?v=20261112t';
+} from './comum.js?v=20261113b';
+import { boasVindas, barrasRitmo, ritmo, roscaPrioridade, faixaPrazos } from './graficos.js?v=20261113b';
 import { ico } from '../icones.js';
-import { ligarLeads, desenharHoje } from './leads.js?v=20261113a';
+import { ligarLeads, desenharHoje } from './leads.js?v=20261113b';
 
 let clientes = [], etapas = [], origens = [];
 let clickup = [];   // tarefas do ClickUp, só leitura (chegam depois do CRM)

@@ -12,7 +12,7 @@
 import {
   $, esc, avisar, salvarCliente, anotar, NOMES, LEADS, iniciais, visiveis, situacaoLead, leadPedeAtencao,
   somarDias, dataLonga, hojeIso,
-} from './comum.js?v=20261112t';
+} from './comum.js?v=20261113b';
 
 /* ---------- Central de ajustes ---------- */
 const DIAS_MANDEI = [2, 4, 7];   // botões "Mandei: falar de novo em X dias"

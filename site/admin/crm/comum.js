@@ -9,7 +9,7 @@ export const DIAS_LEAD_PARADO = 7;     // lead sem movimento há este tanto de d
 export const DIAS_PROXIMAS = 14;       // janela das "próximas entregas"
 const PASTA_PROJETOS = 'Meu Drive/PROJETOS : PORTFÓLIO';   // vai no pedido para o Claude
 export const EQUIPE = ['Samuel'];      // quem pode ser responsável por uma tarefa (acrescente o nome de quem entrar no time)
-export const MINUTOS_FILA_CLAUDE = 10; // de quanto em quanto tempo o Claude do Mac olha a fila
+export const MINUTOS_FILA_CLAUDE = 30; // de quanto em quanto tempo o Claude do Mac olha a fila
 const SALVAR_DEPOIS_MS = 600;          // o painel da tarefa grava sozinho este tanto depois da última mudança
 
 export const $ = (s, raiz = document) => raiz.querySelector(s);

@@ -2,7 +2,7 @@
 
 O botão "Mandar o Claude fazer" no painel de uma tarefa só marca `claude: "fila"`.
 Quem faz o trabalho é uma tarefa agendada do app do Claude no Mac do Samuel, que
-olha a fila a cada 10 minutos, das 7h às 23h (`*/10 7-23 * * *`). Precisa do Mac
+olha a fila a cada 30 minutos, das 8h às 22h30 (`*/30 8-22 * * *`). Precisa do Mac
 ligado e do app do Claude aberto. O intervalo também aparece no painel: constante
 `MINUTOS_FILA_CLAUDE` em `site/admin/crm/comum.js`.
 
@@ -17,8 +17,8 @@ Você é o Claude do Samuel (a conta do Mac se chama "matheus", mas o nome dele 
 OBJETIVO: pegar UMA tarefa da "fila do Claude" no CRM do painel dele e fazê-la de verdade.
 
 1. LER A FILA (rápido; se estiver vazia, encerre na hora, em uma linha, sem fazer mais nada)
-   - Abra https://links.samuelfreire.com.br/admin/crm/ no navegador embutido (ele já está logado; se cair no login, encerre dizendo "CRM pediu login" e não tente entrar).
-   - Rode no console da página: fetch('/api/crm').then(r=>r.json()).
+   - Com chave (o normal): curl https://links.samuelfreire.com.br/api/crm com o cabeçalho "x-token: $(cat ~/.config/painel-samuel/token)". Use a mesma chave em todas as chamadas abaixo (POST com content-type application/json). Nunca mostre o valor da chave.
+   - Sem o arquivo da chave: abra https://links.samuelfreire.com.br/admin/crm/ no navegador embutido (já logado) e rode fetch('/api/crm').then(r=>r.json()) no console. Se cair no login, encerre dizendo "CRM pediu login" e não tente entrar.
    - Procure em clientes[].atividades[] as tarefas com claude === "fila" e estado diferente de "feita". Se houver alguma com claude === "trabalhando" atualizada há menos de 60 minutos (campo atualizadaEm), outra execução está nela: não mexa nessa.
    - Se não houver nenhuma em "fila": encerre com "Fila vazia." e mais nada.
    - Se houver: pegue só UMA, a mais urgente (prioridade urgente > alta > normal > baixa; empate: prazo mais perto, sem prazo por último).
