@@ -1,6 +1,6 @@
 /* ============================================================
    Tela inicial do painel. Entra depois de crm.css (usa os mesmos
-   cartões, números e listas) e só acrescenta o Cofre e os atalhos.
+   cartões, números e listas) e só acrescenta o Cofre.
    ============================================================ */
 
 .ini > * + * { margin-top: var(--crm-respiro); }
@@ -16,17 +16,3 @@
 .ini-cofre label::before { content: ""; width: var(--bullet); height: var(--bullet); border-radius: 50%; background: var(--brand); }
 .ini-cofre textarea { flex: 1; min-width: 0; min-height: 0; border: 0; padding: .45em .3em; resize: none; font-size: var(--t-small); }
 .ini-cofre textarea:focus-visible { outline: none; }
-
-/* Atalhos para os módulos: duas colunas, ícone, nome e o que faz. */
-.ini-atalhos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2xs); }
-.ini-atalhos a {
-  display: grid; grid-template-columns: auto 1fr; column-gap: var(--sp-xs); align-items: center;
-  padding: var(--sp-xs); border: var(--hair) solid var(--line); border-radius: var(--radius-img); color: var(--ink);
-  transition: border-color var(--d-fast);
-}
-.ini-atalhos a:hover { border-color: var(--ink); }
-.ini-atalhos .ico { grid-row: span 2; width: 2.1rem; height: 2.1rem; padding: .5rem; border-radius: 50%; background: var(--bg-2); color: var(--ink); }
-.ini-atalhos a:hover .ico { background: var(--brand); color: var(--brand-ink); }
-.ini-atalhos b { font-size: var(--t-small); }
-.ini-atalhos small { color: var(--muted); font-size: var(--t-eyebrow); }
-@media (max-width: 520px) { .ini-atalhos { grid-template-columns: 1fr; } }

@@ -13,10 +13,11 @@
 <link rel="stylesheet" href="/admin/casca.css?v=20261029i">
 <script type="module" src="/admin/casca.js?v=20261029i"></script>
 <link rel="stylesheet" href="/admin/crm/crm.css?v=20261112t">
-<link rel="stylesheet" href="/admin/inicio.css?v=20261029i">
+<link rel="stylesheet" href="/admin/inicio.css?v=20261119a">
 <link rel="modulepreload" href="/admin/icones.js">
 <link rel="modulepreload" href="/admin/crm/comum.js?v=20261113c">
 <link rel="modulepreload" href="/admin/crm/graficos.js?v=20261113c">
+<link rel="stylesheet" href="/admin/visual.css?v=20261119a">
 </head>
 <body>
 
@@ -59,24 +60,10 @@
     <p class="g-faixa-legenda"><span><i></i>Tarefa</span><span><i class="forte"></i>Entrega ou urgente</span><span><i class="lead"></i>Follow-up de lead</span></p>
   </article>
 
-  <div class="crm-grade crm-grade--2">
-    <article class="crm-card-box">
-      <header class="crm-box__topo"><h3>Hoje</h3><a class="crm-box__link" href="/admin/crm/#tarefas">Todas as tarefas</a></header>
-      <ul class="tf-lista" id="hoje"></ul>
-    </article>
-    <article class="crm-card-box">
-      <header class="crm-box__topo"><h3>Atalhos</h3></header>
-      <div class="ini-atalhos">
-        <a href="/admin/propostas/" data-ico="proposta"><b>Criar proposta</b><small>Página por cliente, com prévia ao vivo</small></a>
-        <a href="/admin/formularios/" data-ico="formulario"><b>Formulários</b><small>Briefing que o cliente responde</small></a>
-        <a href="/admin/contratos/" data-ico="contrato"><b>Contratos</b><small>Da proposta e do briefing, em PDF</small></a>
-        <a href="/admin/faturas/" data-ico="fatura"><b>Faturas</b><small>Fatura ou invoice com link</small></a>
-        <a href="/admin/site/" data-ico="site"><b>Editar site</b><small>Clique no texto para mudar</small></a>
-        <a href="/google-prospection/" data-ico="prospeccao"><b>Prospecção</b><small>Negócios de uma cidade no Google</small></a>
-      </div>
-    </article>
-  </div>
-
+  <article class="crm-card-box">
+    <header class="crm-box__topo"><h3>Hoje</h3><a class="crm-box__link" href="/admin/crm/#tarefas">Todas as tarefas</a></header>
+    <ul class="tf-lista" id="hoje"></ul>
+  </article>
   <div class="crm-grade crm-grade--3">
     <article class="crm-card-box">
       <header class="crm-box__topo"><h3>Leads para falar</h3><a class="crm-box__link" href="/admin/crm/#leads">Leads</a></header>
@@ -118,7 +105,6 @@ $('#cofre-link').addEventListener('paste', (e) => {
 });
 $('#cofre-link').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mandarProCofre($('#cofre-link').value); } });
 
-document.querySelectorAll('.ini-atalhos [data-ico]').forEach((a) => a.prepend(ico(a.dataset.ico)));
 const h = new Date().getHours();
 const saudacao = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
 
