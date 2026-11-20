@@ -59,6 +59,7 @@ import * as novidades from './novidades.js';
 import * as push from './push.js';
 import * as metricas from './metricas.js';
 import * as relatorios from './relatorios.js';
+import * as lembretes from './lembretes.js';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 // A pasta site/ ao lado desta. No container, copiada para /app/site.
@@ -1057,6 +1058,7 @@ if (plantadas.length) console.log('propostas instaladas:', plantadas.join(', '))
 
 servidor.listen(PORTA, () => {
   relatorios.ligar();
+  lembretes.iniciar();   // lista do dia no celular às 8h e o que falta às 14h
   console.log(`site em http://localhost:${PORTA}`);
   console.log(`arquivos:  ${SITE}`);
   console.log(`dados:     ${dados.RAIZ_DADOS}`);
