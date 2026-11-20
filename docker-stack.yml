@@ -27,10 +27,9 @@
 #    TOKEN_CLAUDE       chave que o Claude usa no painel inteiro pela
 #                       API (cabeçalho x-token): lê, cria e edita,
 #                       nunca apaga. Sem ela: só o painel com login.
-#    NTFY_TOPICO        canal do app ntfy no celular: avisa proposta
-#                       aberta, clique no WhatsApp da proposta, briefing
-#                       aberto ou respondido. Sem ela:
-#                       sem aviso no celular (o painel mostra igual).
+#    NTFY_TOPICO        troca o canal do app ntfy que recebe os avisos de
+#                       proposta e briefing. Sem ela: o canal padrão do
+#                       código (servidor/novidades.js).
 #
 #  A imagem vem do ghcr.io, montada pela Action a cada push na
 #  main. Para atualizar: git push → Action verde → Update the

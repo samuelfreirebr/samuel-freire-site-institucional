@@ -59,9 +59,11 @@ export async function contarVisita(req) {
   gravar();
 }
 
-/* Aviso no celular pelo app ntfy, no canal NTFY_TOPICO da stack (vazio:
-   não avisa). Cada aviso abre o item no painel. Nunca trava nem derruba
-   a página do cliente. */
+/* Aviso no celular pelo app ntfy. Cada aviso abre o item no painel. Nunca
+   trava nem derruba a página do cliente. O canal fica no código (decisão do
+   Samuel: o pior caso é alguém mandar aviso falso); NTFY_TOPICO na stack
+   troca. Fora de produção não avisa, para o teste local não tocar o celular. */
+const CANAL = process.env.NTFY_TOPICO || (process.env.NODE_ENV === 'production' ? 'samue-site-x5rfq6i1e9gf' : '');
 const AVISOS = {
   'proposta-aberta': ['👀 Proposta aberta', 4],
   'proposta-voltou': ['👀 Proposta aberta de novo', 3],
@@ -71,7 +73,7 @@ const AVISOS = {
   'formulario-respondido': ['✅ Briefing respondido', 5],
 };
 function avisarCelular(tipo, titulo, link) {
-  const topico = process.env.NTFY_TOPICO, aviso = AVISOS[tipo];
+  const topico = CANAL, aviso = AVISOS[tipo];
   if (!topico || !aviso) return;
   const base = (process.env.URL_PUBLICA || 'https://links.samuelfreire.com.br').replace(/\/$/, '');
   fetch('https://ntfy.sh/', {
