@@ -13,6 +13,7 @@ import path from 'node:path';
 import { createHash, randomBytes } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { RAIZ_DADOS } from './dados.js';
+import * as push from './push.js';
 
 const ARQ = path.join(RAIZ_DADOS, 'novidades.json');
 const DIAS = 90;          // guarda 90 dias de visitas
@@ -59,29 +60,20 @@ export async function contarVisita(req) {
   gravar();
 }
 
-/* Aviso no celular pelo app ntfy. Cada aviso abre o item no painel. Nunca
-   trava nem derruba a página do cliente. O canal fica no código (decisão do
-   Samuel: o pior caso é alguém mandar aviso falso); NTFY_TOPICO na stack
-   troca. Fora de produção não avisa, para o teste local não tocar o celular. */
-const CANAL = process.env.NTFY_TOPICO || (process.env.NODE_ENV === 'production' ? 'samue-site-x5rfq6i1e9gf' : '');
+/* Aviso no celular: notificação do próprio painel (servidor/push.js),
+   para cada aparelho que ligou o sino em "Avisos no celular". Cada aviso
+   abre o item no painel. Nunca trava nem derruba a página do cliente. */
 const AVISOS = {
-  'proposta-aberta': ['👀 Proposta aberta', 4],
-  'proposta-voltou': ['👀 Proposta aberta de novo', 3],
-  'proposta-whatsapp': ['💬 Cliente clicou para fechar a proposta', 5],
-  'formulario-aberta': ['👀 Briefing aberto', 3],
-  'formulario-voltou': ['👀 Briefing aberto de novo', 2],
-  'formulario-respondido': ['✅ Briefing respondido', 5],
+  'proposta-aberta': '👀 Proposta aberta',
+  'proposta-voltou': '👀 Proposta aberta de novo',
+  'proposta-whatsapp': '💬 Cliente clicou para fechar a proposta',
+  'formulario-aberta': '👀 Briefing aberto',
+  'formulario-voltou': '👀 Briefing aberto de novo',
+  'formulario-respondido': '✅ Briefing respondido',
 };
 function avisarCelular(tipo, titulo, link) {
-  const topico = CANAL, aviso = AVISOS[tipo];
-  if (!topico || !aviso) return;
-  const base = (process.env.URL_PUBLICA || 'https://links.samuelfreire.com.br').replace(/\/$/, '');
-  fetch('https://ntfy.sh/', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ topic: topico, title: aviso[0], message: String(titulo || '').slice(0, 300), priority: aviso[1], click: link ? base + link : undefined }),
-    signal: AbortSignal.timeout(10000),
-  }).catch(() => {});
+  if (!AVISOS[tipo]) return;
+  push.avisar({ titulo: AVISOS[tipo], texto: String(titulo || '').slice(0, 300), url: link || '/admin/' }).catch(() => {});
 }
 
 /* O cliente abriu a proposta ou o formulário. A primeira vez sempre

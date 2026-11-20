@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Ícone do app Painel (tela de início): tinta da marca, o desenho "painel" de site/admin/icones.js redesenhado com respiro, um bloco no laranja. Gerar PNGs: sh material/icones/gerar-painel.sh -->
+  <rect width="512" height="512" fill="#141517"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="24">
+    <rect x="124" y="124" width="108" height="144" rx="10"/>
+    <rect x="280" y="124" width="108" height="72" rx="10"/>
+    <rect x="124" y="316" width="108" height="72" rx="10"/>
+  </g>
+  <rect x="268" y="232" width="132" height="168" rx="22" fill="#FF4F18"/>
+</svg>

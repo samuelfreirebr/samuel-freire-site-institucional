@@ -58,6 +58,7 @@ function montar() {
       </div>`).join('')}
     </nav>
     <div class="casca__pe">
+      <button class="casca__item" type="button" data-avisos hidden title="Avisos no celular"><span>Avisos no celular</span></button>
       <a class="casca__item" href="/" target="_blank" rel="noopener" data-ico="externo" title="Ver o site"><span>Ver o site</span></a>
       <button class="casca__item" type="button" data-sair data-ico="sair" title="Sair"><span>Sair</span></button>
     </div>`;
@@ -88,6 +89,7 @@ function montar() {
   };
 
   ligarNotificacoes();
+  avisosNoCelular(nav.querySelector('[data-avisos]'));
 
   // Celular: o menu sai da frente e abre pelo botão na barra do topo.
   const topo = document.querySelector('.topo');
@@ -189,6 +191,49 @@ function ligarNotificacoes() {
     try { localStorage.setItem('notif-visto', new Date().toISOString()); } catch (e) {}
     contar(nov);
   });
+}
+
+/* ---------- Avisos no celular ----------
+   Notificação do próprio painel (servidor/push.js): liga e desliga por
+   aparelho. No iPhone só funciona com o painel aberto pelo ícone da tela
+   de início (iOS 16.4 ou mais novo). */
+async function avisosNoCelular(botao) {
+  const suporta = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const iphone = /iPhone|iPad/.test(navigator.userAgent);
+  if (!suporta && !iphone) return;
+  botao.hidden = false;
+  const reg = suporta ? await navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).then(() => navigator.serviceWorker.ready).catch(() => null) : null;
+  const sub = reg ? await reg.pushManager.getSubscription() : null;
+  const ligado = !!sub && Notification.permission === 'granted';
+  botao.querySelector('svg')?.remove();
+  botao.prepend(ico(ligado ? 'sino' : 'sinoDesligado'));
+  botao.querySelector('span').textContent = ligado ? 'Avisos no celular: ligados' : 'Avisos no celular: desligados';
+  botao.setAttribute('aria-pressed', String(ligado));
+  botao.title = ligado ? 'Tocar desliga os avisos neste aparelho' : 'Tocar liga os avisos neste aparelho';
+  botao.onclick = async () => {
+    if (!suporta || !reg) {
+      const instalado = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+      return alert(instalado ? 'Este iPhone não aceita avisos de app instalado. Atualize para o iOS 16.4 ou mais novo.' : 'Para receber avisos, abra o painel pelo ícone da tela de início (no Safari: Compartilhar, Adicionar à Tela de Início).');
+    }
+    if (Notification.permission === 'denied') return alert('Os avisos estão bloqueados. Libere em Ajustes, Notificações, Painel.');
+    const api = (u, corpo) => fetch(u, { method: corpo ? 'POST' : 'GET', headers: corpo ? { 'content-type': 'application/json' } : {}, body: corpo ? JSON.stringify(corpo) : undefined })
+      .then(async (r) => { const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.erro || 'O servidor não respondeu.'); return d; });
+    botao.disabled = true;
+    try {
+      if (ligado) {
+        await api('/api/push/sair', { endpoint: sub.endpoint });
+        await sub.unsubscribe();
+      } else {
+        if (await Notification.requestPermission() !== 'granted') return;
+        const { chave } = await api('/api/push/chave');
+        const bytes = Uint8Array.from(atob(chave.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+        const nova = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes });
+        await api('/api/push/inscrever', nova.toJSON());
+        await api('/api/push/teste', {});   // confirma com um aviso
+      }
+    } catch (e) { alert('Não deu: ' + e.message); }
+    finally { botao.disabled = false; avisosNoCelular(botao); }
+  };
 }
 
 /* Clicar fora de uma janela aberta (no fundo escuro) fecha a janela.

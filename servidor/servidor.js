@@ -56,6 +56,7 @@ import * as cofre from './cofre.js';
 import * as crm from './crm.js';
 import * as clickup from './clickup.js';
 import * as novidades from './novidades.js';
+import * as push from './push.js';
 import * as metricas from './metricas.js';
 import * as relatorios from './relatorios.js';
 
@@ -332,6 +333,16 @@ async function api(req, res, url) {
 
   /* --- novidades: visitas do site e o que os clientes fizeram --- */
   if (rota === 'novidades' && req.method === 'GET') return json(res, await novidades.resumo());
+
+  /* --- avisos no celular (servidor/push.js): chave pública, ligar, desligar e teste --- */
+  if (rota === 'push/chave' && req.method === 'GET') return json(res, { chave: await push.chavePublica() });
+  if ((rota === 'push/inscrever' || rota === 'push/sair') && req.method === 'POST') {
+    const dado = await lerJson(req, res, 8192);
+    if (dado === undefined) return;
+    try { return json(res, { aparelhos: rota === 'push/sair' ? await push.sair(String(dado.endpoint || '')) : await push.inscrever(dado) }); }
+    catch (e) { return json(res, { erro: e.message }, 400); }
+  }
+  if (rota === 'push/teste' && req.method === 'POST') return json(res, await push.avisar({ titulo: 'Avisos ligados', texto: 'Propostas e briefings do painel vão chegar aqui.', url: '/admin/' }));
 
   /* --- métricas dos sites dos clientes --- */
   if (rota === 'metricas') {
@@ -832,7 +843,10 @@ const servidor = http.createServer(async (req, res) => {
 
       // A tela de login é a única coisa aberta sob /admin. O resto,
       // sem sessão, volta para ela, e a API responde 401 em JSON.
-      if (!ehLogin && !liberado(req)) {
+      // O manifesto e o service worker dos avisos no celular também ficam abertos:
+      // o iPhone busca os dois sem a sessão ao instalar o painel na tela de início.
+      const aberto = ehLogin || caminho === '/admin/manifest.json' || caminho === '/admin/sw.js';
+      if (!aberto && !liberado(req)) {
         if (path.extname(arq) === '.html') {
           res.writeHead(302, { location: '/admin/entrar?voltar=' + encodeURIComponent(caminho), 'cache-control': 'no-store' });
           return res.end();

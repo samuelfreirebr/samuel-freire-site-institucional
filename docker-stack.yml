@@ -27,9 +27,6 @@
 #    TOKEN_CLAUDE       chave que o Claude usa no painel inteiro pela
 #                       API (cabeçalho x-token): lê, cria e edita,
 #                       nunca apaga. Sem ela: só o painel com login.
-#    NTFY_TOPICO        troca o canal do app ntfy que recebe os avisos de
-#                       proposta e briefing. Sem ela: o canal padrão do
-#                       código (servidor/novidades.js).
 #
 #  A imagem vem do ghcr.io, montada pela Action a cada push na
 #  main. Para atualizar: git push → Action verde → Update the
@@ -73,8 +70,6 @@ services:
       # Chave do Claude para usar a API do painel (cabeçalho x-token):
       # tudo menos apagar. Vazia, só o painel com login.
       - TOKEN_CLAUDE=${TOKEN_CLAUDE:-}
-      # Aviso no celular pelo app ntfy (ver o cabeçalho).
-      - NTFY_TOPICO=${NTFY_TOPICO:-}
       # Chaves pessoais do ClickUp (Settings > Apps > API Token), uma por conta.
       - CLICKUP_TOKEN_ETRIA=${CLICKUP_TOKEN_ETRIA:-}
       - CLICKUP_TOKEN_EDA=${CLICKUP_TOKEN_EDA:-}

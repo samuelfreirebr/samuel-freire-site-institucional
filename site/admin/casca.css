@@ -46,6 +46,8 @@ body.com-casca { padding-left: var(--casca-largura); }
 .casca__item:hover { background: var(--bg-2); color: var(--ink); }
 .casca__item[aria-current] { background: var(--bg-2); color: var(--ink); font-weight: var(--w-semi); }
 .casca__item[aria-current] .ico { color: var(--brand); }
+.casca__item[hidden] { display: none; }
+.casca__item[aria-pressed="true"] .ico { color: var(--brand); }
 .casca__pe { margin-top: auto; display: grid; gap: 1px; padding-top: var(--sp-sm); border-top: var(--hair) solid var(--line); }
 
 /* ---------- Barra do topo (a .topo de cada tela) ---------- */

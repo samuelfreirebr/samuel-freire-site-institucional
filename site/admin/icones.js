@@ -38,6 +38,8 @@ const DESENHOS = {
   sair: 'M6 13.5H3V2.5h3 M10 11l3-3-3-3 M13 8H6',
   menu: 'M2.5 4h11 M2.5 8h11 M2.5 12h11',
   sino: 'M4 11V7a4 4 0 0 1 8 0v4l1.5 1.5h-11z M6.5 13.5a1.5 1.5 0 0 0 3 0',
+  // Avisos no celular desligados: o mesmo sino, riscado
+  sinoDesligado: 'M4 11V7a4 4 0 0 1 8 0v4l1.5 1.5h-11z M6.5 13.5a1.5 1.5 0 0 0 3 0 M2 2l12 12',
   recolher: 'M2.5 2.5h11v11h-11z M6 2.5v11 M10.5 6 8.5 8l2 2',
   externo: 'M9 3h4v4 M13 3 7 9 M11 9.5V13H3V5h3.5',
   // Janela da tarefa (crm/comum.js)
