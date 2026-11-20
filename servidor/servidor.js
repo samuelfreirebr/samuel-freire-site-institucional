@@ -863,12 +863,25 @@ const servidor = http.createServer(async (req, res) => {
 
     /* Propostas: página pública, gerada do JSON. */
     if (caminho.startsWith('/propostas/')) {
-      const id = caminho.slice('/propostas/'.length).replace(/\/$/, '');
+      let id = caminho.slice('/propostas/'.length).replace(/\/$/, '');
+      /* /propostas/<id>/zap?u=<link do WhatsApp>: o cliente clicou para
+         conversar. Avisa e segue para o WhatsApp (só wa.me ou whatsapp.com). */
+      const zap = id.endsWith('/zap');
+      if (zap) id = id.slice(0, -4);
       const p = await dados.lerProposta(id);
       if (!p) return texto(res, 'Proposta não encontrada.', 404);
       if (p.publicada === false && !liberado(req)) return texto(res, 'Proposta não encontrada.', 404);
+      if (zap) {
+        const destino = url.searchParams.get('u') || '';
+        if (!/^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(destino)) return texto(res, 'Link inválido.', 400);
+        if (!liberado(req)) novidades.registrar('proposta-whatsapp', id, p.cliente || id, '/admin/propostas/#' + id).catch(() => {});
+        res.writeHead(302, { location: destino, 'cache-control': 'no-store' });
+        return res.end();
+      }
       if (!liberado(req)) novidades.abriu(req, 'proposta', id, p.cliente || id, '/admin/propostas/#' + id).catch(() => {});
-      const html = renderizarProposta(comModelo(p, await dados.lerModelo()));
+      const html = renderizarProposta(comModelo(p, await dados.lerModelo()))
+        /* os botões de WhatsApp passam por /zap para avisar o Samuel (a prévia do painel não muda) */
+        .replace(/href="(https:\/\/(?:wa\.me|api\.whatsapp\.com)\/[^"]*)"/g, (_, u) => `href="/propostas/${encodeURIComponent(id)}/zap?u=${encodeURIComponent(u.replace(/&amp;/g, '&'))}"`);
       return enviarCorpo(res, 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache, must-revalidate', 'x-robots-tag': 'noindex, nofollow' }, html);
     }
 

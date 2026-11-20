@@ -59,6 +59,29 @@ export async function contarVisita(req) {
   gravar();
 }
 
+/* Aviso no celular pelo app ntfy, no canal NTFY_TOPICO da stack (vazio:
+   não avisa). Cada aviso abre o item no painel. Nunca trava nem derruba
+   a página do cliente. */
+const AVISOS = {
+  'proposta-aberta': ['👀 Proposta aberta', 4],
+  'proposta-voltou': ['👀 Proposta aberta de novo', 3],
+  'proposta-whatsapp': ['💬 Cliente clicou para fechar a proposta', 5],
+  'formulario-aberta': ['👀 Briefing aberto', 3],
+  'formulario-voltou': ['👀 Briefing aberto de novo', 2],
+  'formulario-respondido': ['✅ Briefing respondido', 5],
+};
+function avisarCelular(tipo, titulo, link) {
+  const topico = process.env.NTFY_TOPICO, aviso = AVISOS[tipo];
+  if (!topico || !aviso) return;
+  const base = (process.env.URL_PUBLICA || 'https://links.samuelfreire.com.br').replace(/\/$/, '');
+  fetch('https://ntfy.sh/', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ topic: topico, title: aviso[0], message: String(titulo || '').slice(0, 300), priority: aviso[1], click: link ? base + link : undefined }),
+    signal: AbortSignal.timeout(10000),
+  }).catch(() => {});
+}
+
 /* O cliente abriu a proposta ou o formulário. A primeira vez sempre
    avisa; as seguintes, só se passou um tempo. */
 export async function abriu(req, tipo, id, titulo, link) {
@@ -66,7 +89,10 @@ export async function abriu(req, tipo, id, titulo, link) {
   const s = await carregar(), chave = `${tipo}:${id}`, agora = Date.now();
   const v = s.vistos[chave] ||= { vezes: 0, primeira: agora, ultima: 0 };
   const avisa = !v.vezes || agora - v.ultima > VOLTOU;
-  if (avisa) s.eventos.push({ tipo: v.vezes ? `${tipo}-voltou` : `${tipo}-aberta`, id, titulo, link, quando: new Date(agora).toISOString() });
+  if (avisa) {
+    s.eventos.push({ tipo: v.vezes ? `${tipo}-voltou` : `${tipo}-aberta`, id, titulo, link, quando: new Date(agora).toISOString() });
+    avisarCelular(v.vezes ? `${tipo}-voltou` : `${tipo}-aberta`, titulo, link);
+  }
   v.vezes++; v.ultima = agora;
   gravar();
 }
@@ -74,6 +100,7 @@ export async function abriu(req, tipo, id, titulo, link) {
 export async function registrar(tipo, id, titulo, link) {
   const s = await carregar();
   s.eventos.push({ tipo, id, titulo, link, quando: new Date().toISOString() });
+  avisarCelular(tipo, titulo, link);
   gravar();
 }
 
