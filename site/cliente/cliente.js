@@ -95,6 +95,7 @@ async function carregar() {
   try {
     render(await api('painel?dias=' + dias));
     mostrar('painel');
+    avisos();
   } catch (e) {
     if (e.status === 401) return mostrar('entrar');
     $('#leads').innerHTML = `<li class="cl-vazio">${esc(e.message)}</li>`;
@@ -121,6 +122,42 @@ $('#periodo').addEventListener('click', (e) => {
   dias = Number(b.dataset.dias);
   carregar();
 });
+
+/* Notificações de lead novo neste aparelho (Web Push). No iPhone só
+   funciona com o painel aberto pelo ícone da tela de início (iOS 16.4+). */
+async function avisos() {
+  const b = $('#avisos');
+  const suporta = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const iphone = /iPhone|iPad/.test(navigator.userAgent);
+  const instalado = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  $('#dica-iphone').hidden = !(iphone && !instalado);
+  if (!suporta) { b.hidden = true; return; }
+  const reg = await navigator.serviceWorker.register('/cliente/sw.js', { scope: '/cliente/' }).then(() => navigator.serviceWorker.ready).catch(() => null);
+  if (!reg) { b.hidden = true; return; }
+  const sub = await reg.pushManager.getSubscription();
+  const ligado = !!sub && Notification.permission === 'granted';
+  b.hidden = false;
+  b.textContent = ligado ? 'Notifications on' : 'Turn on notifications';
+  b.setAttribute('aria-pressed', String(ligado));
+  b.title = ligado ? 'Tap to turn off notifications on this device' : 'Get a notification on this device for every new lead';
+  b.onclick = async () => {
+    if (Notification.permission === 'denied') return alert('Notifications are blocked for this site. Allow them in your browser or phone settings, then try again.');
+    b.disabled = true;
+    try {
+      if (ligado) {
+        await api('push/sair', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+        await sub.unsubscribe();
+      } else {
+        if (await Notification.requestPermission() !== 'granted') return;
+        const { chave } = await api('push/chave');
+        const bytes = Uint8Array.from(atob(chave.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+        const nova = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes });
+        await api('push/inscrever', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(nova.toJSON()) });
+      }
+    } catch (e) { alert('Could not change notifications: ' + e.message); }
+    finally { b.disabled = false; avisos(); }
+  };
+}
 
 // Volta para a aba: busca de novo, para o lead novo aparecer sem recarregar.
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('#painel').hidden) carregar(); });

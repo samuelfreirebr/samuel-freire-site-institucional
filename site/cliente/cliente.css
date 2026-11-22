@@ -74,3 +74,11 @@ body { background: var(--bg-2); color: var(--ink); font-family: var(--font); }
 .cl-vazio { color: var(--muted); padding: var(--sp-md); background: var(--bg); border: var(--hair) dashed var(--line-2); border-radius: 14px; list-style: none; }
 .cl-origens .cl-vazio { border: 0; padding: 0; }
 .cl-rodape { color: var(--meta); font-size: var(--t-small); text-align: center; margin: 0; }
+
+.cl-topo__acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2xs); }
+#avisos[aria-pressed="true"] { border-color: var(--ink); }
+.cl-dica { margin: 0; font-size: var(--t-small); color: var(--ink-2); background: var(--brand-wash); border-radius: 12px; padding: var(--sp-xs) var(--sp-sm); }
+/* No celular as ações descem para uma linha própria e o nome do site não espreme. */
+.cl-topo { flex-wrap: wrap; }
+.cl-topo > div:first-child { flex: 1 1 14rem; }
+@media (max-width: 560px) { .cl-topo__acoes { justify-content: flex-start; } }

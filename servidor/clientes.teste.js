@@ -28,5 +28,11 @@ assert.match(await c.registrarLead(pedido('https://outro.com'), JSON.stringify({
 assert.equal(await c.registrarLead(pedido('https://www.sitea.com'), JSON.stringify({ s: 'site-a', nome: 'Ana', telefone: '2035550100' })), '');
 assert.equal(await c.registrarLead(pedido('https://sitea.com'), JSON.stringify({ s: 'site-a', nome: 'Robô', telefone: '1', empresa: 'x' })), '');
 assert.deepEqual((await c.listarLeads('site-a')).map((l) => l.nome), ['Ana'], 'isca não grava');
+// Avisos: aparelho do cliente fica no site dele, separado dos do Samuel.
+const push = await import('./push.js');
+const sub = { endpoint: 'https://push.invalido/1', keys: { p256dh: 'x', auth: 'y' } };
+assert.equal(await push.inscrever(sub, 'site-a'), 1);
+assert.equal((await push.avisar({ titulo: 't' })).aparelhos, 0, 'Samuel não recebe o aparelho do cliente');
+assert.equal(await push.sair(sub.endpoint, 'site-a'), 0);
 console.log('clientes ok');
 process.exit(0);

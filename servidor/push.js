@@ -34,20 +34,29 @@ const gravar = () => mkdir(RAIZ_DADOS, { recursive: true }).then(() => writeFile
 
 export const chavePublica = async () => (await carregar()).vapid.publica;
 
-export async function inscrever(sub) {
-  if (!/^https:\/\//.test(sub?.endpoint || '') || !sub.keys?.p256dh || !sub.keys?.auth) throw Object.assign(new Error('Inscrição inválida.'), { status: 400 });
-  const s = await carregar();
-  s.inscritos = s.inscritos.filter((x) => x.endpoint !== sub.endpoint);
-  s.inscritos.push({ endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth }, desde: new Date().toISOString() });
-  await gravar();
-  return s.inscritos.length;
+/* Sem `site`: os aparelhos do Samuel. Com `site`: os do cliente daquele
+   site (painel /cliente), em clientes[site] no mesmo arquivo. */
+const listaDe = (s, site) => (site ? s.clientes?.[site] || [] : s.inscritos);
+function trocar(s, site, fn) {
+  if (!site) return (s.inscritos = fn(s.inscritos));
+  s.clientes ||= {};
+  return (s.clientes[site] = fn(s.clientes[site] || []));
 }
 
-export async function sair(endpoint) {
+export async function inscrever(sub, site) {
+  if (!/^https:\/\//.test(sub?.endpoint || '') || !sub.keys?.p256dh || !sub.keys?.auth) throw Object.assign(new Error('Inscrição inválida.'), { status: 400 });
   const s = await carregar();
-  s.inscritos = s.inscritos.filter((x) => x.endpoint !== endpoint);
+  const novo = { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth }, desde: new Date().toISOString() };
+  const lista = trocar(s, site, (l) => [...l.filter((x) => x.endpoint !== sub.endpoint), novo].slice(-20));
   await gravar();
-  return s.inscritos.length;
+  return lista.length;
+}
+
+export async function sair(endpoint, site) {
+  const s = await carregar();
+  const lista = trocar(s, site, (l) => l.filter((x) => x.endpoint !== endpoint));
+  await gravar();
+  return lista.length;
 }
 
 /* corpo cifrado em aes128gcm (RFC 8291) */
@@ -75,10 +84,11 @@ function vapid(endpoint, v) {
 }
 
 /* manda para todos os aparelhos inscritos; tira os que o servidor de push diz que sumiram */
-export async function avisar({ titulo, texto, url = '/' }) {
+export async function avisar({ titulo, texto, url = '/' }, site) {
   const s = await carregar();
   const corpo = JSON.stringify({ titulo, texto, url });
-  const res = await Promise.all(s.inscritos.map(async (x) => {
+  const alvo = listaDe(s, site);
+  const res = await Promise.all(alvo.map(async (x) => {
     try {
       const r = await fetch(x.endpoint, {
         method: 'POST',
@@ -91,6 +101,6 @@ export async function avisar({ titulo, texto, url = '/' }) {
       return r.ok;
     } catch (e) { console.error('push', e.message); return false; }
   }));
-  if (s.inscritos.some((x) => x.sumiu)) { s.inscritos = s.inscritos.filter((x) => !x.sumiu); await gravar(); }
-  return { enviados: res.filter(Boolean).length, aparelhos: s.inscritos.length };
+  if (alvo.some((x) => x.sumiu)) { trocar(s, site, (l) => l.filter((x) => !x.sumiu)); await gravar(); }
+  return { enviados: res.filter(Boolean).length, aparelhos: listaDe(s, site).length };
 }

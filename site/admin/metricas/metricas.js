@@ -194,7 +194,8 @@ function barraTestes(site) {
       </span>`).join('')}
     </div>
     <div class="mt-testes__acoes">
-      <button type="button" class="mini mini--ativo" data-acao="novo-teste">+ Iniciar novo teste</button>
+      <button type="button" class="mini mini--ativo" data-acao="acesso-cliente">Acesso do cliente (login e senha)</button>
+      <button type="button" class="mini" data-acao="novo-teste">+ Iniciar novo teste</button>
       <button type="button" class="mini mini--perigo" data-acao="apagar-site">Apagar site</button>
     </div>
   </div>`;
@@ -297,6 +298,7 @@ $('#relatorio').addEventListener('click', async (e) => {
   }
   const site = sites.find((x) => x.id === $('#site').value); if (!site) return;
   if (ac.dataset.acao === 'apagar-site') return apagarSite(site);
+  if (ac.dataset.acao === 'acesso-cliente') { $('#jan').showModal(); return mostrarAcesso(site.id); }
   const nome = prompt('Nome do novo teste (ele conta a partir de hoje):', `Teste ${(site.testes || []).length + 1}`);
   if (nome === null) return;
   try {

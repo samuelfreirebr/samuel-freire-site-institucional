@@ -75,6 +75,8 @@ export async function registrarLead(req, corpo) {
   await gravarJson(arq, lista.slice(0, MAX_LEADS));
   metricas.contar(site.id, 'lead').catch(() => {});
   push.avisar({ titulo: '💬 Lead novo', texto: `${site.nome}: ${lead.nome}`, url: '/admin/metricas/?site=' + site.id }).catch(() => {});
+  // E no celular do próprio cliente, se ele ligou as notificações no /cliente.
+  push.avisar({ titulo: 'New estimate request', texto: lead.nome + (lead.servicos.length ? ' · ' + lead.servicos.join(', ') : ''), url: '/cliente/' }, site.id).catch(() => {});
   return '';
 }
 

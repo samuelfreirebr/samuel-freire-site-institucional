@@ -858,6 +858,17 @@ const servidor = http.createServer(async (req, res) => {
       const a = await clientes.sessao(req);
       if (!a) return json(res, { erro: 'Please sign in.' }, 401);
       if (rota === 'painel' && req.method === 'GET') return json(res, await clientes.painel(a, url.searchParams.get('dias')));
+      /* Notificações no celular do cliente (Web Push, só do site dele). */
+      if (rota === 'push/chave' && req.method === 'GET') return json(res, { chave: await push.chavePublica() });
+      if ((rota === 'push/inscrever' || rota === 'push/sair') && req.method === 'POST') {
+        const dado = await lerJson(req, res, 8192);
+        if (dado === undefined) return;
+        try {
+          if (rota === 'push/sair') return json(res, { aparelhos: await push.sair(String(dado.endpoint || ''), a.site) });
+          await push.inscrever(dado, a.site);
+          return json(res, await push.avisar({ titulo: 'Notifications are on', texto: 'New estimate requests from your website will show up here.', url: '/cliente/' }, a.site));
+        } catch (e) { return json(res, { erro: e.message }, 400); }
+      }
       return json(res, { erro: 'Not found.' }, 404);
     }
     if (caminho.startsWith('/cliente/')) {

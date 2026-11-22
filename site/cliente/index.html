@@ -8,13 +8,14 @@
 <meta name="description" content="Your website leads and numbers in one place.">
 <link rel="icon" href="/img/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="/img/painel-180.png">
+<link rel="manifest" href="/cliente/manifest.json">
 <meta name="apple-mobile-web-app-title" content="Leads">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="./cliente.css?v=20261122a">
-<script type="module" src="./cliente.js?v=20261122a"></script>
+<link rel="stylesheet" href="./cliente.css?v=20261122b">
+<script type="module" src="./cliente.js?v=20261122b"></script>
 </head>
 <body>
 
@@ -38,7 +39,10 @@
       <p class="cl-marca">Website dashboard</p>
       <h1 class="cl-titulo" id="nome-site"></h1>
     </div>
-    <button class="cl-btn" type="button" id="sair">Sign out</button>
+    <div class="cl-topo__acoes">
+      <button class="cl-btn" type="button" id="avisos" aria-pressed="false" hidden>Turn on notifications</button>
+      <button class="cl-btn" type="button" id="sair">Sign out</button>
+    </div>
   </header>
 
   <nav class="cl-periodo" id="periodo" aria-label="Period">
@@ -46,6 +50,8 @@
     <button type="button" data-dias="30" aria-pressed="true">30 days</button>
     <button type="button" data-dias="90">90 days</button>
   </nav>
+
+  <p class="cl-dica" id="dica-iphone" hidden>To get notifications on iPhone: tap Share, then <b>Add to Home Screen</b>, and open the dashboard from that icon.</p>
 
   <section class="cl-numeros" id="numeros" aria-label="Numbers"></section>
 
