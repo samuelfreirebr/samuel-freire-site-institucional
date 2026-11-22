@@ -234,8 +234,27 @@ function montarSites(escolher) {
   $('#site').innerHTML = '<option value="">Todos os sites</option>' + sites.map((s) => `<option value="${esc(s.id)}">${esc(s.nome)}</option>`).join('');
   if (escolher) $('#site').value = escolher;
   $('#lista-sites').innerHTML = sites.length
-    ? sites.map((s) => `<li><b>${esc(s.nome)}</b> <span>${esc(s.id)} · ${esc(s.dominios.join(', '))}</span> <button type="button" class="mini" data-codigo="${esc(s.id)}">Código</button> <button type="button" class="mini mini--perigo" data-apagar="${esc(s.id)}">Apagar</button></li>`).join('')
+    ? sites.map((s) => `<li><b>${esc(s.nome)}</b> <span>${esc(s.id)} · ${esc(s.dominios.join(', '))}</span> <button type="button" class="mini" data-codigo="${esc(s.id)}">Código</button> <button type="button" class="mini" data-acesso="${esc(s.id)}">Acesso do cliente</button> <button type="button" class="mini mini--perigo" data-apagar="${esc(s.id)}">Apagar</button></li>`).join('')
     : '<li class="mt-sub">Nenhum site ainda.</li>';
+}
+
+/* Acesso do cliente ao /cliente: e-mail e senha criados aqui. A senha
+   fica guardada só como hash, então não volta para a tela. */
+let acessoId = '';
+async function mostrarAcesso(id) {
+  const f = $('#form-acesso'), s = sites.find((x) => x.id === id);
+  acessoId = id; f.reset(); f.hidden = false; $('#codigo').hidden = true;
+  $('#acesso-site').textContent = s?.nome || id;
+  $('#acesso-link').textContent = $('#acesso-link').href = 'https://samuelfreire.com.br/cliente/';
+  f.scrollIntoView({ block: 'nearest' });
+  try {
+    const { acesso } = await api(`metricas/${encodeURIComponent(id)}/acesso`);
+    f.email.value = acesso?.email || '';
+    f.ativo.checked = acesso ? acesso.ativo : true;
+    f.senha.placeholder = acesso ? 'Deixe vazio para manter a senha atual' : 'Pelo menos 6 caracteres';
+    f.senha.required = !acesso;
+    $('#acesso-estado').textContent = acesso?.senhaEm ? 'Senha criada em ' + new Date(acesso.senhaEm).toLocaleDateString('pt-BR') + '. Ela não aparece aqui: se o cliente esquecer, crie outra.' : 'Ainda sem acesso. Crie o e-mail e a senha.';
+  } catch (err) { if (err.message) aviso(err.message, 'erro'); }
 }
 
 function mostrarCodigo(id) {
@@ -307,8 +326,19 @@ for (const [grupo, chave, fn] of [['#periodo', 'dias', (v) => { dias = Number(v)
 $('#abrir-sites').addEventListener('click', () => $('#jan').showModal());
 $('#jan-fechar').addEventListener('click', () => $('#jan').close());
 $('#lista-sites').addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-codigo]'); if (b) return mostrarCodigo(b.dataset.codigo);
+  const b = e.target.closest('[data-codigo]'); if (b) { $('#form-acesso').hidden = true; return mostrarCodigo(b.dataset.codigo); }
+  const ac = e.target.closest('[data-acesso]'); if (ac) return mostrarAcesso(ac.dataset.acesso);
   const ap = e.target.closest('[data-apagar]'); if (ap) apagarSite(sites.find((x) => x.id === ap.dataset.apagar));
+});
+$('#form-acesso').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  try {
+    await api(`metricas/${encodeURIComponent(acessoId)}/acesso`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: f.email.value, senha: f.senha.value, ativo: f.ativo.checked }) });
+    const senha = f.senha.value;
+    await mostrarAcesso(acessoId);
+    aviso(senha ? 'Acesso salvo. Mande o link, o e-mail e a senha para o cliente.' : 'Acesso salvo.');
+  } catch (err) { if (err.message) aviso(err.message, 'erro'); }
 });
 $('#copiar').addEventListener('click', async () => { await navigator.clipboard.writeText($('#codigo-texto').textContent); aviso('Código copiado.'); });
 $('#form-site').addEventListener('submit', async (e) => {

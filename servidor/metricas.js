@@ -137,17 +137,31 @@ function origemDe(ref, busca) {
   return corte(host, 60) || 'direto';
 }
 
+/* O site cadastrado com esse id, se o pedido vier de um domínio dele.
+   Vale para as métricas e para os leads (clientes.js). */
+export async function siteDoPedido(req, id) {
+  const site = (await listarSites()).find((s) => s.id === id);
+  if (!site) return null;
+  let host = '';
+  try { host = new URL(req.headers.origin || req.headers.referer || '').host.replace(/^www\./, ''); } catch { return null; }
+  return site.dominios.some((d) => d.replace(/^www\./, '') === host) ? site : null;
+}
+
+/* Soma um evento sem passar pelo script (o lead gravado no servidor). */
+export async function contar(id, tipo) {
+  const s = await carregar(id), dia = s.dias[hojeBr()] ||= novoDia();
+  dia[tipo] = (dia[tipo] || 0) + 1;
+  gravar(id);
+}
+
 /* Recebe um evento do script. Devolve false quando não vale. */
 export async function registrar(req, corpo) {
   if (ROBO.test(req.headers['user-agent'] || '')) return false;
   let e;
   try { e = JSON.parse(corpo); } catch { return false; }
-  const site = (await listarSites()).find((s) => s.id === e?.s);
-  if (!site || !TIPOS.includes(e.t)) return false;
-  // Só aceita o que vem de um domínio do próprio site.
-  let host = '';
-  try { host = new URL(req.headers.origin || req.headers.referer || '').host.replace(/^www\./, ''); } catch { return false; }
-  if (!site.dominios.some((d) => d.replace(/^www\./, '') === host)) return false;
+  if (!TIPOS.includes(e?.t)) return false;
+  const site = await siteDoPedido(req, e.s);
+  if (!site) return false;
 
   const s = await carregar(site.id), dia = s.dias[hojeBr()] ||= novoDia();
   if (e.t === 'visita') {

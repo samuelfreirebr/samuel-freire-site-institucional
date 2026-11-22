@@ -154,3 +154,5 @@ button.mt-linha:hover { background: var(--bg-2); }
   .mt-dupla { grid-template-columns: 1fr 1fr; }
   .mt-bloco, .mt-cards { break-inside: avoid; }
 }
+.mt-check { display: flex !important; align-items: center; gap: var(--sp-2xs); font-size: var(--t-small); }
+.mt-check input { width: auto; }

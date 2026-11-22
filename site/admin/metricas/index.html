@@ -15,8 +15,8 @@
 <link rel="stylesheet" href="/admin/painel.css?v=20261029i">
 <link rel="stylesheet" href="/admin/casca.css?v=20261029i">
 <script type="module" src="/admin/casca.js?v=20261110a"></script>
-<link rel="stylesheet" href="./metricas.css?v=20261111a">
-<script type="module" src="./metricas.js?v=20261111a"></script>
+<link rel="stylesheet" href="./metricas.css?v=20261122a">
+<script type="module" src="./metricas.js?v=20261122a"></script>
 <link rel="stylesheet" href="/admin/visual.css?v=20261119c">
 </head>
 <body>
@@ -57,6 +57,15 @@
   </header>
   <div class="mt-jan__corpo">
     <ul class="mt-sites" id="lista-sites"></ul>
+    <form id="form-acesso" class="mt-form" hidden>
+      <p class="mt-form__titulo">Acesso do cliente: <span id="acesso-site"></span></p>
+      <p class="mt-sub">O cliente entra em <a id="acesso-link" href="/cliente/" target="_blank" rel="noopener"></a> e vê os leads e os números só do site dele.</p>
+      <label>E-mail do cliente <input name="email" type="email" required maxlength="160" autocomplete="off"></label>
+      <label>Senha <input name="senha" type="text" minlength="6" maxlength="200" autocomplete="off" placeholder="Pelo menos 6 caracteres"></label>
+      <p class="mt-sub" id="acesso-estado"></p>
+      <label class="mt-check"><input name="ativo" type="checkbox" checked> Acesso ligado (desligado, o cliente não entra mais)</label>
+      <button class="mini mini--ativo" type="submit">Salvar acesso</button>
+    </form>
     <form id="form-site" class="mt-form">
       <p class="mt-form__titulo">Cadastrar ou atualizar site</p>
       <label>Nome do cliente <input name="nome" required maxlength="120" placeholder="Chief Pavers"></label>

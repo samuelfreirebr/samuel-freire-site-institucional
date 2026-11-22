@@ -29,6 +29,8 @@
      /m.js                script de métricas que vai nos sites dos clientes (aberto)
      /m                   recebe as métricas desses sites (aberto, só site cadastrado)
      /admin/metricas/     relatório de cada site · exige sessão
+     /l                   recebe os leads do formulário desses sites (aberto, só site cadastrado)
+     /cliente/            painel do cliente: métricas e leads do site dele · login próprio (clientes.js)
    ============================================================ */
 
 import http from 'node:http';
@@ -58,6 +60,7 @@ import * as clickup from './clickup.js';
 import * as novidades from './novidades.js';
 import * as push from './push.js';
 import * as metricas from './metricas.js';
+import * as clientes from './clientes.js';
 import * as relatorios from './relatorios.js';
 import * as lembretes from './lembretes.js';
 
@@ -369,6 +372,18 @@ async function api(req, res, url) {
     if (dado === undefined) return;
     try { return json(res, { site: mt[2] ? await metricas.mudarTeste(mt[1], mt[2], dado.ativo === true) : await metricas.novoTeste(mt[1], dado.nome) }); }
     catch (e) { return json(res, { erro: e.message }, 400); }
+  }
+  /* Acesso do cliente ao /cliente e os leads do site dele. */
+  const ma = rota.match(/^metricas\/([a-z0-9-]+)\/(acesso|leads)$/);
+  if (ma && ma[2] === 'leads' && req.method === 'GET') return json(res, { leads: await clientes.listarLeads(ma[1]) });
+  if (ma && ma[2] === 'acesso') {
+    if (req.method === 'GET') return json(res, { acesso: await clientes.acessoDoSite(ma[1]) });
+    if (req.method === 'POST') {
+      const dado = await lerJson(req, res, 4096);
+      if (dado === undefined) return;
+      try { return json(res, { acesso: await clientes.salvarAcesso(ma[1], dado) }); }
+      catch (e) { return json(res, { erro: e.message }, 400); }
+    }
   }
   // Gera agora as mensagens do ciclo quinzenal (normalmente roda sozinho no dia 15 e no fim do mês).
   if (rota === 'metricas-ciclo' && req.method === 'POST') {
@@ -805,6 +820,50 @@ const servidor = http.createServer(async (req, res) => {
       }
       res.writeHead(204, cors);
       return res.end();
+    }
+
+    /* --- Leads do formulário dos sites dos clientes: aberto, como o /m.
+       O site manda texto puro (sem preflight de CORS). --- */
+    if (caminho === '/l') {
+      const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type' };
+      if (req.method === 'OPTIONS') { res.writeHead(204, cors); return res.end(); }
+      if (req.method !== 'POST') return json(res, { erro: 'Método não aceito.' }, 405);
+      const corpo = await lerCorpo(req, 16384).catch(() => null);
+      const erro = corpo ? await clientes.registrarLead(req, corpo.toString('utf8')) : 'Pedido grande demais.';
+      return enviarCorpo(res, erro ? 400 : 200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...cors }, JSON.stringify(erro ? { erro } : { ok: true }));
+    }
+
+    /* --- Painel do cliente: login próprio, só o site dele --- */
+    if (caminho === '/cliente') {
+      res.writeHead(308, { location: '/cliente/', 'cache-control': 'no-store' });
+      return res.end();
+    }
+    if (caminho.startsWith('/cliente/api/')) {
+      const rota = caminho.slice('/cliente/api/'.length);
+      if (rota === 'entrar' && req.method === 'POST') {
+        const seg = bloqueado(req);
+        if (seg) return json(res, { erro: `Too many attempts. Please wait ${Math.ceil(seg / 60)} min.` }, 429);
+        const dado = await lerJson(req, res, 4096);
+        if (!dado) return;
+        const a = await clientes.conferir(dado.email, dado.senha);
+        if (!a) { registrarFalha(req); return json(res, { erro: 'Wrong email or password.' }, 401); }
+        limparFalhas(req);
+        res.setHeader('set-cookie', clientes.cookieDeSessao(req, clientes.criarSessao(a)));
+        return json(res, { ok: true });
+      }
+      if (rota === 'sair' && req.method === 'POST') {
+        res.setHeader('set-cookie', clientes.cookieDeSaida());
+        return json(res, { ok: true });
+      }
+      const a = await clientes.sessao(req);
+      if (!a) return json(res, { erro: 'Please sign in.' }, 401);
+      if (rota === 'painel' && req.method === 'GET') return json(res, await clientes.painel(a, url.searchParams.get('dias')));
+      return json(res, { erro: 'Not found.' }, 404);
+    }
+    if (caminho.startsWith('/cliente/')) {
+      const arq = await acharArquivo(caminho);
+      if (!arq) return texto(res, 'Not found.', 404);
+      return enviarArquivo(req, res, arq, cacheDoPainel(), { 'x-robots-tag': 'noindex, nofollow' });
     }
 
     /* --- API --- */

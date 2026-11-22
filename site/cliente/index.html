@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Client dashboard | Samuel Freire</title>
+<meta name="description" content="Your website leads and numbers in one place.">
+<link rel="icon" href="/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/img/painel-180.png">
+<meta name="apple-mobile-web-app-title" content="Leads">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
+<link rel="stylesheet" href="/styles/base.css?v=20260911a">
+<link rel="stylesheet" href="./cliente.css?v=20261122a">
+<script type="module" src="./cliente.js?v=20261122a"></script>
+</head>
+<body>
+
+<!-- Login -->
+<main class="cl-entrar" id="entrar" hidden>
+  <form class="cl-cartao cl-form" id="form-entrar">
+    <p class="cl-marca">Samuel Freire</p>
+    <h1 class="cl-titulo">Your website dashboard</h1>
+    <p class="cl-sub">Leads and numbers from your website, in one place.</p>
+    <label class="cl-campo">Email <input name="email" type="email" autocomplete="username" required></label>
+    <label class="cl-campo">Password <input name="senha" type="password" autocomplete="current-password" required></label>
+    <p class="cl-erro" id="erro-entrar" role="alert"></p>
+    <button class="cl-btn cl-btn--cheio" type="submit">Sign in</button>
+  </form>
+</main>
+
+<!-- Painel -->
+<div class="cl-painel" id="painel" hidden>
+  <header class="cl-topo">
+    <div>
+      <p class="cl-marca">Website dashboard</p>
+      <h1 class="cl-titulo" id="nome-site"></h1>
+    </div>
+    <button class="cl-btn" type="button" id="sair">Sign out</button>
+  </header>
+
+  <nav class="cl-periodo" id="periodo" aria-label="Period">
+    <button type="button" data-dias="7">7 days</button>
+    <button type="button" data-dias="30" aria-pressed="true">30 days</button>
+    <button type="button" data-dias="90">90 days</button>
+  </nav>
+
+  <section class="cl-numeros" id="numeros" aria-label="Numbers"></section>
+
+  <section class="cl-bloco">
+    <h2 class="cl-h2">Leads <span id="total-leads"></span></h2>
+    <ul class="cl-leads" id="leads"></ul>
+  </section>
+
+  <section class="cl-bloco">
+    <h2 class="cl-h2">Where visitors came from</h2>
+    <ul class="cl-origens" id="origens"></ul>
+  </section>
+
+  <p class="cl-rodape">Prepared by Samuel Freire · <span id="email"></span></p>
+</div>
+
+</body>
+</html>
