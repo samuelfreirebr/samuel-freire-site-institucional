@@ -17,6 +17,7 @@ const TXT = {
     origens: 'De onde vieram', paginas: 'Páginas mais vistas', aparelho: 'Aparelho', celular: 'Celular', computador: 'Computador',
     direto: 'Direto (digitou ou salvou)', vazio: 'Ainda não há dados neste período. Assim que alguém abrir o site, os números aparecem aqui.',
     rodape: 'Preparado por Samuel Freire', gerado: 'Gerado em', novo: 'novo',
+    semCliques: 'Ainda ninguém clicou em ligar, WhatsApp, e-mail ou mapa.', semVisitas: 'Ainda sem visitas neste período.',
   },
   en: {
     eyebrow: 'Website report', periodo: 'Period', ate: 'to', comp: 'vs. previous period',
@@ -27,6 +28,7 @@ const TXT = {
     origens: 'Where they came from', paginas: 'Most viewed pages', aparelho: 'Device', celular: 'Mobile', computador: 'Desktop',
     direto: 'Direct (typed or saved)', vazio: 'No data for this period yet. As soon as someone opens the site, the numbers show up here.',
     rodape: 'Prepared by Samuel Freire', gerado: 'Generated on', novo: 'new',
+    semCliques: 'No one has clicked call, WhatsApp, email or map yet.', semVisitas: 'No visits in this period yet.',
   },
 };
 
@@ -61,16 +63,18 @@ function cartao(rotulo, valor, agora, antes, destaque) {
 
 /* Barras por dia: visitas (cinza) e contatos (laranja). SVG puro. */
 function grafico(serie) {
-  const L = 900, A = 220, base = 190, max = Math.max(1, ...serie.map((d) => d.visitas));
+  const poucos = serie.filter((d) => d.visitas).length <= 3;
+  /* No celular o desenho é mais estreito: barras e datas saem maiores. */
+  const L = matchMedia('(max-width: 620px)').matches ? 400 : 900, A = poucos ? 120 : 220, base = A - 30, alto = base - 20, max = Math.max(1, ...serie.map((d) => d.visitas));
   const w = L / serie.length, larg = Math.max(4, w * 0.62);
   const passo = Math.ceil(serie.length / 10);
   return `<svg class="mt-graf" viewBox="0 0 ${L} ${A}" role="img" aria-label="${esc(t('dia'))}">
     <line x1="0" y1="${base}" x2="${L}" y2="${base}" class="mt-graf__base"/>
     ${serie.map((d, i) => {
-      const x = i * w + (w - larg) / 2, hv = (d.visitas / max) * 160, hc = (d.contatos / max) * 160;
+      const x = i * w + (w - larg) / 2, hv = (d.visitas / max) * alto, hc = (d.contatos / max) * alto;
       return `<rect x="${x}" y="${base - hv}" width="${larg}" height="${hv}" rx="3" class="mt-graf__v"><title>${dataCurta(d.dia)}: ${d.visitas}</title></rect>
         ${d.contatos ? `<rect x="${x}" y="${base - hc}" width="${larg}" height="${hc}" rx="3" class="mt-graf__c"><title>${d.contatos}</title></rect>` : ''}
-        ${i % passo === 0 ? `<text x="${x + larg / 2}" y="${base + 20}" text-anchor="middle" class="mt-graf__dia">${dataCurta(d.dia)}</text>` : ''}`;
+        ${i % passo === 0 ? `<text x="${x + larg / 2}" y="${base + 20}" text-anchor="middle" class="mt-graf__dia${(i / passo) % 2 ? ' mt-graf__dia--impar' : ''}">${dataCurta(d.dia)}</text>` : ''}`;
     }).join('')}
   </svg>
   <p class="mt-legenda"><i class="mt-ponto"></i>${esc(t('visitas'))} <i class="mt-ponto mt-ponto--c"></i>${esc(t('contatos'))}</p>`;
@@ -165,14 +169,14 @@ function render() {
     <section class="mt-bloco"><h3>${esc(t('dia'))}</h3>${grafico(a.dias)}</section>
     <section class="mt-dupla">
       <div class="mt-bloco"><h3>${esc(t('funil'))}</h3>${barras(funil)}</div>
-      <div class="mt-bloco"><h3>${esc(t('acoes'))}</h3>${acoes.length ? barras(acoes) : '<p class="mt-sub">0</p>'}</div>
+      <div class="mt-bloco"><h3>${esc(t('acoes'))}</h3>${acoes.length ? barras(acoes) : `<p class="mt-sub">${esc(t('semCliques'))}</p>`}</div>
     </section>
     <section class="mt-tripla">
-      <div class="mt-bloco"><h3>${esc(t('origens'))}</h3>${a.origens.length ? barras(a.origens, (x) => x.nome === 'direto' ? t('direto') : x.nome.replace(/^./, (c) => c.toUpperCase())) : '<p class="mt-sub">0</p>'}</div>
-      <div class="mt-bloco"><h3>${esc(t('paginas'))}</h3>${a.paginas.length ? barras(a.paginas) : '<p class="mt-sub">0</p>'}</div>
-      <div class="mt-bloco"><h3>${esc(t('aparelho'))}</h3>
+      <div class="mt-bloco"><h3>${esc(t('origens'))}</h3>${a.origens.length ? barras(a.origens, (x) => x.nome === 'direto' ? t('direto') : x.nome.replace(/^./, (c) => c.toUpperCase())) : `<p class="mt-sub">${esc(t('semVisitas'))}</p>`}</div>
+      <div class="mt-bloco"><h3>${esc(t('paginas'))}</h3>${a.paginas.length ? barras(a.paginas) : `<p class="mt-sub">${esc(t('semVisitas'))}</p>`}</div>
+      <div class="mt-bloco"><h3>${esc(t('aparelho'))}</h3>${a.visitas ? `
         <div class="mt-anel" style="--p:${pctCel}"><span><b>${pctCel}%</b>${esc(t('celular'))}</span></div>
-        <p class="mt-legenda"><i class="mt-ponto mt-ponto--c"></i>${esc(t('celular'))} ${num(a.celular)} <i class="mt-ponto"></i>${esc(t('computador'))} ${num(a.visitas - a.celular)}</p>
+        <p class="mt-legenda"><i class="mt-ponto mt-ponto--c"></i>${esc(t('celular'))} ${num(a.celular)} <i class="mt-ponto"></i>${esc(t('computador'))} ${num(a.visitas - a.celular)}</p>` : `<p class="mt-sub">${esc(t('semVisitas'))}</p>`}
       </div>
     </section>
     <footer class="mt-pe"><span>${esc(t('rodape'))} · samuelfreire.com.br</span><span>${esc(t('gerado'))} ${new Date(r.geradoEm).toLocaleString(lingua === 'en' ? 'en-US' : 'pt-BR', { dateStyle: 'medium', timeStyle: 'short' })}</span></footer>`;
@@ -234,33 +238,53 @@ async function carregar() {
 function montarSites(escolher) {
   $('#site').innerHTML = '<option value="">Todos os sites</option>' + sites.map((s) => `<option value="${esc(s.id)}">${esc(s.nome)}</option>`).join('');
   if (escolher) $('#site').value = escolher;
+  /* Um cartão por site (só um aberto por vez): acesso do cliente,
+     código do site e apagar, tudo daquele cliente. */
   $('#lista-sites').innerHTML = sites.length
-    ? sites.map((s) => `<li><b>${esc(s.nome)}</b> <span>${esc(s.id)} · ${esc(s.dominios.join(', '))}</span> <button type="button" class="mini" data-codigo="${esc(s.id)}">Código</button> <button type="button" class="mini" data-acesso="${esc(s.id)}">Acesso do cliente</button> <button type="button" class="mini mini--perigo" data-apagar="${esc(s.id)}">Apagar</button></li>`).join('')
+    ? sites.map((s) => `<li><details class="mt-site" name="sites" data-site="${esc(s.id)}">
+      <summary><b>${esc(s.nome)}</b><small>${esc(s.dominios.join(', '))}</small></summary>
+      <div class="mt-site__corpo">
+        <form class="mt-form" data-form-acesso="${esc(s.id)}">
+          <p class="mt-form__titulo">Acesso do cliente</p>
+          <p class="mt-sub">O cliente entra em <a href="https://samuelfreire.com.br/cliente/" target="_blank" rel="noopener">samuelfreire.com.br/cliente</a> e vê os leads e os números só deste site.</p>
+          <label>E-mail do cliente <input name="email" type="email" required maxlength="160" autocomplete="off" placeholder="cliente@empresa.com"></label>
+          <label>Senha <input name="senha" type="text" minlength="6" maxlength="200" autocomplete="off" placeholder="Pelo menos 6 caracteres"></label>
+          <p class="mt-sub" data-estado></p>
+          <label class="mt-check"><input name="ativo" type="checkbox" checked> Acesso ligado (desligado, o cliente não entra mais)</label>
+          <button class="mini mini--ativo" type="submit">Salvar acesso</button>
+        </form>
+        <div class="mt-form">
+          <p class="mt-form__titulo">Código do site</p>
+          <p class="mt-sub">Cole no &lt;head&gt; de todas as páginas do site.</p>
+          <pre class="mt-codigo">${esc(`<script src="${location.origin}/m.js" data-site="${s.id}" defer></script>`)}</pre>
+          <button class="mini" type="button" data-copiar>Copiar código</button>
+        </div>
+        <button type="button" class="mini mini--perigo" data-apagar="${esc(s.id)}">Apagar site</button>
+      </div>
+    </details></li>`).join('')
     : '<li class="mt-sub">Nenhum site ainda.</li>';
 }
 
 /* Acesso do cliente ao /cliente: e-mail e senha criados aqui. A senha
    fica guardada só como hash, então não volta para a tela. */
-let acessoId = '';
 async function mostrarAcesso(id) {
-  const f = $('#form-acesso'), s = sites.find((x) => x.id === id);
-  acessoId = id; f.reset(); f.hidden = false; $('#codigo').hidden = true;
-  $('#acesso-site').textContent = s?.nome || id;
-  $('#acesso-link').textContent = $('#acesso-link').href = 'https://samuelfreire.com.br/cliente/';
-  f.scrollIntoView({ block: 'nearest' });
+  const f = document.querySelector(`[data-form-acesso="${CSS.escape(id)}"]`); if (!f) return;
+  f.reset();
   try {
     const { acesso } = await api(`metricas/${encodeURIComponent(id)}/acesso`);
     f.email.value = acesso?.email || '';
     f.ativo.checked = acesso ? acesso.ativo : true;
     f.senha.placeholder = acesso ? 'Deixe vazio para manter a senha atual' : 'Pelo menos 6 caracteres';
     f.senha.required = !acesso;
-    $('#acesso-estado').textContent = acesso?.senhaEm ? 'Senha criada em ' + new Date(acesso.senhaEm).toLocaleDateString('pt-BR') + '. Ela não aparece aqui: se o cliente esquecer, crie outra.' : 'Ainda sem acesso. Crie o e-mail e a senha.';
+    f.querySelector('[data-estado]').textContent = acesso?.senhaEm ? 'Senha criada em ' + new Date(acesso.senhaEm).toLocaleDateString('pt-BR') + '. Ela não aparece aqui: se o cliente esquecer, crie outra.' : 'Ainda sem acesso. Crie o e-mail e a senha.';
   } catch (err) { if (err.message) aviso(err.message, 'erro'); }
 }
 
-function mostrarCodigo(id) {
-  $('#codigo-texto').textContent = `<script src="${location.origin}/m.js" data-site="${id}" defer></script>`;
-  $('#codigo').hidden = false;
+/* Abre a janela já no cartão daquele site. */
+function abrirSite(id) {
+  $('#jan').showModal();
+  const d = document.querySelector(`.mt-site[data-site="${CSS.escape(id)}"]`); if (!d) return;
+  d.open = true; d.scrollIntoView({ block: 'start' });
 }
 
 async function iniciar() {
@@ -279,7 +303,7 @@ async function apagarSite(s) {
     await api('metricas/' + encodeURIComponent(s.id), { method: 'DELETE' });
     sites = sites.filter((x) => x.id !== s.id);
     if ($('#site').value === s.id) { $('#site').value = ''; teste = ''; }
-    montarSites($('#site').value || undefined); $('#codigo').hidden = true; carregar();
+    montarSites($('#site').value || undefined); carregar();
     aviso('Site apagado.');
   } catch (err) { if (err.message) aviso(err.message, 'erro'); }
 }
@@ -298,7 +322,7 @@ $('#relatorio').addEventListener('click', async (e) => {
   }
   const site = sites.find((x) => x.id === $('#site').value); if (!site) return;
   if (ac.dataset.acao === 'apagar-site') return apagarSite(site);
-  if (ac.dataset.acao === 'acesso-cliente') { $('#jan').showModal(); return mostrarAcesso(site.id); }
+  if (ac.dataset.acao === 'acesso-cliente') return abrirSite(site.id);
   const nome = prompt('Nome do novo teste (ele conta a partir de hoje):', `Teste ${(site.testes || []).length + 1}`);
   if (nome === null) return;
   try {
@@ -327,29 +351,29 @@ for (const [grupo, chave, fn] of [['#periodo', 'dias', (v) => { dias = Number(v)
 }
 $('#abrir-sites').addEventListener('click', () => $('#jan').showModal());
 $('#jan-fechar').addEventListener('click', () => $('#jan').close());
+/* toggle não sobe pela árvore: escuta na captura. */
+$('#lista-sites').addEventListener('toggle', (e) => { if (e.target.open) mostrarAcesso(e.target.dataset.site); }, true);
 $('#lista-sites').addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-codigo]'); if (b) { $('#form-acesso').hidden = true; return mostrarCodigo(b.dataset.codigo); }
-  const ac = e.target.closest('[data-acesso]'); if (ac) return mostrarAcesso(ac.dataset.acesso);
+  const cp = e.target.closest('[data-copiar]');
+  if (cp) { await navigator.clipboard.writeText(cp.previousElementSibling.textContent); return aviso('Código copiado.'); }
   const ap = e.target.closest('[data-apagar]'); if (ap) apagarSite(sites.find((x) => x.id === ap.dataset.apagar));
 });
-$('#form-acesso').addEventListener('submit', async (e) => {
+$('#lista-sites').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const f = e.target;
+  const f = e.target, id = f.dataset.formAcesso, senha = f.senha.value;
   try {
-    await api(`metricas/${encodeURIComponent(acessoId)}/acesso`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: f.email.value, senha: f.senha.value, ativo: f.ativo.checked }) });
-    const senha = f.senha.value;
-    await mostrarAcesso(acessoId);
+    await api(`metricas/${encodeURIComponent(id)}/acesso`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: f.email.value, senha, ativo: f.ativo.checked }) });
+    await mostrarAcesso(id);
     aviso(senha ? 'Acesso salvo. Mande o link, o e-mail e a senha para o cliente.' : 'Acesso salvo.');
   } catch (err) { if (err.message) aviso(err.message, 'erro'); }
 });
-$('#copiar').addEventListener('click', async () => { await navigator.clipboard.writeText($('#codigo-texto').textContent); aviso('Código copiado.'); });
 $('#form-site').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target;
   try {
     const { site } = await api('metricas', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nome: f.nome.value, id: f.elements.namedItem('id').value, dominios: f.dominios.value }) });
     sites = [...sites.filter((s) => s.id !== site.id), site].sort((a, b) => a.nome.localeCompare(b.nome));
-    montarSites(site.id); mostrarCodigo(site.id); carregar();
+    montarSites(site.id); f.reset(); abrirSite(site.id); carregar();
     aviso('Site salvo.');
   } catch (err) { if (err.message) aviso(err.message, 'erro'); }
 });
