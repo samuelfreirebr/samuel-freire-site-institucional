@@ -1,21 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Client dashboard | Samuel Freire</title>
-<meta name="description" content="Your website leads and numbers in one place.">
+<title>Painel do cliente | Samuel Freire</title>
+<meta name="description" content="Os pedidos e os números do seu site num lugar só.">
 <link rel="icon" href="/img/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="/img/painel-180.png">
 <link rel="manifest" href="/cliente/manifest.json">
-<meta name="apple-mobile-web-app-title" content="Leads">
+<meta name="apple-mobile-web-app-title" content="Pedidos">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="./cliente.css?v=20261122b">
-<script type="module" src="./cliente.js?v=20261122b"></script>
+<link rel="stylesheet" href="./cliente.css?v=20261124a">
+<script type="module" src="./cliente.js?v=20261124a"></script>
 </head>
 <body>
 
@@ -23,49 +23,50 @@
 <main class="cl-entrar" id="entrar" hidden>
   <form class="cl-cartao cl-form" id="form-entrar">
     <p class="cl-marca">Samuel Freire</p>
-    <h1 class="cl-titulo">Your website dashboard</h1>
-    <p class="cl-sub">Leads and numbers from your website, in one place.</p>
-    <label class="cl-campo">Email <input name="email" type="email" autocomplete="username" required></label>
-    <label class="cl-campo">Password <input name="senha" type="password" autocomplete="current-password" required></label>
+    <h1 class="cl-titulo">O painel do seu site</h1>
+    <p class="cl-sub">Os pedidos e os números do seu site num lugar só.</p>
+    <label class="cl-campo">E-mail <input name="email" type="email" autocomplete="username" required></label>
+    <label class="cl-campo">Senha <input name="senha" type="password" autocomplete="current-password" required></label>
     <p class="cl-erro" id="erro-entrar" role="alert"></p>
-    <button class="cl-btn cl-btn--cheio" type="submit">Sign in</button>
+    <button class="cl-btn cl-btn--cheio" type="submit">Entrar</button>
   </form>
 </main>
 
 <!-- Painel -->
 <div class="cl-painel" id="painel" hidden>
+  <p class="cl-dica" id="aviso-samuel" hidden>Você está vendo o painel como o cliente vê.</p>
   <header class="cl-topo">
     <div>
-      <p class="cl-marca">Website dashboard</p>
+      <p class="cl-marca">Painel do site</p>
       <h1 class="cl-titulo" id="nome-site"></h1>
     </div>
     <div class="cl-topo__acoes">
-      <button class="cl-btn" type="button" id="avisos" aria-pressed="false" hidden>Turn on notifications</button>
-      <button class="cl-btn" type="button" id="sair">Sign out</button>
+      <button class="cl-btn" type="button" id="avisos" aria-pressed="false" hidden>Ligar avisos</button>
+      <button class="cl-btn" type="button" id="sair">Sair</button>
     </div>
   </header>
 
-  <nav class="cl-periodo" id="periodo" aria-label="Period">
-    <button type="button" data-dias="7">7 days</button>
-    <button type="button" data-dias="30" aria-pressed="true">30 days</button>
-    <button type="button" data-dias="90">90 days</button>
+  <nav class="cl-periodo" id="periodo" aria-label="Período">
+    <button type="button" data-dias="7">7 dias</button>
+    <button type="button" data-dias="30" aria-pressed="true">30 dias</button>
+    <button type="button" data-dias="90">90 dias</button>
   </nav>
 
-  <p class="cl-dica" id="dica-iphone" hidden>To get notifications on iPhone: tap Share, then <b>Add to Home Screen</b>, and open the dashboard from that icon.</p>
+  <p class="cl-dica" id="dica-iphone" hidden>Para receber avisos no iPhone: toque em Compartilhar, depois em <b>Adicionar à Tela de Início</b>, e abra o painel por esse ícone.</p>
 
-  <section class="cl-numeros" id="numeros" aria-label="Numbers"></section>
+  <section class="cl-numeros" id="numeros" aria-label="Números"></section>
 
   <section class="cl-bloco">
-    <h2 class="cl-h2">Leads <span id="total-leads"></span></h2>
+    <h2 class="cl-h2">Pedidos <span id="total-leads"></span></h2>
     <ul class="cl-leads" id="leads"></ul>
   </section>
 
   <section class="cl-bloco">
-    <h2 class="cl-h2">Where visitors came from</h2>
+    <h2 class="cl-h2">De onde vieram as visitas</h2>
     <ul class="cl-origens" id="origens"></ul>
   </section>
 
-  <p class="cl-rodape">Prepared by Samuel Freire · <span id="email"></span></p>
+  <p class="cl-rodape">Preparado por Samuel Freire<span id="email"></span></p>
 </div>
 
 </body>

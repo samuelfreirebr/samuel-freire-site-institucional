@@ -5,7 +5,7 @@ self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch { d = { texto: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.titulo || 'Website dashboard', { body: d.texto || '', icon: '/img/painel-192.png', badge: '/img/painel-192.png', data: { url: d.url || '/cliente/' } }));
+  e.waitUntil(self.registration.showNotification(d.titulo || 'Painel do site', { body: d.texto || '', icon: '/img/painel-192.png', badge: '/img/painel-192.png', data: { url: d.url || '/cliente/' } }));
 });
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();

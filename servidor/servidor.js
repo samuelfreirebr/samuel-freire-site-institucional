@@ -842,11 +842,11 @@ const servidor = http.createServer(async (req, res) => {
       const rota = caminho.slice('/cliente/api/'.length);
       if (rota === 'entrar' && req.method === 'POST') {
         const seg = bloqueado(req);
-        if (seg) return json(res, { erro: `Too many attempts. Please wait ${Math.ceil(seg / 60)} min.` }, 429);
+        if (seg) return json(res, { erro: `Muitas tentativas. Espere ${Math.ceil(seg / 60)} min.` }, 429);
         const dado = await lerJson(req, res, 4096);
         if (!dado) return;
         const a = await clientes.conferir(dado.email, dado.senha);
-        if (!a) { registrarFalha(req); return json(res, { erro: 'Wrong email or password.' }, 401); }
+        if (!a) { registrarFalha(req); return json(res, { erro: 'E-mail ou senha errados.' }, 401); }
         limparFalhas(req);
         res.setHeader('set-cookie', clientes.cookieDeSessao(req, clientes.criarSessao(a)));
         return json(res, { ok: true });
@@ -855,8 +855,16 @@ const servidor = http.createServer(async (req, res) => {
         res.setHeader('set-cookie', clientes.cookieDeSaida());
         return json(res, { ok: true });
       }
+      /* Samuel logado no painel vê o painel de qualquer cliente (?site=),
+         só leitura: sem sessão de cliente, os avisos não funcionam. */
+      const verSite = rota === 'painel' && req.method === 'GET' && url.searchParams.get('site');
+      if (verSite) {
+        if (!liberado(req)) return json(res, { erro: 'Entre no painel para ver o painel do cliente.' }, 401);
+        const d = await clientes.painel({ site: verSite, email: '' }, url.searchParams.get('dias'));
+        return d ? json(res, d) : json(res, { erro: 'Site não encontrado.' }, 404);
+      }
       const a = await clientes.sessao(req);
-      if (!a) return json(res, { erro: 'Please sign in.' }, 401);
+      if (!a) return json(res, { erro: 'Entre com seu e-mail e senha.' }, 401);
       if (rota === 'painel' && req.method === 'GET') return json(res, await clientes.painel(a, url.searchParams.get('dias')));
       /* Notificações no celular do cliente (Web Push, só do site dele). */
       if (rota === 'push/chave' && req.method === 'GET') return json(res, { chave: await push.chavePublica() });
@@ -866,14 +874,14 @@ const servidor = http.createServer(async (req, res) => {
         try {
           if (rota === 'push/sair') return json(res, { aparelhos: await push.sair(String(dado.endpoint || ''), a.site) });
           await push.inscrever(dado, a.site);
-          return json(res, await push.avisar({ titulo: 'Notifications are on', texto: 'New estimate requests from your website will show up here.', url: '/cliente/' }, a.site));
+          return json(res, await push.avisar({ titulo: 'Avisos ligados', texto: 'Os pedidos de orçamento do seu site vão chegar aqui.', url: '/cliente/' }, a.site));
         } catch (e) { return json(res, { erro: e.message }, 400); }
       }
-      return json(res, { erro: 'Not found.' }, 404);
+      return json(res, { erro: 'Não encontrado.' }, 404);
     }
     if (caminho.startsWith('/cliente/')) {
       const arq = await acharArquivo(caminho);
-      if (!arq) return texto(res, 'Not found.', 404);
+      if (!arq) return texto(res, 'Página não encontrada.', 404);
       return enviarArquivo(req, res, arq, cacheDoPainel(), { 'x-robots-tag': 'noindex, nofollow' });
     }
 

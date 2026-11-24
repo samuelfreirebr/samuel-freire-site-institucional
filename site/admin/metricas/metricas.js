@@ -32,7 +32,8 @@ const TXT = {
   },
 };
 
-let sites = [], dias = 15, lingua = 'pt', atual = null, geral = null, teste = '';
+let sites = [], dias = 15, lingua = 'pt', atual = null, geral = null, teste = '', acesso = null;
+const LINK_CLIENTE = 'https://samuelfreire.com.br/cliente/';
 const t = (k) => TXT[lingua][k] ?? k;
 const num = (n) => Number(n || 0).toLocaleString(lingua === 'en' ? 'en-US' : 'pt-BR');
 const dataCurta = (iso) => new Date(iso + 'T12:00').toLocaleDateString(lingua === 'en' ? 'en-US' : 'pt-BR', { day: '2-digit', month: 'short' });
@@ -156,7 +157,6 @@ function render() {
       <p class="mt-sub mt-sub--dir">${esc(t('comp'))}</p>
     </header>
     ${barraTestes(r.site)}
-    ${blocoMensagem(r.mensagem)}
     ${a.visitas ? '' : `<p class="mt-vazio">${esc(t('vazio'))}</p>`}
     <section class="mt-cards">
       ${cartao(t('visitas'), num(a.visitas), a.visitas, b.visitas)}
@@ -185,39 +185,30 @@ function render() {
 const dataBr = (iso) => iso.split('-').reverse().slice(0, 2).join('/');
 const testeAtual = (site) => (site.testes || []).find((x) => x.id === teste);
 
-/* Testes do site: cada um conta a partir do dia em que foi iniciado.
-   Fica fora do PDF; o nome do teste vai no cabeçalho do relatório. */
+/* Faixa de trabalho (fora do PDF): link do cliente à vista, ver o
+   painel como ele vê, login e senha e os testes do site. */
 function barraTestes(site) {
   const lista = [...(site.testes || [])].reverse();
-  return `<div class="mt-testes">
-    <div class="mt-testes__lista">
+  const chips = lista.length ? `<div class="mt-testes__lista">
       <button type="button" class="mt-teste__nome${teste ? '' : ' on'}" data-teste="">Últimos ${dias} dias</button>
       ${lista.map((x) => `<span class="mt-teste${x.id === teste ? ' on' : ''}${x.fim ? ' desligado' : ''}">
         <button type="button" class="mt-teste__nome" data-teste="${esc(x.id)}">${esc(x.nome)} <small>desde ${dataBr(x.inicio)}${x.fim ? ' até ' + dataBr(x.fim) : ''}</small></button>
         <label class="mt-chave" title="${x.fim ? 'Desligado: clique para voltar a contar' : 'Ativo: clique para desligar'}"><input type="checkbox" data-ativo="${esc(x.id)}" ${x.fim ? '' : 'checked'}><span></span></label>
       </span>`).join('')}
+    </div>` : '';
+  const login = acesso ? (acesso.ativo ? esc(acesso.email) : esc(acesso.email) + ' (desligado)') : 'sem login ainda';
+  return `<div class="mt-testes">
+    <div class="mt-cliente">
+      <span class="mt-cliente__rot">Painel do cliente</span>
+      <span class="mt-cliente__link">samuelfreire.com.br/cliente <small>· login: ${login}</small></span>
     </div>
     <div class="mt-testes__acoes">
-      <button type="button" class="mini mini--ativo" data-acao="acesso-cliente">Acesso do cliente (login e senha)</button>
-      <button type="button" class="mini" data-acao="novo-teste">+ Iniciar novo teste</button>
-      <button type="button" class="mini mini--perigo" data-acao="apagar-site">Apagar site</button>
+      <button type="button" class="mini mini--ativo" data-acao="copiar-link">Copiar link</button>
+      <a class="mini" href="/cliente/?site=${encodeURIComponent(site.id)}" target="_blank" rel="noopener">Ver painel do cliente</a>
+      <button type="button" class="mini" data-acao="acesso-cliente">${acesso ? 'Login e senha' : 'Criar login'}</button>
+      <button type="button" class="mini" data-acao="novo-teste">+ Teste</button>
     </div>
-  </div>`;
-}
-
-/* Mensagem do relatório quinzenal (dia 15 e fim do mês), pronta para
-   colar no WhatsApp junto com o PDF. Fica fora do PDF. */
-function blocoMensagem(m) {
-  return `<div class="mt-msg">
-    <div class="mt-msg__topo">
-      <b>Mensagem para o cliente</b>
-      <span class="mt-sub">${m ? 'gerada em ' + dataBr(m.dia) : 'gerada no dia 15 e no último dia do mês'}</span>
-      <span class="mt-msg__acoes">
-        ${m ? '<button type="button" class="mini mini--ativo" data-acao="copiar-msg">Copiar mensagem</button>' : ''}
-        <button type="button" class="mini" data-acao="gerar-msgs">Gerar mensagens agora</button>
-      </span>
-    </div>
-    ${m ? `<p class="mt-msg__texto">${esc(m.mensagem)}</p>${m.analise ? `<p class="mt-sub"><b>Para você:</b> ${esc(m.analise)}</p>` : ''}` : ''}
+    ${chips}
   </div>`;
 }
 
@@ -227,7 +218,7 @@ async function carregar() {
   try {
     const st = id && sites.find((x) => x.id === id), tt = st && testeAtual(st);
     if (!tt) teste = '';
-    if (id) atual = await api(`metricas/${encodeURIComponent(id)}?` + (tt ? `inicio=${tt.inicio}&fim=${tt.fim}` : `dias=${dias}`));
+    if (id) [atual, { acesso }] = await Promise.all([api(`metricas/${encodeURIComponent(id)}?` + (tt ? `inicio=${tt.inicio}&fim=${tt.fim}` : `dias=${dias}`)), api(`metricas/${encodeURIComponent(id)}/acesso`)]);
     else { atual = null; geral = (await api(`metricas?dias=${dias}`)).geral; }
     render();
   }
@@ -312,16 +303,11 @@ $('#relatorio').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-abrir]'); if (b) { $('#site').value = b.dataset.abrir; teste = ''; return carregar(); }
   const tb = e.target.closest('[data-teste]'); if (tb) { teste = tb.dataset.teste; return carregar(); }
   const ac = e.target.closest('[data-acao]'); if (!ac) return;
-  if (ac.dataset.acao === 'copiar-msg') { await navigator.clipboard.writeText(atual.mensagem.mensagem); return aviso('Mensagem copiada.'); }
-  if (ac.dataset.acao === 'gerar-msgs') {
-    if (!confirm('Gerar agora as mensagens de todos os sites com os últimos 15 dias? Também cria a tarefa de envio no CRM.')) return;
-    ac.disabled = true; ac.textContent = 'Gerando…';
-    try { await api('metricas-ciclo', { method: 'POST' }); await carregar(); aviso('Mensagens geradas e tarefa criada no CRM.'); }
-    catch (err) { ac.disabled = false; if (err.message) aviso(err.message, 'erro'); }
-    return;
-  }
   const site = sites.find((x) => x.id === $('#site').value); if (!site) return;
-  if (ac.dataset.acao === 'apagar-site') return apagarSite(site);
+  if (ac.dataset.acao === 'copiar-link') {
+    await navigator.clipboard.writeText(LINK_CLIENTE + (acesso ? '\nLogin: ' + acesso.email : ''));
+    return aviso(acesso ? 'Link e login copiados. A senha você manda à parte.' : 'Link copiado. Crie o login do cliente.');
+  }
   if (ac.dataset.acao === 'acesso-cliente') return abrirSite(site.id);
   const nome = prompt('Nome do novo teste (ele conta a partir de hoje):', `Teste ${(site.testes || []).length + 1}`);
   if (nome === null) return;
@@ -364,6 +350,7 @@ $('#lista-sites').addEventListener('submit', async (e) => {
   try {
     await api(`metricas/${encodeURIComponent(id)}/acesso`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: f.email.value, senha, ativo: f.ativo.checked }) });
     await mostrarAcesso(id);
+    if (id === $('#site').value) carregar();
     aviso(senha ? 'Acesso salvo. Mande o link, o e-mail e a senha para o cliente.' : 'Acesso salvo.');
   } catch (err) { if (err.message) aviso(err.message, 'erro'); }
 });

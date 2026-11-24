@@ -1,18 +1,20 @@
 /* ============================================================
    Painel do cliente: entra com e-mail e senha (criados pelo
    Samuel no /admin/metricas) e vê os leads e os números do site.
-   Texto em inglês: os clientes atendidos aqui são dos EUA.
+   Tudo em português (pedido do Matheus, 24/11/2026).
+   Com ?site=<id>, o Samuel logado vê o painel daquele cliente.
    ============================================================ */
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const num = (n) => Number(n || 0).toLocaleString('en-US');
+const num = (n) => Number(n || 0).toLocaleString('pt-BR');
 let dias = 30;
+const verSite = new URLSearchParams(location.search).get('site');
 
 async function api(rota, opcoes) {
   const r = await fetch('/cliente/api/' + rota, opcoes);
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) { const e = new Error(j.erro || 'Something went wrong.'); e.status = r.status; throw e; }
+  if (!r.ok) { const e = new Error(j.erro || 'Algo deu errado.'); e.status = r.status; throw e; }
   return j;
 }
 
@@ -28,13 +30,13 @@ const telefone = (t) => { const d = digitos(t).replace(/^1(?=\d{10}$)/, ''); ret
 
 function quando(iso) {
   const d = new Date(iso);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
 function variacao(agora, antes) {
-  if (!antes) return agora ? '<span class="cl-var cl-var--sobe">new</span>' : '';
+  if (!antes) return agora ? '<span class="cl-var cl-var--sobe">novo</span>' : '';
   const p = Math.round(((agora - antes) / antes) * 100);
-  if (!p) return '<span class="cl-var">same</span>';
+  if (!p) return '<span class="cl-var">igual</span>';
   return `<span class="cl-var cl-var--${p > 0 ? 'sobe' : 'desce'}">${p > 0 ? '+' : ''}${p}%</span>`;
 }
 
@@ -45,58 +47,60 @@ function leadHtml(l) {
   const novo = Date.now() - Date.parse(l.em) < 864e5;
   const tel = digitos(l.telefone);
   const botoes = [
-    tel && `<a class="cl-btn cl-btn--cheio" href="tel:+${zap(l.telefone)}">Call</a>`,
-    tel && `<a class="cl-btn" href="sms:+${zap(l.telefone)}">Text</a>`,
+    tel && `<a class="cl-btn cl-btn--cheio" href="tel:+${zap(l.telefone)}">Ligar</a>`,
+    tel && `<a class="cl-btn" href="sms:+${zap(l.telefone)}">SMS</a>`,
     tel && `<a class="cl-btn" href="https://wa.me/${zap(l.telefone)}" target="_blank" rel="noopener">WhatsApp</a>`,
-    l.email && `<a class="cl-btn" href="mailto:${esc(l.email)}">Email</a>`,
+    l.email && `<a class="cl-btn" href="mailto:${esc(l.email)}">E-mail</a>`,
   ].filter(Boolean).join('');
   return `<li class="cl-cartao cl-lead">
     <div class="cl-lead__topo">
-      <p class="cl-lead__nome">${esc(l.nome)}${novo ? ' <span class="cl-novo">New</span>' : ''}</p>
+      <p class="cl-lead__nome">${esc(l.nome)}${novo ? ' <span class="cl-novo">Novo</span>' : ''}</p>
       <time class="cl-lead__quando" datetime="${esc(l.em)}">${quando(l.em)}</time>
     </div>
     <dl class="cl-lead__dados">
-      ${l.telefone ? `<div><dt>Phone</dt><dd>${esc(telefone(l.telefone))}</dd></div>` : ''}
-      ${l.email ? `<div><dt>Email</dt><dd>${esc(l.email)}</dd></div>` : ''}
-      ${l.cep ? `<div><dt>Zip code</dt><dd>${esc(l.cep)}</dd></div>` : ''}
-      ${l.servicos?.length ? `<div><dt>Service</dt><dd>${l.servicos.map((s) => `<span class="cl-chip">${esc(s)}</span>`).join(' ')}</dd></div>` : ''}
-      ${l.mensagem ? `<div class="cl-lead__msg"><dt>Message</dt><dd>${esc(l.mensagem)}</dd></div>` : ''}
+      ${l.telefone ? `<div><dt>Telefone</dt><dd>${esc(telefone(l.telefone))}</dd></div>` : ''}
+      ${l.email ? `<div><dt>E-mail</dt><dd>${esc(l.email)}</dd></div>` : ''}
+      ${l.cep ? `<div><dt>CEP</dt><dd>${esc(l.cep)}</dd></div>` : ''}
+      ${l.servicos?.length ? `<div><dt>Serviço</dt><dd>${l.servicos.map((s) => `<span class="cl-chip">${esc(s)}</span>`).join(' ')}</dd></div>` : ''}
+      ${l.mensagem ? `<div class="cl-lead__msg"><dt>Mensagem</dt><dd>${esc(l.mensagem)}</dd></div>` : ''}
     </dl>
     <div class="cl-lead__acoes">${botoes}</div>
   </li>`;
 }
 
-const NOMES_ORIGEM = { direto: 'Direct (typed or saved)', google: 'Google', instagram: 'Instagram', facebook: 'Facebook' };
+const NOMES_ORIGEM = { direto: 'Direto (digitou ou salvou)', google: 'Google', instagram: 'Instagram', facebook: 'Facebook' };
 
 function render(d) {
   const a = d.atual, b = d.anterior;
   $('#nome-site').textContent = d.site.nome;
-  $('#email').textContent = d.email;
-  document.title = d.site.nome + ' | Website dashboard';
+  $('#email').textContent = d.email ? ' · ' + d.email : '';
+  document.title = d.site.nome + ' | Painel do site';
   $('#numeros').innerHTML =
-    cartao('Estimate requests', a.leads, b.leads) +
-    cartao('Call and text clicks', a.ligar + a.sms + a.whatsapp, b.ligar + b.sms + b.whatsapp) +
-    cartao('Visits', a.visitas, b.visitas) +
-    cartao('Unique visitors', a.visitantes, b.visitantes);
+    cartao('Pedidos de orçamento', a.leads, b.leads) +
+    cartao('Cliques em ligar e mensagem', a.ligar + a.sms + a.whatsapp, b.ligar + b.sms + b.whatsapp) +
+    cartao('Visitas', a.visitas, b.visitas) +
+    cartao('Pessoas diferentes', a.visitantes, b.visitantes);
   // Leads do período escolhido, o mais novo primeiro.
   const desde = Date.now() - dias * 864e5;
   const leads = d.leads.filter((l) => Date.parse(l.em) >= desde);
   $('#total-leads').textContent = leads.length ? `(${leads.length})` : '';
   $('#leads').innerHTML = leads.length
     ? leads.map(leadHtml).join('')
-    : `<li class="cl-vazio">No leads in the last ${dias} days yet. New estimate requests from your website show up here.</li>`;
+    : `<li class="cl-vazio">Nenhum pedido nos últimos ${dias} dias. Os pedidos de orçamento do seu site aparecem aqui.</li>`;
   const total = a.origens.reduce((s, o) => s + o.n, 0);
   $('#origens').innerHTML = total
     ? a.origens.map((o) => `<li><span>${esc(NOMES_ORIGEM[o.nome] || o.nome)}</span><b>${num(o.n)}</b><i style="--p:${Math.round((o.n / total) * 100)}%"></i></li>`).join('')
-    : '<li class="cl-vazio">No visits in this period yet.</li>';
+    : '<li class="cl-vazio">Ainda sem visitas neste período.</li>';
 }
 
 async function carregar() {
   try {
-    render(await api('painel?dias=' + dias));
+    render(await api('painel?dias=' + dias + (verSite ? '&site=' + encodeURIComponent(verSite) : '')));
     mostrar('painel');
+    if (verSite) { $('#aviso-samuel').hidden = false; $('#sair').hidden = true; return; }
     avisos();
   } catch (e) {
+    if (e.status === 401 && verSite) return location.assign('/admin/entrar?voltar=' + encodeURIComponent(location.pathname + location.search));
     if (e.status === 401) return mostrar('entrar');
     $('#leads').innerHTML = `<li class="cl-vazio">${esc(e.message)}</li>`;
   }
@@ -137,11 +141,11 @@ async function avisos() {
   const sub = await reg.pushManager.getSubscription();
   const ligado = !!sub && Notification.permission === 'granted';
   b.hidden = false;
-  b.textContent = ligado ? 'Notifications on' : 'Turn on notifications';
+  b.textContent = ligado ? 'Avisos ligados' : 'Ligar avisos';
   b.setAttribute('aria-pressed', String(ligado));
-  b.title = ligado ? 'Tap to turn off notifications on this device' : 'Get a notification on this device for every new lead';
+  b.title = ligado ? 'Toque para desligar os avisos neste aparelho' : 'Receba um aviso neste aparelho a cada pedido novo';
   b.onclick = async () => {
-    if (Notification.permission === 'denied') return alert('Notifications are blocked for this site. Allow them in your browser or phone settings, then try again.');
+    if (Notification.permission === 'denied') return alert('Os avisos estão bloqueados para este site. Libere nos ajustes do navegador ou do celular e tente de novo.');
     b.disabled = true;
     try {
       if (ligado) {
@@ -154,7 +158,7 @@ async function avisos() {
         const nova = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes });
         await api('push/inscrever', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(nova.toJSON()) });
       }
-    } catch (e) { alert('Could not change notifications: ' + e.message); }
+    } catch (e) { alert('Não deu para mudar os avisos: ' + e.message); }
     finally { b.disabled = false; avisos(); }
   };
 }

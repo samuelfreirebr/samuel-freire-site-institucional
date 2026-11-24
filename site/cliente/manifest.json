@@ -1,9 +1,9 @@
 {
   "id": "/cliente/",
-  "name": "Website dashboard",
-  "short_name": "Leads",
-  "description": "Leads and numbers from your website.",
-  "lang": "en",
+  "name": "Painel do site",
+  "short_name": "Pedidos",
+  "description": "Os pedidos e os números do seu site.",
+  "lang": "pt-BR",
   "start_url": "/cliente/",
   "scope": "/cliente/",
   "display": "standalone",
