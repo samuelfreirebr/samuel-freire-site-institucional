@@ -12,7 +12,7 @@ site/                  o site como vai ao ar
   index.html             versão BR
   global/index.html      versão internacional
   admin/                 painel de edição
-  google-prospection/    prospecção: varredura do Google Maps, diagnóstico, mensagens, leads
+  prospeccao/    prospecção: varredura do Google Maps, diagnóstico, mensagens, leads
   styles/tokens.css      variáveis (cores, fontes, espaços, tempos)
   styles/base.css        reset, tipografia, botões, utilitários
   styles/site.css        cada seção da página
@@ -186,7 +186,7 @@ Novas funcionalidades entram como novos blocos.
 /admin/               hub
 /admin/site/          editor do site
 /admin/propostas/     propostas
-/google-prospection/  prospecção (mesma sessão do painel)
+/prospeccao/  prospecção (mesma sessão do painel)
 ```
 
 ### A senha
@@ -373,7 +373,7 @@ editar pelo painel e dar deploy de novo não desfaz a edição.
 
 ## Prospecção
 
-Em `links.samuelfreire.com.br/google-prospection`. É a ferramenta de
+Em `links.samuelfreire.com.br/prospeccao`. É a ferramenta de
 prospecção do MIRA (`../MIRA/ARQUITETURA-MIRA.md`) refeita para caber neste
 servidor: sem Supabase, sem créditos, sem cadastro. Quem entra é quem
 tem a senha do painel — sem sessão, a página volta para o login.

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /cliente/
+Disallow: /cofre
+Disallow: /prospeccao/
+Disallow: /propostas/
+Disallow: /contratos/
+Disallow: /faturas/
+Disallow: /perguntas/
+Disallow: /api/
+
+Sitemap: https://links.samuelfreire.com.br/sitemap.xml

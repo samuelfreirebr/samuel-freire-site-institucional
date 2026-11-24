@@ -45,7 +45,7 @@ const PASTA = path.join(RAIZ_DADOS, 'prospeccao');
 const ARQ_LEADS = path.join(PASTA, 'leads.json');
 const ARQ_PERFIL = path.join(PASTA, 'perfil.json');
 
-const UA = 'links.samuelfreire.com.br/google-prospection (prospeccao; contato: samuelfreirebr@gmail.com)';
+const UA = 'links.samuelfreire.com.br/prospeccao (prospeccao; contato: samuelfreirebr@gmail.com)';
 
 const chaveGoogle = () => process.env.GOOGLE_PLACES_KEY || process.env.GOOGLE_MAPS_API_KEY || '';
 const chaveClaude = () => process.env.ANTHROPIC_API_KEY || '';

@@ -19,7 +19,7 @@
      /admin/cofre/        banco de links    · exige sessão (/cofre leva para lá)
      /admin/crm/          funil de clientes · exige sessão
      /contratos/<id>      contrato da proposta, para imprimir · exige sessão
-     /google-prospection/ prospecção        · exige sessão
+     /prospeccao/ prospecção        · exige sessão
      /api/...             API do painel     · exige sessão (entrar/sair abertas)
      /api/reunioes/entrada  recebe transcrição do Meet · exige TOKEN_REUNIOES
      /api/... com x-token  o Claude, com TOKEN_CLAUDE: tudo menos apagar
@@ -79,7 +79,7 @@ const MIME = {
   '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif',
   '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.mp4': 'video/mp4',
-  '.txt': 'text/plain; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8',
 };
 
 /* ---------- respostas curtas ---------- */
@@ -778,7 +778,7 @@ async function estado(res) {
     siteGlobal: await ver(path.join(SITE, 'global', 'index.html')),
     painel: await ver(path.join(SITE, 'admin', 'index.html')),
     prospeccao: {
-      pagina: await ver(path.join(SITE, 'google-prospection', 'index.html')),
+      pagina: await ver(path.join(SITE, 'prospeccao', 'index.html')),
       mapas: configProspeccao().mapas,        // 'google' com chave, 'osm' sem
       ia: configProspeccao().ia,
       instagram: configProspeccao().instagram,
@@ -803,6 +803,16 @@ const servidor = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://local');
     let caminho = url.pathname;
+
+    /* O domínio principal e o www só redirecionam para o links.: em
+       11/2026 o Google marcou samuelfreire.com.br como "enganoso"
+       porque as telas de senha do painel abriam nele. 308 mantém o
+       método (um POST no /l continua POST). */
+    const host = (req.headers.host || '').toLowerCase().split(':')[0];
+    if (host === 'samuelfreire.com.br' || host === 'www.samuelfreire.com.br') {
+      res.writeHead(308, { location: 'https://links.samuelfreire.com.br' + caminho + url.search, 'cache-control': 'public, max-age=3600' });
+      return res.end();
+    }
 
     if (caminho === '/estado') return estado(res);
 
@@ -937,16 +947,16 @@ const servidor = http.createServer(async (req, res) => {
     }
 
     /* --- Prospecção: mesma tranca do painel, pasta própria --- */
-    if (caminho === '/google-prospection' || caminho.startsWith('/google-prospection/')) {
-      if (caminho === '/google-prospection') {
-        res.writeHead(308, { location: '/google-prospection/' + url.search, 'cache-control': 'no-store' });
+    if (caminho === '/prospeccao' || caminho.startsWith('/prospeccao/')) {
+      if (caminho === '/prospeccao') {
+        res.writeHead(308, { location: '/prospeccao/' + url.search, 'cache-control': 'no-store' });
         return res.end();
       }
       const arq = await acharArquivo(caminho);
       if (!arq) return texto(res, 'Não encontrado.', 404);
       if (!liberado(req)) {
         if (path.extname(arq) === '.html') {
-          res.writeHead(302, { location: '/admin/entrar?voltar=' + encodeURIComponent('/google-prospection/'), 'cache-control': 'no-store' });
+          res.writeHead(302, { location: '/admin/entrar?voltar=' + encodeURIComponent('/prospeccao/'), 'cache-control': 'no-store' });
           return res.end();
         }
         return texto(res, 'Faça login.', 401);

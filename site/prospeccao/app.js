@@ -36,7 +36,7 @@ async function lerResposta(r) {
   let dado;
   try { dado = JSON.parse(texto); }
   catch (e) { throw new Error('o servidor respondeu algo que não é JSON.'); }
-  if (r.status === 401) { location.replace('/admin/entrar?voltar=' + encodeURIComponent('/google-prospection/')); throw new Error('sessão encerrada'); }
+  if (r.status === 401) { location.replace('/admin/entrar?voltar=' + encodeURIComponent('/prospeccao/')); throw new Error('sessão encerrada'); }
   if (!r.ok) throw new Error(dado.erro || ('erro ' + r.status));
   return dado;
 }

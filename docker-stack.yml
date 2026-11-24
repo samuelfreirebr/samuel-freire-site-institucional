@@ -7,7 +7,7 @@
 #  Variáveis a preencher:
 #    SENHA_PAINEL       obrigatória: a senha do /admin
 #
-#  Opcionais, da prospecção (/google-prospection). Sem elas o
+#  Opcionais, da prospecção (/prospeccao). Sem elas o
 #  app sobe do mesmo jeito, com menos:
 #    GOOGLE_PLACES_KEY  Places API (New): nota, avaliações,
 #                       opiniões. Sem ela: OpenStreetMap.

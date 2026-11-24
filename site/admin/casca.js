@@ -27,7 +27,7 @@ const MENU = [
   ] },
   { titulo: 'Site e vendas', itens: [
     { nome: 'Editar site', href: '/admin/site/', ico: 'site' },
-    { nome: 'Prospecção', href: '/google-prospection/', ico: 'prospeccao' },
+    { nome: 'Prospecção', href: '/prospeccao/', ico: 'prospeccao' },
     { nome: 'Métricas dos clientes', href: '/admin/metricas/', ico: 'situacao' },
     { nome: 'Cofre', href: '/admin/cofre/', ico: 'cofre' },
   ] },
