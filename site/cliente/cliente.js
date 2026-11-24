@@ -5,9 +5,13 @@
    Com ?site=<id>, o Samuel logado vê o painel daquele cliente.
    ============================================================ */
 
+import { relatorio } from './relatorio.js?v=20261124b';
+
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const num = (n) => Number(n || 0).toLocaleString('pt-BR');
+/* Ícones de traço fino, 16px, na cor do texto (mesmo desenho do painel do Samuel). */
+const DESENHOS = {"ligar": "M5.5 2.5 3 3c-.3 4.9 5.1 10.3 10 10l.5-2.5-2.8-1.2-1.3 1.3a7 7 0 0 1-3-3l1.3-1.3z", "sms": "M2.5 3.5h11v7.5H7l-3 2.5V11H2.5z", "whatsapp": "M3 13l.8-2.6A5.5 5.5 0 1 1 5.7 12.3z M6.2 5.5c0 2.2 2 4.3 4.3 4.3l.6-1.1-1.3-.6-.6.6c-.9-.4-1.5-1-1.9-1.9l.6-.6-.6-1.3z", "email": "M2 3.5h12v9H2z M2.5 4l5.5 4.5L13.5 4", "pedidos": "M2 9.5 4 3h8l2 6.5V13H2z M2 9.5h3.5l1 1.5h3l1-1.5H14"};
+const ico = (n) => `<svg class="cl-ico" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${DESENHOS[n]}"/></svg>`;
 let dias = 30;              // ou 'max': todo o histórico
 const verSite = new URLSearchParams(location.search).get('site');
 
@@ -33,27 +37,14 @@ function quando(iso) {
   return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-/* Comparação com o período anterior do mesmo tamanho. No Máximo não
-   há período anterior, e sem número antes não há o que comparar. */
-function variacao(agora, antes) {
-  if (dias === 'max' || !antes) return '';
-  const p = Math.round(((agora - antes) / antes) * 100);
-  const vs = ` vs. ${dias} dias antes`;
-  if (!p) return `<span class="cl-var"><b>igual</b>${vs}</span>`;
-  return `<span class="cl-var cl-var--${p > 0 ? 'sobe' : 'desce'}"><b>${p > 0 ? '+' : ''}${p}%</b>${vs}</span>`;
-}
-
-const cartao = (rotulo, agora, antes) =>
-  `<div class="cl-num"><p class="cl-num__rotulo">${rotulo}</p><p class="cl-num__valor">${num(agora)}</p>${variacao(agora, antes)}</div>`;
-
 function leadHtml(l) {
   const novo = Date.now() - Date.parse(l.em) < 864e5;
   const tel = digitos(l.telefone);
   const botoes = [
-    tel && `<a class="cl-btn cl-btn--cheio" href="tel:+${zap(l.telefone)}">Ligar</a>`,
-    tel && `<a class="cl-btn" href="sms:+${zap(l.telefone)}">SMS</a>`,
-    tel && `<a class="cl-btn" href="https://wa.me/${zap(l.telefone)}" target="_blank" rel="noopener">WhatsApp</a>`,
-    l.email && `<a class="cl-btn" href="mailto:${esc(l.email)}">E-mail</a>`,
+    tel && `<a class="cl-btn cl-btn--cheio" href="tel:+${zap(l.telefone)}">${ico('ligar')}Ligar</a>`,
+    tel && `<a class="cl-btn" href="sms:+${zap(l.telefone)}">${ico('sms')}SMS</a>`,
+    tel && `<a class="cl-btn" href="https://wa.me/${zap(l.telefone)}" target="_blank" rel="noopener">${ico('whatsapp')}WhatsApp</a>`,
+    l.email && `<a class="cl-btn" href="mailto:${esc(l.email)}">${ico('email')}E-mail</a>`,
   ].filter(Boolean).join('');
   return `<li class="cl-lead">
     <div class="cl-lead__topo">
@@ -71,29 +62,22 @@ function leadHtml(l) {
   </li>`;
 }
 
-const NOMES_ORIGEM = { direto: 'Direto (digitou ou salvou)', google: 'Google', instagram: 'Instagram', facebook: 'Facebook' };
-
+/* Mesmo relatório do painel do Samuel (relatorio.js), com os pedidos
+   logo depois dos números: é o que o cliente mais quer ver. */
 function render(d) {
-  const a = d.atual, b = d.anterior;
   $('#nome-site').textContent = d.site.nome;
   $('#email').textContent = d.email ? ' · ' + d.email : '';
   document.title = d.site.nome + ' | Painel do site';
-  $('#numeros').innerHTML =
-    cartao('Pedidos de orçamento', a.leads, b.leads) +
-    cartao('Cliques em ligar e mensagem', a.ligar + a.sms + a.whatsapp, b.ligar + b.sms + b.whatsapp) +
-    cartao('Visitas', a.visitas, b.visitas) +
-    cartao('Pessoas diferentes', a.visitantes, b.visitantes);
-  // Leads do período escolhido, o mais novo primeiro.
+  // Pedidos do período escolhido, o mais novo primeiro.
   const desde = dias === 'max' ? 0 : Date.now() - dias * 864e5;
   const leads = d.leads.filter((l) => Date.parse(l.em) >= desde);
-  $('#total-leads').textContent = leads.length ? `(${leads.length})` : '';
-  $('#leads').innerHTML = leads.length
-    ? leads.map(leadHtml).join('')
-    : `<li class="cl-vazio">${dias === 'max' ? 'Nenhum pedido ainda.' : `Nenhum pedido nos últimos ${dias} dias.`} Os pedidos de orçamento do seu site aparecem aqui.</li>`;
-  const total = a.origens.reduce((s, o) => s + o.n, 0);
-  $('#origens').innerHTML = total
-    ? a.origens.map((o) => `<li><span>${esc(NOMES_ORIGEM[o.nome] || o.nome)}</span><b>${num(o.n)}</b><i style="--p:${Math.round((o.n / total) * 100)}%"></i></li>`).join('')
-    : '<li class="cl-vazio">Ainda sem visitas neste período.</li>';
+  const pedidos = `<section class="cl-bloco">
+    <div class="cl-bloco__cab"><h2 class="cl-h2">${ico('pedidos')}Pedidos ${leads.length ? `<span>(${leads.length})</span>` : ''}</h2></div>
+    <ul class="cl-leads">${leads.length
+      ? leads.map(leadHtml).join('')
+      : `<li class="cl-vazio">${dias === 'max' ? 'Nenhum pedido ainda.' : `Nenhum pedido nos últimos ${dias} dias.`} Os pedidos de orçamento do seu site aparecem aqui.</li>`}</ul>
+  </section>`;
+  $('#relatorio').innerHTML = relatorio(d, { lingua: 'pt', comparar: dias !== 'max', depois: pedidos });
 }
 
 async function carregar() {
@@ -105,7 +89,7 @@ async function carregar() {
   } catch (e) {
     if (e.status === 401 && verSite) return location.assign('/admin/entrar?voltar=' + encodeURIComponent(location.pathname + location.search));
     if (e.status === 401) return mostrar('entrar');
-    $('#leads').innerHTML = `<li class="cl-vazio">${esc(e.message)}</li>`;
+    $('#relatorio').innerHTML = `<p class="cl-vazio">${esc(e.message)}</p>`;
   }
 }
 
@@ -144,11 +128,11 @@ async function avisos() {
   const sub = await reg.pushManager.getSubscription();
   const ligado = !!sub && Notification.permission === 'granted';
   b.hidden = false;
-  b.textContent = ligado ? 'Avisos ligados' : 'Ligar avisos';
-  b.setAttribute('aria-pressed', String(ligado));
-  b.title = ligado ? 'Toque para desligar os avisos neste aparelho' : 'Receba um aviso neste aparelho a cada pedido novo';
+  // Chave liga e desliga: o sino e o texto ficam, só a chave muda.
+  b.setAttribute('aria-checked', String(ligado));
+  b.title = ligado ? 'Notificações ligadas: toque para desligar neste aparelho' : 'Receba uma notificação neste aparelho a cada pedido novo';
   b.onclick = async () => {
-    if (Notification.permission === 'denied') return alert('Os avisos estão bloqueados para este site. Libere nos ajustes do navegador ou do celular e tente de novo.');
+    if (Notification.permission === 'denied') return alert('As notificações estão bloqueadas para este site. Libere nos ajustes do navegador ou do celular e tente de novo.');
     b.disabled = true;
     try {
       if (ligado) {
@@ -161,7 +145,7 @@ async function avisos() {
         const nova = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes });
         await api('push/inscrever', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(nova.toJSON()) });
       }
-    } catch (e) { alert('Não deu para mudar os avisos: ' + e.message); }
+    } catch (e) { alert('Não deu para mudar as notificações: ' + e.message); }
     finally { b.disabled = false; avisos(); }
   };
 }

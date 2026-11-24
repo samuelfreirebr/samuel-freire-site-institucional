@@ -14,22 +14,25 @@
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="./cliente.css?v=20261124b">
-<script type="module" src="./cliente.js?v=20261124b"></script>
+<link rel="stylesheet" href="./relatorio.css?v=20261124b">
+<link rel="stylesheet" href="./cliente.css?v=20261124d">
+<script type="module" src="./cliente.js?v=20261124d"></script>
 </head>
 <body>
 
 <!-- Login -->
 <main class="cl-entrar" id="entrar" hidden>
   <form class="cl-cartao cl-form" id="form-entrar">
+    <span class="cl-selo"><svg class="cl-ico" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 13.5h11 M4.5 11V8 M8 11V4.5 M11.5 11V6.5"/></svg></span>
     <p class="cl-marca">Samuel Freire</p>
     <h1 class="cl-titulo">O painel do seu site</h1>
     <p class="cl-sub">Os pedidos e os números do seu site num lugar só.</p>
-    <label class="cl-campo">E-mail <input name="email" type="email" autocomplete="username" required></label>
-    <label class="cl-campo">Senha <input name="senha" type="password" autocomplete="current-password" required></label>
+    <label class="cl-campo">E-mail <span class="cl-campo__caixa"><svg class="cl-ico" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h12v9H2z M2.5 4l5.5 4.5L13.5 4"/></svg><input name="email" type="email" autocomplete="username" placeholder="seu@email.com" required></span></label>
+    <label class="cl-campo">Senha <span class="cl-campo__caixa"><svg class="cl-ico" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5a4 4 0 0 1 8 0v2 M3 7h10v7H3z M8 10v1.5"/></svg><input name="senha" type="password" autocomplete="current-password" placeholder="Sua senha" required></span></label>
     <p class="cl-erro" id="erro-entrar" role="alert"></p>
-    <button class="cl-btn cl-btn--cheio" type="submit">Entrar</button>
+    <button class="cl-btn cl-btn--cheio cl-btn--grande" type="submit">Entrar <svg class="cl-ico" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10 M9 4l4 4-4 4"/></svg></button>
   </form>
+  <p class="cl-entrar__pe">Feito por <a href="https://samuelfreire.com.br" target="_blank" rel="noopener">Samuel Freire</a></p>
 </main>
 
 <!-- Painel -->
@@ -40,9 +43,8 @@
       <p class="cl-marca">Painel do site</p>
       <h1 class="cl-titulo" id="nome-site"></h1>
     </div>
-    <a class="cl-assina" href="https://www.instagram.com/samuelfreirebr" target="_blank" rel="noopener" aria-label="Samuel Freire BR no Instagram">
-      <span class="cl-assina__ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1" fill="currentColor" stroke="none"/></svg></span>
-      <span class="cl-assina__txt"><b>Samuel Freire BR</b><em>@samuelfreirebr</em></span>
+    <a class="cl-assina" href="https://www.instagram.com/samuelfreirebr" target="_blank" rel="noopener" aria-label="Samuel Freire no Instagram">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1" fill="currentColor" stroke="none"/></svg>@samuelfreirebr
     </a>
   </header>
 
@@ -54,24 +56,14 @@
       <button type="button" data-dias="max" title="Todo o histórico do site">Máximo</button>
     </nav>
     <div class="cl-barra__acoes">
-      <button class="cl-btn cl-btn--leve" type="button" id="avisos" aria-pressed="false" hidden>Ligar avisos</button>
-      <button class="cl-btn cl-btn--leve" type="button" id="sair">Sair</button>
+      <button class="cl-btn cl-btn--leve cl-notif" type="button" id="avisos" role="switch" aria-checked="false" hidden><svg class="cl-ico" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11V7a4 4 0 0 1 8 0v4l1.2 1.5H2.8z M6.5 14h3"/></svg>Notificações<span class="cl-chave" aria-hidden="true"></span></button>
+      <button class="cl-btn cl-btn--leve" type="button" id="sair"><svg class="cl-ico" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5H3v11h3 M10.5 5l3 3-3 3 M13.5 8H6.5"/></svg>Sair</button>
     </div>
   </div>
 
   <p class="cl-dica" id="dica-iphone" hidden>Para receber avisos no iPhone: toque em Compartilhar, depois em <b>Adicionar à Tela de Início</b>, e abra o painel por esse ícone.</p>
 
-  <section class="cl-numeros" id="numeros" aria-label="Números"></section>
-
-  <section class="cl-bloco">
-    <div class="cl-bloco__cab"><h2 class="cl-h2">Pedidos <span id="total-leads"></span></h2></div>
-    <ul class="cl-leads" id="leads"></ul>
-  </section>
-
-  <section class="cl-bloco">
-    <div class="cl-bloco__cab"><h2 class="cl-h2">De onde vieram as visitas</h2></div>
-    <ul class="cl-origens" id="origens"></ul>
-  </section>
+  <div class="cl-rel" id="relatorio"></div>
 
   <p class="cl-rodape">Preparado por Samuel Freire<span id="email"></span></p>
 </div>

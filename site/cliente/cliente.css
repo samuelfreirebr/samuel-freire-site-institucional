@@ -1,6 +1,18 @@
 /* Painel do cliente. Cores, medidas e fontes saem de tokens.css.
-   Visual de painel técnico (referência: Cloudflare): fundo claro,
-   blocos brancos com hairline, divisórias finas no lugar de sombra. */
+   Mesmo acabamento do painel do Samuel (admin/visual.css): linha
+   fina, cantos redondos e o laranja da marca no que é contato. */
+
+/* ---------- Central de ajustes ---------- */
+:root {
+  --ink-2:   #314158;   /* texto forte de apoio */
+  --muted:   #45556C;   /* texto secundário */
+  --meta:    #90A1B9;   /* detalhe e placeholder */
+  --line:    #E2E8F0;   /* linha fina */
+  --line-2:  #CAD5E2;   /* linha de campo e botão vazado */
+  --bg-2:    #F5F7FA;   /* fundo */
+  --radius-img: 16px;   /* cartões e blocos */
+  --campo-raio: 12px;   /* campos */
+}
 
 body { background: var(--bg-2); color: var(--ink); font-family: var(--font); }
 [hidden] { display: none !important; }
@@ -8,33 +20,47 @@ body { background: var(--bg-2); color: var(--ink); font-family: var(--font); }
 .cl-marca { font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; color: var(--muted); font-weight: var(--w-semi); margin: 0; }
 .cl-titulo { font-size: clamp(1.5rem, 4vw, 2rem); letter-spacing: var(--ls-h3); line-height: var(--lh-h3); font-weight: var(--w-bold); margin: var(--sp-3xs) 0 0; }
 .cl-sub { color: var(--muted); margin: var(--sp-2xs) 0 var(--sp-md); }
-.cl-h2 { font-size: var(--t-small); font-weight: var(--w-semi); margin: 0; }
+.cl-h2 { display: flex; align-items: center; gap: var(--sp-2xs); font-size: var(--t-body); font-weight: var(--w-bold); margin: 0; }
+.cl-h2 .cl-ico { color: var(--brand); }
+.cl-ico { flex: none; }
 .cl-h2 span { color: var(--meta); font-weight: var(--w-medium); }
 
 /* Bloco branco com hairline: base de tudo no painel */
-.cl-cartao, .cl-bloco, .cl-numeros { background: var(--bg); border: var(--hair) solid var(--line); border-radius: 8px; }
+.cl-cartao, .cl-bloco { background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-img); }
+.cl-rel { display: grid; gap: var(--sp-md); }
 .cl-cartao { padding: var(--sp-md); }
 
 /* Botões: grandes o bastante para o dedo */
 .cl-btn {
-  display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 var(--sp-sm);
-  border: var(--hair) solid var(--line-2); border-radius: 6px; background: var(--bg); color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2xs); min-height: 40px; padding: 0 var(--sp-sm);
+  border: var(--hair) solid var(--line-2); border-radius: var(--radius-pill); background: var(--bg); color: var(--ink);
   font: inherit; font-weight: var(--w-semi); font-size: var(--t-small); text-decoration: none; cursor: pointer;
   transition: background var(--d-fast) var(--ease-out), border-color var(--d-fast) var(--ease-out);
 }
-.cl-btn:hover { border-color: var(--meta); background: var(--bg-2); }
+.cl-btn:hover { border-color: var(--ink); }
 .cl-btn--cheio { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
 .cl-btn--cheio:hover { background: var(--ink); border-color: var(--ink); }
-.cl-btn--leve { min-height: 36px; font-weight: var(--w-medium); color: var(--ink-2); }
+.cl-btn--leve { min-height: 38px; font-weight: var(--w-semi); color: var(--ink-2); }
+.cl-btn--grande { min-height: 50px; font-size: var(--t-body); }
 .cl-btn:disabled { opacity: .5; cursor: wait; }
 .cl-btn:focus-visible, .cl-campo input:focus-visible, .cl-periodo button:focus-visible, .cl-assina:focus-visible { outline: var(--hair-2) solid var(--brand); outline-offset: 2px; }
 
 /* Login */
-.cl-entrar { min-height: 100svh; display: grid; place-items: center; padding: var(--sp-md); }
-.cl-form { width: min(100%, 400px); display: grid; gap: var(--sp-sm); }
+.cl-entrar { min-height: 100svh; display: grid; place-content: center; justify-items: center; gap: var(--sp-sm); padding: var(--sp-md);
+  background: radial-gradient(60rem 30rem at 50% -10%, var(--brand-wash), transparent 70%), var(--bg-2); }
+.cl-form { width: min(100vw - 2 * var(--sp-md), 420px); display: grid; gap: var(--sp-sm); padding: var(--sp-lg); border-radius: 24px; box-shadow: 0 20px 50px -30px rgba(15, 23, 42, .25); }
+.cl-selo { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: var(--brand); color: var(--brand-ink); box-shadow: 0 10px 24px -12px var(--brand); margin-bottom: var(--sp-2xs); }
+.cl-selo .cl-ico { width: 26px; height: 26px; }
+.cl-campo__caixa { position: relative; display: block; }
+.cl-campo__caixa .cl-ico { position: absolute; left: 14px; top: 50%; translate: 0 -50%; color: var(--meta); pointer-events: none; }
+.cl-campo__caixa input { width: 100%; padding-left: 42px !important; }
+.cl-campo__caixa:focus-within .cl-ico { color: var(--brand); }
+.cl-entrar__pe { font-size: var(--t-eyebrow); color: var(--meta); margin: 0; }
+.cl-entrar__pe a { color: inherit; }
 .cl-form .cl-sub { margin-bottom: var(--sp-2xs); }
 .cl-campo { display: grid; gap: var(--sp-3xs); font-size: var(--t-small); font-weight: var(--w-semi); }
-.cl-campo input { min-height: 48px; padding: 0 var(--sp-sm); border: var(--hair) solid var(--line-2); border-radius: 6px; font: inherit; font-size: 1rem; background: var(--bg); }
+.cl-campo input { min-height: 48px; padding: 0 var(--sp-sm); border: var(--hair) solid var(--line-2); border-radius: var(--campo-raio); font: inherit; font-size: 1rem; background: var(--bg); transition: border-color var(--d-fast), box-shadow var(--d-fast); }
+.cl-campo input:focus { border-color: var(--brand); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent); outline: none; }
 .cl-erro { color: var(--brand); font-size: var(--t-small); margin: 0; min-height: 1.2em; }
 
 /* Painel */
@@ -43,41 +69,25 @@ body { background: var(--bg-2); color: var(--ink); font-family: var(--font); }
 /* Topo: título à esquerda, assinatura do Samuel à direita */
 .cl-topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-sm) var(--sp-md); padding-bottom: var(--sp-md); border-bottom: var(--hair) solid var(--line); }
 .cl-topo > div:first-child { flex: 1 1 14rem; min-width: 0; }
-.cl-assina { display: flex; align-items: center; gap: var(--sp-2xs); text-decoration: none; color: inherit; padding: var(--sp-2xs) var(--sp-xs) var(--sp-2xs) var(--sp-2xs); border: var(--hair) solid var(--line); border-radius: 8px; background: var(--bg); transition: border-color var(--d-fast) var(--ease-out); }
-.cl-assina:hover { border-color: var(--meta); }
-.cl-assina__ico { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; background: var(--bg-2); color: var(--ink); flex: none; }
-.cl-assina__txt { display: grid; line-height: 1.25; white-space: nowrap; }
-.cl-assina__txt b { font-size: var(--t-small); font-weight: var(--w-semi); }
-.cl-assina__txt em { font-style: normal; font-size: var(--t-eyebrow); color: var(--muted); }
-/* No celular a assinatura fica à direita do título, só o texto. */
-@media (max-width: 560px) {
-  .cl-topo { flex-wrap: nowrap; align-items: flex-start; }
-  .cl-assina { border: 0; padding: var(--sp-3xs) 0 0; background: none; }
-  .cl-assina__ico { display: none; }
-  .cl-assina__txt { text-align: right; }
-}
+.cl-assina { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-small); color: var(--meta); text-decoration: none; padding-bottom: 4px; transition: color var(--d-fast) var(--ease-out); }
+.cl-assina:hover { color: var(--brand); }
+.cl-topo > .cl-marca::before, .cl-topo .cl-marca::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--brand); margin-right: .6em; vertical-align: 1px; }
 
 /* Barra de ferramentas: período à esquerda, avisos e sair à direita */
 .cl-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-xs); }
 .cl-barra__acoes { display: flex; flex-wrap: wrap; gap: var(--sp-2xs); }
-#avisos[aria-pressed="true"] { border-color: var(--ink); }
+/* Notificações: sino + chave liga e desliga (laranja quando ligada) */
+.cl-chave { position: relative; width: 32px; height: 18px; border-radius: 99px; background: var(--line-2); transition: background var(--d-fast) var(--ease-out); flex: none; }
+.cl-chave::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: translate var(--d-fast) var(--ease-out); }
+.cl-notif[aria-checked="true"] .cl-chave { background: var(--brand); }
+.cl-notif[aria-checked="true"] .cl-chave::after { translate: 14px 0; }
+.cl-notif[aria-checked="true"] .cl-ico { color: var(--brand); }
 
-.cl-periodo { display: flex; background: var(--bg); border: var(--hair) solid var(--line-2); border-radius: 6px; padding: 2px; width: fit-content; max-width: 100%; }
-.cl-periodo button { border: 0; background: none; font: inherit; font-size: var(--t-small); font-weight: var(--w-medium); color: var(--muted); min-height: 32px; padding: 0 var(--sp-sm); border-radius: 4px; cursor: pointer; white-space: nowrap; transition: color var(--d-fast) var(--ease-out); }
+.cl-periodo { display: flex; background: var(--bg); border: var(--hair) solid var(--line); border-radius: var(--radius-pill); padding: 3px; width: fit-content; max-width: 100%; }
+.cl-periodo button { border: 0; background: none; font: inherit; font-size: var(--t-small); font-weight: var(--w-medium); color: var(--muted); min-height: 32px; padding: 0 var(--sp-sm); border-radius: var(--radius-pill); cursor: pointer; white-space: nowrap; transition: color var(--d-fast) var(--ease-out); }
 .cl-periodo button:hover { color: var(--ink); }
-.cl-periodo button[aria-pressed="true"] { background: var(--bg-2); color: var(--ink); font-weight: var(--w-semi); }
+.cl-periodo button[aria-pressed="true"] { background: var(--ink); color: #fff; font-weight: var(--w-semi); }
 @media (max-width: 420px) { .cl-periodo { width: 100%; } .cl-periodo button { flex: 1; padding: 0 var(--sp-2xs); } }
-
-/* Números: uma faixa só, divididos por hairline */
-.cl-numeros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: hidden; }
-.cl-num { padding: var(--sp-sm) var(--sp-md) var(--sp-md); box-shadow: -1px 0 0 var(--line), 0 -1px 0 var(--line); display: grid; align-content: start; gap: var(--sp-3xs); }
-@media (min-width: 760px) { .cl-numeros { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.cl-num__rotulo { font-size: var(--t-small); color: var(--muted); margin: 0; }
-.cl-num__valor { font-size: clamp(1.75rem, 4.4vw, 2.25rem); font-weight: var(--w-semi); letter-spacing: var(--ls-h3); margin: 0; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.cl-var { font-size: var(--t-eyebrow); font-weight: var(--w-medium); color: var(--meta); }
-.cl-var b { font-weight: var(--w-semi); }
-.cl-var--sobe b { color: var(--ink); }
-.cl-var--desce b { color: var(--muted); }
 
 /* Blocos com cabeçalho separado por hairline */
 .cl-bloco { overflow: hidden; }
@@ -89,13 +99,13 @@ body { background: var(--bg-2); color: var(--ink); font-family: var(--font); }
 .cl-lead__topo { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-3xs) var(--sp-sm); }
 .cl-lead__nome { font-size: 1.0625rem; font-weight: var(--w-semi); margin: 0; }
 .cl-lead__quando { font-size: var(--t-small); color: var(--meta); font-variant-numeric: tabular-nums; }
-.cl-novo { display: inline-block; vertical-align: middle; font-size: var(--t-eyebrow); font-weight: var(--w-semi); letter-spacing: .04em; text-transform: uppercase; background: var(--brand-wash); color: var(--brand); border-radius: 4px; padding: 1px 6px; margin-left: var(--sp-3xs); }
+.cl-novo { display: inline-block; vertical-align: middle; font-size: var(--t-eyebrow); font-weight: var(--w-semi); letter-spacing: .04em; text-transform: uppercase; background: var(--brand-wash); color: var(--brand); border-radius: var(--radius-pill); padding: 2px 8px; margin-left: var(--sp-3xs); }
 .cl-lead__dados { display: grid; gap: var(--sp-2xs); margin: 0; font-size: var(--t-small); }
 .cl-lead__dados div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: var(--sp-xs); }
 .cl-lead__dados dt { color: var(--muted); }
 .cl-lead__dados dd { margin: 0; overflow-wrap: anywhere; }
 .cl-lead__msg dd { white-space: pre-line; }
-.cl-chip { display: inline-block; border: var(--hair) solid var(--line); border-radius: 4px; padding: 1px 8px; margin: 0 2px 4px 0; }
+.cl-chip { display: inline-block; border: var(--hair) solid var(--line); border-radius: var(--radius-pill); padding: 1px 8px; margin: 0 2px 4px 0; }
 .cl-lead__acoes { display: flex; flex-wrap: wrap; gap: var(--sp-2xs); }
 @media (max-width: 480px) {
   .cl-lead__dados div { grid-template-columns: minmax(0, 1fr); gap: 0; }
@@ -104,13 +114,12 @@ body { background: var(--bg-2); color: var(--ink); font-family: var(--font); }
   .cl-bloco__cab { padding-inline: var(--sp-sm); }
 }
 
-.cl-origens { list-style: none; margin: 0; padding: var(--sp-md); display: grid; gap: var(--sp-sm); }
-.cl-origens li:not(.cl-vazio) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-2xs) var(--sp-sm); font-size: var(--t-small); }
-.cl-origens b { font-weight: var(--w-semi); font-variant-numeric: tabular-nums; }
-.cl-origens i { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--ink) var(--p), var(--bg-2) var(--p)); }
-
 .cl-vazio { color: var(--muted); padding: var(--sp-md); list-style: none; font-size: var(--t-small); }
-.cl-origens .cl-vazio { padding: 0; }
 .cl-rodape { color: var(--meta); font-size: var(--t-eyebrow); text-align: center; margin: 0; }
 
-.cl-dica { margin: 0; font-size: var(--t-small); color: var(--ink-2); background: var(--brand-wash); border: var(--hair) solid var(--line); border-radius: 8px; padding: var(--sp-xs) var(--sp-sm); }
+.cl-dica { margin: 0; font-size: var(--t-small); color: var(--ink-2); background: var(--brand-wash); border: var(--hair) solid var(--line); border-radius: 12px; padding: var(--sp-xs) var(--sp-sm); }
+
+/* Relatório sobre o fundo cinza: cartões e blocos ficam brancos. */
+.cl-rel .mt-card:not(.mt-card--destaque), .cl-rel .mt-bloco { background: var(--bg); border: var(--hair) solid var(--line); }
+.cl-rel .mt-barras__trilho { background: var(--bg-2); }
+.cl-rel .mt-anel span { background: var(--bg); }
