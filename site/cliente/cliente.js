@@ -8,7 +8,7 @@
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString('pt-BR');
-let dias = 30;
+let dias = 30;              // ou 'max': todo o histórico
 const verSite = new URLSearchParams(location.search).get('site');
 
 async function api(rota, opcoes) {
@@ -33,11 +33,14 @@ function quando(iso) {
   return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
+/* Comparação com o período anterior do mesmo tamanho. No Máximo não
+   há período anterior, e sem número antes não há o que comparar. */
 function variacao(agora, antes) {
-  if (!antes) return agora ? '<span class="cl-var cl-var--sobe">novo</span>' : '';
+  if (dias === 'max' || !antes) return '';
   const p = Math.round(((agora - antes) / antes) * 100);
-  if (!p) return '<span class="cl-var">igual</span>';
-  return `<span class="cl-var cl-var--${p > 0 ? 'sobe' : 'desce'}">${p > 0 ? '+' : ''}${p}%</span>`;
+  const vs = ` vs. ${dias} dias antes`;
+  if (!p) return `<span class="cl-var"><b>igual</b>${vs}</span>`;
+  return `<span class="cl-var cl-var--${p > 0 ? 'sobe' : 'desce'}"><b>${p > 0 ? '+' : ''}${p}%</b>${vs}</span>`;
 }
 
 const cartao = (rotulo, agora, antes) =>
@@ -52,7 +55,7 @@ function leadHtml(l) {
     tel && `<a class="cl-btn" href="https://wa.me/${zap(l.telefone)}" target="_blank" rel="noopener">WhatsApp</a>`,
     l.email && `<a class="cl-btn" href="mailto:${esc(l.email)}">E-mail</a>`,
   ].filter(Boolean).join('');
-  return `<li class="cl-cartao cl-lead">
+  return `<li class="cl-lead">
     <div class="cl-lead__topo">
       <p class="cl-lead__nome">${esc(l.nome)}${novo ? ' <span class="cl-novo">Novo</span>' : ''}</p>
       <time class="cl-lead__quando" datetime="${esc(l.em)}">${quando(l.em)}</time>
@@ -81,12 +84,12 @@ function render(d) {
     cartao('Visitas', a.visitas, b.visitas) +
     cartao('Pessoas diferentes', a.visitantes, b.visitantes);
   // Leads do período escolhido, o mais novo primeiro.
-  const desde = Date.now() - dias * 864e5;
+  const desde = dias === 'max' ? 0 : Date.now() - dias * 864e5;
   const leads = d.leads.filter((l) => Date.parse(l.em) >= desde);
   $('#total-leads').textContent = leads.length ? `(${leads.length})` : '';
   $('#leads').innerHTML = leads.length
     ? leads.map(leadHtml).join('')
-    : `<li class="cl-vazio">Nenhum pedido nos últimos ${dias} dias. Os pedidos de orçamento do seu site aparecem aqui.</li>`;
+    : `<li class="cl-vazio">${dias === 'max' ? 'Nenhum pedido ainda.' : `Nenhum pedido nos últimos ${dias} dias.`} Os pedidos de orçamento do seu site aparecem aqui.</li>`;
   const total = a.origens.reduce((s, o) => s + o.n, 0);
   $('#origens').innerHTML = total
     ? a.origens.map((o) => `<li><span>${esc(NOMES_ORIGEM[o.nome] || o.nome)}</span><b>${num(o.n)}</b><i style="--p:${Math.round((o.n / total) * 100)}%"></i></li>`).join('')
@@ -123,7 +126,7 @@ $('#sair').addEventListener('click', async () => { await api('sair', { method: '
 $('#periodo').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   $('#periodo').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-  dias = Number(b.dataset.dias);
+  dias = b.dataset.dias === 'max' ? 'max' : Number(b.dataset.dias);
   carregar();
 });
 

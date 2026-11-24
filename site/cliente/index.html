@@ -14,8 +14,8 @@
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles/tokens.css?v=20260909h">
 <link rel="stylesheet" href="/styles/base.css?v=20260911a">
-<link rel="stylesheet" href="./cliente.css?v=20261124a">
-<script type="module" src="./cliente.js?v=20261124a"></script>
+<link rel="stylesheet" href="./cliente.css?v=20261124b">
+<script type="module" src="./cliente.js?v=20261124b"></script>
 </head>
 <body>
 
@@ -40,29 +40,36 @@
       <p class="cl-marca">Painel do site</p>
       <h1 class="cl-titulo" id="nome-site"></h1>
     </div>
-    <div class="cl-topo__acoes">
-      <button class="cl-btn" type="button" id="avisos" aria-pressed="false" hidden>Ligar avisos</button>
-      <button class="cl-btn" type="button" id="sair">Sair</button>
-    </div>
+    <a class="cl-assina" href="https://www.instagram.com/samuelfreirebr" target="_blank" rel="noopener" aria-label="Samuel Freire BR no Instagram">
+      <span class="cl-assina__ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1" fill="currentColor" stroke="none"/></svg></span>
+      <span class="cl-assina__txt"><b>Samuel Freire BR</b><em>@samuelfreirebr</em></span>
+    </a>
   </header>
 
-  <nav class="cl-periodo" id="periodo" aria-label="Período">
-    <button type="button" data-dias="7">7 dias</button>
-    <button type="button" data-dias="30" aria-pressed="true">30 dias</button>
-    <button type="button" data-dias="90">90 dias</button>
-  </nav>
+  <div class="cl-barra">
+    <nav class="cl-periodo" id="periodo" aria-label="Período">
+      <button type="button" data-dias="7">7 dias</button>
+      <button type="button" data-dias="30" aria-pressed="true">30 dias</button>
+      <button type="button" data-dias="90">90 dias</button>
+      <button type="button" data-dias="max" title="Todo o histórico do site">Máximo</button>
+    </nav>
+    <div class="cl-barra__acoes">
+      <button class="cl-btn cl-btn--leve" type="button" id="avisos" aria-pressed="false" hidden>Ligar avisos</button>
+      <button class="cl-btn cl-btn--leve" type="button" id="sair">Sair</button>
+    </div>
+  </div>
 
   <p class="cl-dica" id="dica-iphone" hidden>Para receber avisos no iPhone: toque em Compartilhar, depois em <b>Adicionar à Tela de Início</b>, e abra o painel por esse ícone.</p>
 
   <section class="cl-numeros" id="numeros" aria-label="Números"></section>
 
   <section class="cl-bloco">
-    <h2 class="cl-h2">Pedidos <span id="total-leads"></span></h2>
+    <div class="cl-bloco__cab"><h2 class="cl-h2">Pedidos <span id="total-leads"></span></h2></div>
     <ul class="cl-leads" id="leads"></ul>
   </section>
 
   <section class="cl-bloco">
-    <h2 class="cl-h2">De onde vieram as visitas</h2>
+    <div class="cl-bloco__cab"><h2 class="cl-h2">De onde vieram as visitas</h2></div>
     <ul class="cl-origens" id="origens"></ul>
   </section>
 

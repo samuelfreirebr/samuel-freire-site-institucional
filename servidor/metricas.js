@@ -235,8 +235,10 @@ export async function resumo(id, n = 15, faixa = {}) {
     n = Math.max(1, diasEntre(faixa.inicio, fim) + 1);
     desloc = Math.max(0, diasEntre(fim, hoje));
   }
-  n = Math.min(Math.max(Number(n) || 15, 1), 400);
   const s = await carregar(id);
+  // 'max': do primeiro dia com dado até hoje (o arquivo guarda até 400 dias).
+  if (n === 'max') { const primeiro = Object.keys(s.dias).sort()[0]; n = primeiro ? diasEntre(primeiro, hoje) + 1 : 1; }
+  n = Math.min(Math.max(Number(n) || 15, 1), 400);
   return { site, dias: n, atual: periodo(s, desloc, n), anterior: periodo(s, desloc + n, n), geradoEm: new Date().toISOString() };
 }
 
