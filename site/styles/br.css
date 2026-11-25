@@ -129,8 +129,16 @@
 }
 .sobre__janela img { display: block; border-radius: 0; }
 .sobre__foto figcaption { margin-top: var(--sp-sm); }
-/* Sem o zoom de entrada: a foto vazaria para fora da janela. */
-.anim-pronta .sobre__foto img { transform: none; }
+/* Entrada da foto: sem zoom (vazaria da janela), a imagem chega
+   desfocada e vai ganhando nitidez dentro da janelinha. Sem a
+   .anim-pronta (sem JS ou com movimento reduzido) ela nasce nítida. */
+.anim-pronta .sobre__foto img {
+  transform: none;
+  filter: blur(18px);
+  opacity: .35;
+  transition: filter 1.6s var(--ease-out), opacity 1.6s var(--ease-out);
+}
+.anim-pronta .sobre__foto.vis img { filter: none; opacity: 1; }
 
 
 /* ---------- Topo: Ligar + Contato ------------------------------------
