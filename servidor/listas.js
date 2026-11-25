@@ -9,6 +9,10 @@
 export const escapar = (t) => String(t)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// Pino de localização em traço fino, ao lado da cidade do cliente.
+const PINO = '<svg class="cliente__pin" width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">'
+  + '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+
 export function htmlClientes(itens) {
   return itens.map((c) => {
     const ini = escapar(c.inicial || (c.nome || '?').slice(0, 2).toUpperCase());
@@ -16,9 +20,10 @@ export function htmlClientes(itens) {
       ? `<img src="${escapar(c.foto)}" alt="" width="160" height="160" loading="lazy">`
       : '';
     const arroba = c.handle ? `<em>${escapar(c.handle)}</em>` : '';
+    const local = c.cidade ? `<small class="cliente__local">${PINO}${escapar(c.cidade)}</small>` : '';
     return `<li class="cliente">`
       + `<span class="cliente__foto" data-inicial="${ini}">${foto}</span>`
-      + `<span class="cliente__txt"><b>${escapar(c.nome)}</b>${arroba}</span>`
+      + `<span class="cliente__txt"><b>${escapar(c.nome)}</b>${arroba}${local}</span>`
       + `</li>`;
   }).join('');
 }

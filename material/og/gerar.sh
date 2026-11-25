@@ -5,7 +5,7 @@
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 AQUI="$(cd "$(dirname "$0")" && pwd)"
 RAIZ="$(cd "$AQUI/../.." && pwd)"
-for v in site global proposta briefing fatura; do
+for v in site construcao global proposta briefing fatura; do
   "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
     --window-size=1200,630 --virtual-time-budget=4000 \
     --allow-file-access-from-files \

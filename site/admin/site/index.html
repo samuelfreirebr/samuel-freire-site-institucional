@@ -210,6 +210,7 @@ function importarDoQuadro(doc) {
         return {
           nome: (li.querySelector('b') || {}).textContent || '',
           handle: (li.querySelector('em') || {}).textContent || '',
+          cidade: (li.querySelector('.cliente__local') || {}).textContent || '',
           foto: img ? new URL(img.getAttribute('src'), location.origin).pathname : '',
           inicial: foto ? foto.getAttribute('data-inicial') || '' : '',
         };
@@ -323,6 +324,8 @@ function itemCliente(c, i) {
     + '<label><span>Nome</span><input type="text" data-campo="nome" value="' + esc(c.nome) + '"></label>'
     + '<label><span>@ do Instagram</span><input type="text" data-campo="handle" value="' + esc(c.handle) + '">'
     + '<small>Vazio: o arroba some do card.</small></label>'
+    + '<label><span>Cidade</span><input type="text" data-campo="cidade" value="' + esc(c.cidade) + '" placeholder="Ex.: Charlotte, NC">'
+    + '<small>Vazio: a cidade e o pino somem do card.</small></label>'
     + '</div>';
   ligarItem(d, conteudo.clientes, i, montarClientes, 'foto');
   return d;

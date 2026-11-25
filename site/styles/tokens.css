@@ -33,6 +33,10 @@
   --line:             #E1E5EA;   /* hairline padrão */
   --line-2:           #DCE0E6;   /* hairline forte */
   --line-invert:      rgba(255,255,255,.14);
+  /* Bolinhas da janelinha do Mac no retrato do Sobre (só ali). */
+  --mac-vermelho:     #FF5F57;
+  --mac-amarelo:      #FEBC2E;
+  --mac-verde:        #28C840;
   --muted-invert:     rgba(255,255,255,.62);
 
   /* Sem gradientes. Sem sombras. Estas variáveis não existem de propósito. */

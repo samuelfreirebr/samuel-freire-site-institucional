@@ -19,7 +19,9 @@
      os botões para fora da dobra. */
   font-size: min(clamp(2rem, 4.6vw, 4.5rem), 13vh);
   letter-spacing: var(--ls-h1);
-  line-height: .98;
+  /* Com .98 o "p" de uma linha encostava no "b" da linha de baixo.
+     Nenhuma letra pode tocar a outra. */
+  line-height: 1.1;
   /* 24ch cabe "lançamentos de 7D com foco em" numa linha só. Com 20ch
      a frase virava quatro linhas e "foco / em" se separava. Os pares
      que não podem quebrar estão travados com &nbsp; no HTML. */
@@ -80,3 +82,70 @@
   }
   .selo { padding: .5em .9em; }
 }
+
+
+/* ---------- Destaque da manchete ------------------------------------
+   No BR a segunda parte da oferta (para quem é) se diferencia pelo
+   peso fino, na cor do texto. O cinza de antes parecia apagado.    */
+
+.hero__title-2 { color: var(--ink); font-weight: var(--w-light); }
+
+
+/* ---------- Retrato do Sobre -----------------------------------------
+   A foto dentro de uma janelinha de navegador, como a do Mac: barra
+   fina com as três bolinhas (vermelha, amarela e verde, como no Mac)
+   e o endereço. Bordas em hairline, sem sombra.                     */
+
+.sobre__foto { width: min(100%, 20rem); margin: 0; }
+.sobre__janela {
+  display: block;
+  overflow: hidden;
+  border: var(--hair) solid var(--line-invert);
+  border-radius: var(--radius-img);
+}
+.sobre__barra {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: var(--sp-xs) var(--sp-sm);
+  border-bottom: var(--hair) solid var(--line-invert);
+}
+.sobre__barra i {
+  width: .55rem;
+  height: .55rem;
+  border-radius: 50%;
+  background: var(--mac-vermelho);
+}
+.sobre__barra i:nth-child(2) { background: var(--mac-amarelo); }
+.sobre__barra i:nth-child(3) { background: var(--mac-verde); }
+.sobre__url {
+  flex: 1;
+  margin-left: var(--sp-xs);
+  margin-right: calc(1.5rem + .8rem);   /* centra o endereço contra as bolinhas */
+  text-align: center;
+  font-size: var(--t-eyebrow);
+  color: var(--muted-invert);
+  letter-spacing: .02em;
+}
+.sobre__janela img { display: block; border-radius: 0; }
+.sobre__foto figcaption { margin-top: var(--sp-sm); }
+/* Sem o zoom de entrada: a foto vazaria para fora da janela. */
+.anim-pronta .sobre__foto img { transform: none; }
+
+
+/* ---------- Topo: Ligar + Contato ------------------------------------
+   Dois botões lado a lado. No celular o vão encolhe para caberem
+   junto do logo.                                                   */
+
+.nav__fim { gap: var(--sp-xs); }
+/* Sem as âncoras do meio (celular), o bloco caía na coluna central.
+   Fica sempre na última, encostado à direita. */
+.nav__fim { grid-column: 3; }
+/* Ligar: só o telefone, em traço fino, num botão redondo. */
+.nav__ligar {
+  width: 3.1em;   /* mesma altura do Contato: 1em de linha + 2 x 1.05em */
+  aspect-ratio: 1;
+  padding: 0;
+  justify-content: center;
+}
+.link__ico svg { fill: currentColor; }

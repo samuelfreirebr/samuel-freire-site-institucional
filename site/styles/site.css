@@ -930,6 +930,15 @@
   font-size: var(--t-eyebrow);
   color: var(--muted);
 }
+/* Cidade do cliente: pino de traço fino, texto pequeno e apagado. */
+.cliente__local {
+  display: inline-flex;
+  align-items: center;
+  gap: .3em;
+  font-size: var(--t-eyebrow);
+  color: var(--muted);
+}
+.cliente__pin { flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; }
 
 
 /* ============================================================ BORDAS DAS ESTEIRAS
