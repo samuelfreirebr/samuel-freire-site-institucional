@@ -1132,10 +1132,20 @@ const servidor = http.createServer(async (req, res) => {
       if (pais && pais !== 'BR' && pais !== 'XX' && pais !== 'T1') caminho = '/global/';
     }
 
-    if (!permitido(caminho)) return texto(res, 'Página não encontrada.', 404);
-
-    const arq = await acharArquivo(caminho);
-    if (!arq) return texto(res, 'Página não encontrada.', 404);
+    const arq = permitido(caminho) ? await acharArquivo(caminho) : null;
+    if (!arq) {
+      /* Endereço de página que não existe (os antigos do WordPress,
+         como /sobre ou /contato) vai para a página inicial. Arquivo
+         que falta (imagem, css) e caminho com ponto (.env, .git)
+         continuam 404. */
+      const ext = path.extname(caminho).toLowerCase();
+      const escondido = caminho.split('/').some((t) => t.startsWith('.'));
+      if (!escondido && (req.method === 'GET' || req.method === 'HEAD') && (!ext || ext === '.php' || ext === '.html')) {
+        res.writeHead(301, { location: '/' });
+        return res.end();
+      }
+      return texto(res, 'Página não encontrada.', 404);
+    }
     const pagina = path.extname(arq).toLowerCase() === '.html';
     if (pagina && req.method === 'GET' && !liberado(req)) novidades.contarVisita(req).catch(() => {});
     return servirArquivo(res, arq, pagina);
