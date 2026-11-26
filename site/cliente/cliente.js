@@ -48,7 +48,7 @@ function leadHtml(l) {
   ].filter(Boolean).join('');
   return `<li class="cl-lead">
     <div class="cl-lead__topo">
-      <p class="cl-lead__nome">${esc(l.nome)}${novo ? ' <span class="cl-novo">Novo</span>' : ''}</p>
+      <p class="cl-lead__nome">${verSite ? `<input type="checkbox" class="cl-marcar" value="${esc(l.id)}" aria-label="Selecionar ${esc(l.nome)}">` : ''}${esc(l.nome)}${novo ? ' <span class="cl-novo">Novo</span>' : ''}</p>
       <time class="cl-lead__quando" datetime="${esc(l.em)}">${quando(l.em)}</time>
     </div>
     <dl class="cl-lead__dados">
@@ -72,7 +72,7 @@ function render(d) {
   const desde = dias === 'max' ? 0 : Date.now() - dias * 864e5;
   const leads = d.leads.filter((l) => Date.parse(l.em) >= desde);
   const pedidos = `<section class="cl-bloco">
-    <div class="cl-bloco__cab"><h2 class="cl-h2">${ico('pedidos')}Pedidos ${leads.length ? `<span>(${leads.length})</span>` : ''}</h2></div>
+    <div class="cl-bloco__cab"><h2 class="cl-h2">${ico('pedidos')}Pedidos ${leads.length ? `<span>(${leads.length})</span>` : ''}</h2>${verSite && leads.length ? '<button type="button" class="cl-btn cl-btn--leve" id="apagar-leads" hidden>Apagar</button>' : ''}</div>
     <ul class="cl-leads">${leads.length
       ? leads.map(leadHtml).join('')
       : `<li class="cl-vazio">${dias === 'max' ? 'Nenhum pedido ainda.' : `Nenhum pedido nos últimos ${dias} dias.`} Os pedidos de orçamento do seu site aparecem aqui.</li>`}</ul>
@@ -149,6 +149,26 @@ async function avisos() {
     finally { b.disabled = false; avisos(); }
   };
 }
+
+/* Só o Samuel (?site=): marca os pedidos de teste e apaga. Some do
+   painel do cliente e sai da contagem de pedidos. */
+$('#relatorio').addEventListener('change', (e) => {
+  if (!e.target.matches('.cl-marcar')) return;
+  const n = document.querySelectorAll('.cl-marcar:checked').length, b = $('#apagar-leads');
+  b.hidden = !n;
+  b.textContent = n > 1 ? `Apagar ${n} pedidos` : 'Apagar pedido';
+});
+$('#relatorio').addEventListener('click', async (e) => {
+  const b = e.target.closest('#apagar-leads'); if (!b) return;
+  const ids = [...document.querySelectorAll('.cl-marcar:checked')].map((x) => x.value);
+  if (!ids.length || !confirm(`Apagar ${ids.length > 1 ? ids.length + ' pedidos' : 'este pedido'} de vez? O cliente não vai mais ver.`)) return;
+  b.disabled = true;
+  try {
+    const r = await fetch('/api/metricas/' + encodeURIComponent(verSite) + '/leads', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ids }) });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).erro || 'Algo deu errado.');
+    await carregar();
+  } catch (err) { alert('Não deu para apagar: ' + err.message); b.disabled = false; }
+});
 
 // Volta para a aba: busca de novo, para o lead novo aparecer sem recarregar.
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('#painel').hidden) carregar(); });

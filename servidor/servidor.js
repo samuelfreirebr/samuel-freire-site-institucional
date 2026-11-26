@@ -362,6 +362,13 @@ async function api(req, res, url) {
     }
     return json(res, { erro: 'Método não aceito.' }, 405);
   }
+  // Apagar leads (testes) do painel do cliente: vem antes do DELETE do site.
+  const ml = rota.match(/^metricas\/([a-z0-9-]+)\/leads$/);
+  if (ml && req.method === 'DELETE') {
+    const dado = await lerJson(req, res, 65536);
+    if (dado === undefined) return;
+    return json(res, { apagados: await clientes.apagarLeads(ml[1], dado.ids) });
+  }
   if (rota.startsWith('metricas/') && req.method === 'DELETE') {
     try { await metricas.apagarSite(rota.slice('metricas/'.length)); return json(res, { ok: true }); }
     catch (e) { return json(res, { erro: e.message }, 404); }

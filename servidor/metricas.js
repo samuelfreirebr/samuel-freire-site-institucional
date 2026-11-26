@@ -154,6 +154,14 @@ export async function contar(id, tipo) {
   gravar(id);
 }
 
+/* Desfaz um evento no dia em que ele aconteceu (lead de teste apagado). */
+export async function descontar(id, tipo, iso) {
+  const s = await carregar(id), dia = s.dias[new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })];
+  if (!dia?.[tipo]) return;
+  dia[tipo]--;
+  gravar(id);
+}
+
 /* Recebe um evento do script. Devolve false quando não vale. */
 export async function registrar(req, corpo) {
   if (ROBO.test(req.headers['user-agent'] || '')) return false;

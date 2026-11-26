@@ -82,6 +82,19 @@ export async function registrarLead(req, corpo) {
 
 export const listarLeads = (id) => lerJson(path.join(PASTA_LEADS, id + '.json'), []);
 
+/* Apaga leads (os testes do Samuel) e tira cada um da contagem do
+   dia dele, para o cliente não ver nem o pedido nem o número. */
+export async function apagarLeads(id, ids) {
+  const fora = new Set((Array.isArray(ids) ? ids : []).map(String));
+  const arq = path.join(PASTA_LEADS, id + '.json');
+  const lista = await lerJson(arq, []);
+  const apagados = lista.filter((l) => fora.has(l.id));
+  if (!apagados.length) return 0;
+  await gravarJson(arq, lista.filter((l) => !fora.has(l.id)));
+  for (const l of apagados) await metricas.descontar(id, 'lead', l.em);
+  return apagados.length;
+}
+
 /* ---------- acesso do cliente ---------- */
 
 const hashDe = (senha, sal) => scryptSync(String(senha), sal, 32).toString('base64url');

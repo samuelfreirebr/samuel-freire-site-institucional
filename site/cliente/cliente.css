@@ -92,6 +92,8 @@ body { background: var(--bg-2); color: var(--ink); font-family: var(--font); }
 /* Blocos com cabeçalho separado por hairline */
 .cl-bloco { overflow: hidden; }
 .cl-bloco__cab { padding: var(--sp-xs) var(--sp-md); border-bottom: var(--hair) solid var(--line); }
+.cl-bloco__cab:has(#apagar-leads) { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-sm); }
+.cl-marcar { width: 18px; height: 18px; margin: 0 var(--sp-xs) 0 0; vertical-align: -3px; accent-color: var(--brand); cursor: pointer; }
 
 .cl-leads { list-style: none; margin: 0; padding: 0; }
 .cl-lead { display: grid; gap: var(--sp-sm); padding: var(--sp-md); }
