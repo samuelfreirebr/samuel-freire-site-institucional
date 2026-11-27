@@ -29,6 +29,8 @@ h1 em { font-style: normal; color: var(--brand); }
 .foto { position: absolute; right: 80px; top: 150px; width: 300px; height: 300px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 6px var(--brand); display: none; }
 .com-foto h1 { max-width: 700px; font-size: 92px; }
 .com-foto .foto { display: block; }
+.so-arroba .tag, .so-arroba .pe { display: none; }
+.so-arroba h1 { font-size: 84px; letter-spacing: -.04em; }
 </style>
 </head>
 <body>
@@ -42,6 +44,7 @@ h1 em { font-style: normal; color: var(--brand); }
 const variantes = {
   site:      { tag: 'Web Designer', titulo: 'Landing pages para <em>lançamentos</em>', pe: 'De 7D, com foco em escala e previsibilidade', foto: true },
   construcao: { tag: 'Construção nos EUA', titulo: 'Websites de <em>alto padrão</em>', pe: 'Website, SEO e Google para receber mais estimates', foto: true },
+  instagram: { tag: '', titulo: '<em>@</em>samuelfreirebr', pe: '', foto: true, sóArroba: true },
   global:    { tag: 'Digital Design & Brand', titulo: 'Digital Design &amp; <em>Brand</em> Experience', pe: 'Estratégia, Brand, Systems e Marketing', foto: true },
   proposta:  { tag: 'Proposta comercial', titulo: 'Sua proposta de <em>projeto</em>', pe: 'Escopo, processo e investimento' },
   briefing:  { tag: 'Briefing do projeto', titulo: 'Vamos <em>começar</em> o seu projeto', pe: 'Uma pergunta por vez' },
@@ -51,6 +54,7 @@ const v = variantes[new URLSearchParams(location.search).get('v')] || variantes.
 document.getElementById('tag').textContent = v.tag;
 document.getElementById('titulo').innerHTML = v.titulo;
 document.getElementById('pe').textContent = v.pe;
+if (v.sóArroba) document.getElementById('cena').classList.add('so-arroba');
 if (v.foto) document.getElementById('cena').classList.add('com-foto');
 </script>
 </body>
